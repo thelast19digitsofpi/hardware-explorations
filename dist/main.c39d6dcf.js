@@ -394,8 +394,13 @@ function () {
         x: -spacing * (i - (bits - 1) / 2),
         y: this.size.y / 2
       });
-    }
+    } // carry
 
+
+    this.outputSockets.push({
+      x: -this.size.x * 0.375,
+      y: 0
+    });
     this.inputWires = [];
   }
 
@@ -445,6 +450,18 @@ function () {
 
     var num1 = 0,
         num2 = 0;
+
+    for (var i = 0; i < this.numBits; i++) {
+      var wire1 = this.inputWires[i],
+          wire2 = this.inputWires[i + this.numBits];
+      num1 += (wire1.toComponent.state.bits[wire1.toOutput] ? 1 : 0) * (1 << i);
+      num2 += (wire2.toComponent.state.bits[wire2.toOutput] ? 1 : 0) * (1 << i);
+    }
+
+    var textSize = Math.round(Math.min(this.size.x * 0.125, this.size.y * 0.5));
+    ctx.font = textSize + "px monospace";
+    ctx.fillStyle = "black";
+    ctx.fillText(String(num1) + " + " + String(num2), this.position.x, this.position.y);
     ctx.restore();
   };
 
@@ -669,7 +686,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "63176" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59256" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

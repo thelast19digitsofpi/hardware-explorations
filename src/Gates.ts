@@ -1,62 +1,56 @@
-// Adder.ts
+// AndGate.ts
 
 import Component from "./Component";
 import Wire from "./Wire";
 
-class Adder implements Component {
+abstract class Gate implements Component {
     public state: {bits: boolean[]};
     public position: {x: number, y: number};
     public size: {x: number, y: number};
     public inputSockets: {x: number, y: number}[];
     public inputWires: Wire[];
     public outputSockets: {x: number, y: number}[];
-    public numBits: number;
+    public rotation: number;
 
     // bits=8 means an 8-bit plus 8-bit
-    constructor(x: number, y: number, bits: number) {
+    constructor(x: number, y: number, rotation: number) {
         this.position = {
             x: x,
             y: y,
         };
 
-        const width = 200;
+        const width = 60;
         this.size = {
             x: width,
-            y: 100
+            y: width
         };
 
         this.state = {
             bits: [],
         };
 
-        this.numBits = bits;
+        this.rotation = rotation * Math.PI / 180;
 
-        this.inputSockets = [];
-        // spacing between the bits
-        const spacing = width / (2 * bits);
-        for (let i = 0; i < bits; i++) {
-            this.inputSockets.push({
-                x: -spacing * (i + 0.5) + width/2,
-                y: -this.size.y/2,
-            });
-            this.inputSockets.unshift({
-                x: spacing * (i + 0.5) - width/2,
-                y: -this.size.y/2,
-            });
-        }
+        const cosine = Math.cos(this.rotation);
+        const sine = Math.sin(this.rotation);
+        // transform [±0.3, -0.5]
+        this.inputSockets = [
+            {
+                x: -0.3*cosine + 0.5*sine,
+                y: -0.5*cosine - 0.3*sine,
+            },
+            {
+                x: 0.3*cosine + 0.5*sine,
+                y: -0.5*cosine + 0.3*sine
+            }
+        ];
 
-        this.outputSockets = [];
-        for (let i = 0; i < bits; i++) {
-            this.outputSockets.push({
-                x: -spacing * (i - (bits-1)/2),
-                y: this.size.y/2,
-            });
-        }
-        // carry
-        this.outputSockets.push({
-            x: -this.size.x*0.375,
-            y: 0,
-        });
+        this.outputSockets = [
+            {
+                x: -0.5*sine,
+                y: -0.5*cosine,
+            }
+        ];
 
         this.inputWires = [];
     }
@@ -64,6 +58,8 @@ class Adder implements Component {
     onClick(_offsetX: number, _offsetY: number): void {
         return;
     };
+
+    drawGate(ctx: CanvasRenderingContext2D) {};
 
     render(ctx: CanvasRenderingContext2D) {
         ctx.save();
@@ -104,17 +100,6 @@ class Adder implements Component {
             ctx.stroke();
         }
 
-        let num1 = 0, num2 = 0;
-        for (let i = 0; i < this.numBits; i++) {
-            const wire1 = this.inputWires[i], wire2 = this.inputWires[i + this.numBits];
-            num1 += (wire1.toComponent.state.bits[wire1.toOutput] ? 1 : 0) * (1 << i);
-            num2 += (wire2.toComponent.state.bits[wire2.toOutput] ? 1 : 0) * (1 << i);
-        }
-        const textSize = Math.round(Math.min(this.size.x * 0.125, this.size.y * 0.5));
-        ctx.font = textSize + "px monospace";
-        ctx.fillStyle = "black";
-        ctx.fillText(String(num1) + " + " + String(num2), this.position.x, this.position.y);
-
         ctx.restore();
     }
 
@@ -136,4 +121,4 @@ class Adder implements Component {
     }
 }
 
-export default Adder;
+export {AndGate, OrGate, XorGate, Not};

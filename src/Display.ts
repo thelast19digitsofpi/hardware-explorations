@@ -1,9 +1,11 @@
-// Adder.ts
+// Display.ts
+//
+// Given a set of bits, displays its value as a signed or unsigned integer.
 
 import Component from "./Component";
 import Wire from "./Wire";
 
-class Adder implements Component {
+class Display implements Component {
     public state: {bits: boolean[]};
     public position: {x: number, y: number};
     public size: {x: number, y: number};
@@ -73,47 +75,18 @@ class Adder implements Component {
         // base
         ctx.fillStyle = "#cccccc";
         ctx.beginPath();
-        ctx.moveTo(left,                    top);
-        ctx.lineTo(left + this.size.x,      top);
-        ctx.lineTo(left + this.size.x*0.75, top + this.size.y);
-        ctx.lineTo(left + this.size.x*0.25, top + this.size.y);
+        ctx.moveTo(left,               top);
+        ctx.lineTo(left + this.size.x, top);
+        ctx.lineTo(left + this.size.x, top + this.size.y);
+        ctx.lineTo(left,               top + this.size.y);
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
 
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        for (let i = 0; i < this.inputSockets.length; i++) {
-            let socket = this.inputSockets[i];
-            ctx.fillStyle = "#3333cc";
-            ctx.beginPath();
-            ctx.arc(this.position.x + socket.x, this.position.y + socket.y, 6, 0, 2*Math.PI);
-            ctx.fill();
-            ctx.fillStyle = "black";
-            ctx.fillText(String(i), this.position.x + socket.x, this.position.y + socket.y - 15);
-        }
-
-        for (let i = 0; i < this.outputSockets.length; i++) {
-            let socket = this.outputSockets[i];
-            ctx.fillStyle = "#333333";
-            ctx.strokeStyle = (this.state.bits[i] ? '#33ff33' : '#990000');
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(this.position.x + socket.x, this.position.y + socket.y, 6, 0, 2*Math.PI);
-            ctx.fill();
-            ctx.stroke();
-        }
-
-        let num1 = 0, num2 = 0;
-        for (let i = 0; i < this.numBits; i++) {
-            const wire1 = this.inputWires[i], wire2 = this.inputWires[i + this.numBits];
-            num1 += (wire1.toComponent.state.bits[wire1.toOutput] ? 1 : 0) * (1 << i);
-            num2 += (wire2.toComponent.state.bits[wire2.toOutput] ? 1 : 0) * (1 << i);
-        }
-        const textSize = Math.round(Math.min(this.size.x * 0.125, this.size.y * 0.5));
-        ctx.font = textSize + "px monospace";
-        ctx.fillStyle = "black";
-        ctx.fillText(String(num1) + " + " + String(num2), this.position.x, this.position.y);
+        ctx.font = Math.round(Math.min(this.size.x/2, this.size.y*2/3)) + "px monospace";
+        
 
         ctx.restore();
     }
@@ -136,4 +109,4 @@ class Adder implements Component {
     }
 }
 
-export default Adder;
+export default Display;
