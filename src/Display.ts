@@ -32,17 +32,12 @@ class Display implements Component {
         };
 
         this.numBits = bits;
-
         this.inputSockets = [];
         // spacing between the bits
-        const spacing = width / (2 * bits);
+        const spacing = width / (bits + 1);
         for (let i = 0; i < bits; i++) {
             this.inputSockets.push({
-                x: -spacing * (i + 0.5) + width/2,
-                y: -this.size.y/2,
-            });
-            this.inputSockets.unshift({
-                x: spacing * (i + 0.5) - width/2,
+                x: -spacing * (i - bits/2) + width/2,
                 y: -this.size.y/2,
             });
         }
@@ -86,7 +81,7 @@ class Display implements Component {
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.font = Math.round(Math.min(this.size.x/2, this.size.y*2/3)) + "px monospace";
-        
+
 
         ctx.restore();
     }

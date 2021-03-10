@@ -15,6 +15,7 @@ const canvas: HTMLCanvasElement = createCanvas(640, 480);
 document.getElementById('1')!.appendChild(canvas);
 
 const adderExploration = new AdderExploration(canvas);
+adderExploration.update();
 
 function renderLoop() {
     adderExploration.render();

@@ -192,8 +192,8 @@ function () {
     if (!visitedNodes[index]) {
       visitedNodes[index] = true; // prevents infinite loops, although cyclic explorations are invalid anyway
       // has not been visited, so we need to evaluate it
+      //console.log("visiting " + String(index), component);
 
-      console.log("visiting " + String(index), component);
       var parentBits = [];
 
       for (var i = 0; i < component.inputWires.length; i++) {
@@ -358,12 +358,15 @@ var Adder =
 /** @class */
 function () {
   // bits=8 means an 8-bit plus 8-bit
-  function Adder(x, y, bits) {
+  function Adder(x, y, bits, width) {
+    if (width === void 0) {
+      width = bits * 50;
+    }
+
     this.position = {
       x: x,
       y: y
     };
-    var width = 200;
     this.size = {
       x: width,
       y: 100
@@ -519,7 +522,9 @@ function () {
   };
 
   Wire.prototype.render = function (ctx, from) {
-    ctx.strokeStyle = "2px solid black";
+    ctx.save();
+    ctx.strokeStyle = "#333";
+    ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(from.x, from.y);
 
@@ -530,6 +535,7 @@ function () {
     var endOffset = this.toComponent.outputSockets[this.toOutput];
     ctx.lineTo(endOffset.x + this.toComponent.position.x, endOffset.y + this.toComponent.position.y);
     ctx.stroke();
+    ctx.restore();
   };
 
   return Wire;
@@ -537,6 +543,269 @@ function () {
 
 var _default = Wire;
 exports.default = _default;
+},{}],"Gates.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Not = exports.XorGate = exports.OrGate = exports.AndGate = void 0;
+
+// Gates.ts
+var __extends = void 0 && (void 0).__extends || function () {
+  var _extendStatics = function extendStatics(d, b) {
+    _extendStatics = Object.setPrototypeOf || {
+      __proto__: []
+    } instanceof Array && function (d, b) {
+      d.__proto__ = b;
+    } || function (d, b) {
+      for (var p in b) {
+        if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p];
+      }
+    };
+
+    return _extendStatics(d, b);
+  };
+
+  return function (d, b) {
+    _extendStatics(d, b);
+
+    function __() {
+      this.constructor = d;
+    }
+
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+  };
+}();
+
+var Gate =
+/** @class */
+function () {
+  // bits=8 means an 8-bit plus 8-bit
+  function Gate(x, y, size, rotation, bits) {
+    this.position = {
+      x: x,
+      y: y
+    };
+    this.size = {
+      x: size,
+      y: size
+    };
+    this.state = {
+      bits: [false]
+    };
+    this.rotation = rotation * Math.PI / 180;
+    var cosine = Math.cos(this.rotation);
+    var sine = Math.sin(this.rotation); // transform [±0.3, -0.5]
+
+    if (bits == 2) {
+      this.inputSockets = [{
+        x: size * (-0.2 * cosine + 0.5 * sine),
+        y: size * (-0.5 * cosine - 0.2 * sine)
+      }, {
+        x: size * (0.2 * cosine + 0.5 * sine),
+        y: size * (-0.5 * cosine + 0.2 * sine)
+      }];
+    } else {
+      this.inputSockets = [{
+        x: size * 0.5 * sine,
+        y: size * -0.5 * cosine
+      }];
+    }
+
+    this.outputSockets = [{
+      x: size * 0.4 * sine,
+      y: size * 0.4 * cosine
+    }];
+    this.inputWires = [];
+  }
+
+  Gate.prototype.onClick = function (_offsetX, _offsetY) {
+    return;
+  };
+
+  ;
+
+  Gate.prototype.render = function (ctx) {
+    ctx.save(); // base
+
+    ctx.fillStyle = "#cccccc";
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 2;
+    ctx.translate(this.position.x, this.position.y);
+    ctx.rotate(this.rotation); // draw the wires coming in
+
+    ctx.beginPath();
+
+    if (this.inputSockets.length === 2) {
+      ctx.moveTo(this.size.x * -0.2, this.size.y * -0.5);
+      ctx.lineTo(this.size.x * -0.2, 0);
+      ctx.moveTo(this.size.x * 0.2, this.size.y * -0.5);
+      ctx.lineTo(this.size.x * 0.2, 0);
+      ctx.stroke();
+    }
+
+    this.drawGate(ctx);
+    ctx.restore();
+  };
+
+  return Gate;
+}();
+
+var AndGate =
+/** @class */
+function (_super) {
+  __extends(AndGate, _super);
+
+  function AndGate(x, y, size, degrees) {
+    return _super.call(this, x, y, size, degrees, 2) || this;
+  }
+
+  AndGate.prototype.drawGate = function (ctx) {
+    ctx.beginPath();
+    ctx.moveTo(this.size.x * 0.4, -this.size.y * 0.4);
+    ctx.lineTo(this.size.x * 0.4, 0);
+    ctx.arc(0, 0, this.size.x * 0.4, 0, Math.PI);
+    ctx.lineTo(-this.size.x * 0.4, -this.size.y * 0.4);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.fill();
+  };
+
+  ;
+
+  AndGate.prototype.evaluate = function (bits) {
+    return [bits[0] && bits[1]];
+  };
+
+  ;
+  return AndGate;
+}(Gate);
+
+exports.AndGate = AndGate;
+
+var OrGate =
+/** @class */
+function (_super) {
+  __extends(OrGate, _super);
+
+  function OrGate(x, y, size, degrees) {
+    return _super.call(this, x, y, size, degrees, 2) || this;
+  }
+
+  OrGate.prototype.drawGate = function (ctx) {
+    var s = this.size.x;
+    ctx.beginPath();
+    ctx.moveTo(s * 0.4, s * -0.4);
+    ctx.quadraticCurveTo(s * 0.4, s * 0.1, 0, s * 0.4);
+    ctx.quadraticCurveTo(s * -0.4, s * 0.1, s * -0.4, s * -0.4);
+    ctx.quadraticCurveTo(s * 0, s * -0.2, s * 0.4, s * -0.4);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.fill();
+  };
+
+  ;
+
+  OrGate.prototype.evaluate = function (bits) {
+    return [bits[0] || bits[1]];
+  };
+
+  ;
+  return OrGate;
+}(Gate);
+
+exports.OrGate = OrGate;
+
+var XorGate =
+/** @class */
+function (_super) {
+  __extends(XorGate, _super);
+
+  function XorGate(x, y, size, degrees) {
+    return _super.call(this, x, y, size, degrees, 2) || this;
+  }
+
+  XorGate.prototype.drawGate = function (ctx) {
+    var s = this.size.x; // do the or's path...
+
+    ctx.beginPath();
+    ctx.moveTo(s * 0.4, s * -0.4);
+    ctx.quadraticCurveTo(s * 0.4, s * 0.1, 0, s * 0.4);
+    ctx.quadraticCurveTo(s * -0.4, s * 0.1, s * -0.4, s * -0.4);
+    ctx.quadraticCurveTo(s * 0, s * -0.2, s * 0.4, s * -0.4);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.fill(); // and the extra thing
+
+    ctx.beginPath();
+    ctx.moveTo(s * -0.4, s * -0.5);
+    ctx.quadraticCurveTo(s * 0, s * -0.3, s * 0.4, s * -0.5);
+    ctx.stroke();
+  };
+
+  ;
+
+  XorGate.prototype.evaluate = function (bits) {
+    return [bits[0] !== bits[1]];
+  };
+
+  ;
+  return XorGate;
+}(Gate); // Doesn't extend Gate because it only has 1 input and is smaller
+
+
+exports.XorGate = XorGate;
+
+var Not =
+/** @class */
+function (_super) {
+  __extends(Not, _super);
+
+  function Not(x, y, size, degrees) {
+    return _super.call(this, x, y, size, degrees, 1) || this;
+  }
+
+  Not.prototype.drawGate = function (ctx) {
+    var s = this.size.y; // wire in
+
+    ctx.beginPath();
+    ctx.moveTo(0, s * -0.5);
+    ctx.lineTo(0, 0);
+    ctx.stroke(); // triangle for the not
+
+    ctx.beginPath();
+    ctx.moveTo(0, s * 0.2);
+    ctx.lineTo(s * -0.25, s * -0.35);
+    ctx.lineTo(s * 0.25, s * -0.35);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(0, s * 0.3, s * 0.1, 0, 2 * Math.PI);
+    ctx.stroke();
+    ctx.fill();
+  };
+
+  Not.prototype.render = function (ctx) {
+    Gate.prototype.render.call(this, ctx);
+  };
+
+  ;
+
+  Not.prototype.onClick = function (offsetX, offsetY) {};
+
+  ;
+
+  Not.prototype.evaluate = function (bits) {
+    return [!bits[0]];
+  };
+
+  ;
+  return Not;
+}(Gate);
+
+exports.Not = Not;
 },{}],"AdderExploration.ts":[function(require,module,exports) {
 "use strict";
 
@@ -554,6 +823,8 @@ var _OutputBit = _interopRequireDefault(require("./OutputBit"));
 var _Adder = _interopRequireDefault(require("./Adder"));
 
 var _Wire = _interopRequireDefault(require("./Wire"));
+
+var _Gates = require("./Gates");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -623,6 +894,47 @@ function (_super) {
       _this.outputComponents.push(output);
     }
 
+    var andGate = new _Gates.AndGate(365, 240, 60, 0);
+    var orGate = new _Gates.OrGate(425, 240, 60, 0);
+    var xorGate = new _Gates.XorGate(485, 240, 60, 0);
+    var not = new _Gates.Not(545, 240, 60, 0);
+
+    _this.components.push(andGate);
+
+    _this.components.push(orGate);
+
+    _this.components.push(xorGate);
+
+    _this.components.push(not);
+
+    for (var i = 0; i < 7; i++) {
+      var bit = new _InputBit.default(350 + i * 30, 180);
+
+      _this.components.push(bit);
+
+      if (i < 2) {
+        andGate.inputWires.push(new _Wire.default(bit, 0, []));
+      } else if (i < 4) {
+        orGate.inputWires.push(new _Wire.default(bit, 0, []));
+      } else if (i < 6) {
+        xorGate.inputWires.push(new _Wire.default(bit, 0, []));
+      } else {
+        not.inputWires.push(new _Wire.default(bit, 0, []));
+      }
+    }
+
+    var testGates = [andGate, orGate, xorGate, not];
+
+    for (var i = 0; i < 4; i++) {
+      var output = new _OutputBit.default(365 + 60 * i, 300);
+
+      _this.components.push(output);
+
+      _this.outputComponents.push(output);
+
+      output.inputWires.push(new _Wire.default(testGates[i], 0, []));
+    }
+
     return _this;
   }
 
@@ -631,7 +943,7 @@ function (_super) {
 
 var _default = AdderExploration;
 exports.default = _default;
-},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./Adder":"Adder.ts","./Wire":"Wire.ts"}],"main.ts":[function(require,module,exports) {
+},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./Adder":"Adder.ts","./Wire":"Wire.ts","./Gates":"Gates.ts"}],"main.ts":[function(require,module,exports) {
 "use strict";
 
 var _AdderExploration = _interopRequireDefault(require("./AdderExploration"));
@@ -648,6 +960,7 @@ function createCanvas(width, height) {
 var canvas = createCanvas(640, 480);
 document.getElementById('1').appendChild(canvas);
 var adderExploration = new _AdderExploration.default(canvas);
+adderExploration.update();
 
 function renderLoop() {
   adderExploration.render();
@@ -686,7 +999,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59256" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61646" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

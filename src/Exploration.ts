@@ -68,7 +68,7 @@ class Exploration {
         if (!visitedNodes[index]) {
             visitedNodes[index] = true; // prevents infinite loops, although cyclic explorations are invalid anyway
             // has not been visited, so we need to evaluate it
-            console.log("visiting " + String(index), component);
+            //console.log("visiting " + String(index), component);
             let parentBits = [];
             for (let i = 0; i < component.inputWires.length; i++) {
                 const wire = component.inputWires[i];

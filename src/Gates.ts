@@ -1,4 +1,4 @@
-// AndGate.ts
+// Gates.ts
 
 import Component from "./Component";
 import Wire from "./Wire";
@@ -13,20 +13,19 @@ abstract class Gate implements Component {
     public rotation: number;
 
     // bits=8 means an 8-bit plus 8-bit
-    constructor(x: number, y: number, rotation: number) {
+    constructor(x: number, y: number, size: number, rotation: number, bits: number) {
         this.position = {
             x: x,
             y: y,
         };
 
-        const width = 60;
         this.size = {
-            x: width,
-            y: width
+            x: size,
+            y: size
         };
 
         this.state = {
-            bits: [],
+            bits: [false],
         };
 
         this.rotation = rotation * Math.PI / 180;
@@ -34,21 +33,28 @@ abstract class Gate implements Component {
         const cosine = Math.cos(this.rotation);
         const sine = Math.sin(this.rotation);
         // transform [±0.3, -0.5]
-        this.inputSockets = [
-            {
-                x: -0.3*cosine + 0.5*sine,
-                y: -0.5*cosine - 0.3*sine,
-            },
-            {
-                x: 0.3*cosine + 0.5*sine,
-                y: -0.5*cosine + 0.3*sine
-            }
-        ];
+        if (bits == 2) {
+            this.inputSockets = [
+                {
+                    x: size * (-0.2*cosine + 0.5*sine),
+                    y: size * (-0.5*cosine - 0.2*sine),
+                },
+                {
+                    x: size * (0.2*cosine + 0.5*sine),
+                    y: size * (-0.5*cosine + 0.2*sine)
+                }
+            ];
+        } else {
+            this.inputSockets = [{
+                x: size * 0.5*sine,
+                y: size * -0.5*cosine,
+            }]
+        }
 
         this.outputSockets = [
             {
-                x: -0.5*sine,
-                y: -0.5*cosine,
+                x: size * 0.4*sine,
+                y: size * 0.4*cosine,
             }
         ];
 
@@ -59,66 +65,134 @@ abstract class Gate implements Component {
         return;
     };
 
-    drawGate(ctx: CanvasRenderingContext2D) {};
+    abstract drawGate(ctx: CanvasRenderingContext2D): void;
 
     render(ctx: CanvasRenderingContext2D) {
         ctx.save();
 
-        const left = this.position.x - this.size.x/2;
-        const top = this.position.y - this.size.y/2;
         // base
         ctx.fillStyle = "#cccccc";
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 2;
+        ctx.translate(this.position.x, this.position.y);
+        ctx.rotate(this.rotation);
+        // draw the wires coming in
         ctx.beginPath();
-        ctx.moveTo(left,                    top);
-        ctx.lineTo(left + this.size.x,      top);
-        ctx.lineTo(left + this.size.x*0.75, top + this.size.y);
-        ctx.lineTo(left + this.size.x*0.25, top + this.size.y);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        for (let i = 0; i < this.inputSockets.length; i++) {
-            let socket = this.inputSockets[i];
-            ctx.fillStyle = "#3333cc";
-            ctx.beginPath();
-            ctx.arc(this.position.x + socket.x, this.position.y + socket.y, 6, 0, 2*Math.PI);
-            ctx.fill();
-            ctx.fillStyle = "black";
-            ctx.fillText(String(i), this.position.x + socket.x, this.position.y + socket.y - 15);
-        }
-
-        for (let i = 0; i < this.outputSockets.length; i++) {
-            let socket = this.outputSockets[i];
-            ctx.fillStyle = "#333333";
-            ctx.strokeStyle = (this.state.bits[i] ? '#33ff33' : '#990000');
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(this.position.x + socket.x, this.position.y + socket.y, 6, 0, 2*Math.PI);
-            ctx.fill();
+        if (this.inputSockets.length === 2) {
+            ctx.moveTo(this.size.x * -0.2, this.size.y * -0.5);
+            ctx.lineTo(this.size.x * -0.2, 0);
+            ctx.moveTo(this.size.x * 0.2, this.size.y * -0.5);
+            ctx.lineTo(this.size.x * 0.2, 0);
             ctx.stroke();
         }
+
+        this.drawGate(ctx);
 
         ctx.restore();
     }
 
-    evaluate(bits: boolean[]): boolean[] {
-        let num1 = 0, num2 = 0;
-        // cheating here but that's not the point
-        for (let i = 0; i < this.numBits; i++) {
-            num1 += Number(bits[i]) * (1 << i);
-            num2 += Number(bits[i + this.numBits]) * (1 << i);
-        }
+    abstract evaluate(bits: boolean[]): boolean[];
+}
 
-        const answer = num1 + num2;
-        let answerBits = Array(this.numBits + 1);
-        for (let i = 0; i <= this.numBits; i++) {
-            answerBits[i] = (answer & (1 << i)) > 0;
-        }
-        console.log(answerBits);
-        return answerBits;
+class AndGate extends Gate {
+    constructor(x: number, y: number, size: number, degrees: number) {
+        super(x, y, size, degrees, 2);
     }
+    drawGate(ctx: CanvasRenderingContext2D) {
+        ctx.beginPath();
+        ctx.moveTo(this.size.x * 0.4, -this.size.y * 0.4);
+        ctx.lineTo(this.size.x * 0.4, 0);
+        ctx.arc(0, 0, this.size.x * 0.4, 0, Math.PI);
+        ctx.lineTo(-this.size.x * 0.4, -this.size.y * 0.4);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.fill();
+    };
+    evaluate(bits: boolean[]): boolean[] {
+        return [bits[0] && bits[1]];
+    };
+}
+
+class OrGate extends Gate {
+    constructor(x: number, y: number, size: number, degrees: number) {
+        super(x, y, size, degrees, 2);
+    }
+    drawGate(ctx: CanvasRenderingContext2D) {
+        const s = this.size.x;
+        ctx.beginPath();
+        ctx.moveTo(s * 0.4, s * -0.4);
+        ctx.quadraticCurveTo(s * 0.4, s * 0.1, 0, s * 0.4);
+        ctx.quadraticCurveTo(s * -0.4, s * 0.1, s * -0.4, s * -0.4);
+        ctx.quadraticCurveTo(s * 0, s * -0.2, s * 0.4, s * -0.4);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.fill();
+    };
+    evaluate(bits: boolean[]): boolean[] {
+        return [bits[0] || bits[1]];
+    };
+}
+
+class XorGate extends Gate {
+    constructor(x: number, y: number, size: number, degrees: number) {
+        super(x, y, size, degrees, 2);
+    }
+    drawGate(ctx: CanvasRenderingContext2D) {
+        const s = this.size.x;
+        // do the or's path...
+        ctx.beginPath();
+        ctx.moveTo(s * 0.4, s * -0.4);
+        ctx.quadraticCurveTo(s * 0.4, s * 0.1, 0, s * 0.4);
+        ctx.quadraticCurveTo(s * -0.4, s * 0.1, s * -0.4, s * -0.4);
+        ctx.quadraticCurveTo(s * 0, s * -0.2, s * 0.4, s * -0.4);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.fill();
+        // and the extra thing
+        ctx.beginPath();
+        ctx.moveTo(s * -0.4, s * -0.5);
+        ctx.quadraticCurveTo(s * 0, s * -0.3, s * 0.4, s * -0.5);
+        ctx.stroke();
+    };
+    evaluate(bits: boolean[]): boolean[] {
+        return [bits[0] !== bits[1]];
+    };
+}
+// Doesn't extend Gate because it only has 1 input and is smaller
+class Not extends Gate {
+    constructor(x: number, y: number, size: number, degrees: number) {
+        super(x, y, size, degrees, 1);
+    }
+
+    drawGate(ctx: CanvasRenderingContext2D) {
+        const s = this.size.y;
+        // wire in
+        ctx.beginPath();
+        ctx.moveTo(0, s * -0.5);
+        ctx.lineTo(0, 0);
+        ctx.stroke();
+        // triangle for the not
+        ctx.beginPath();
+        ctx.moveTo(0, s * 0.2);
+        ctx.lineTo(s * -0.25, s * -0.35);
+        ctx.lineTo(s * 0.25, s * -0.35);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(0, s * 0.3, s * 0.1, 0, 2*Math.PI);
+        ctx.stroke();
+        ctx.fill();
+    }
+
+    render(ctx: CanvasRenderingContext2D) {
+        Gate.prototype.render.call(this, ctx);
+    };
+    onClick(offsetX: number, offsetY: number) {};
+    evaluate(bits: boolean[]): boolean[] {
+        return [!bits[0]];
+    };
 }
 
 export {AndGate, OrGate, XorGate, Not};

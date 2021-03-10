@@ -13,16 +13,15 @@ class Adder implements Component {
     public numBits: number;
 
     // bits=8 means an 8-bit plus 8-bit
-    constructor(x: number, y: number, bits: number) {
+    constructor(x: number, y: number, bits: number, width: number = bits*50) {
         this.position = {
             x: x,
             y: y,
         };
 
-        const width = 200;
         this.size = {
             x: width,
-            y: 100
+            y: 100,
         };
 
         this.state = {

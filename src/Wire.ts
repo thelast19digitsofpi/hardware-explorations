@@ -22,7 +22,9 @@ class Wire {
     }
 
     render(ctx: CanvasRenderingContext2D, from: {x: number, y: number}) {
-        ctx.strokeStyle = "2px solid black";
+        ctx.save();
+        ctx.strokeStyle = "#333";
+        ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(from.x, from.y);
         for (let i = 0; i < this.waypoints.length; i++) {
@@ -31,6 +33,7 @@ class Wire {
         const endOffset = this.toComponent.outputSockets[this.toOutput];
         ctx.lineTo(endOffset.x + this.toComponent.position.x, endOffset.y + this.toComponent.position.y);
         ctx.stroke();
+        ctx.restore();
     }
 }
 
