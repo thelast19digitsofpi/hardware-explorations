@@ -130,7 +130,7 @@ class Adder implements Component {
         for (let i = 0; i <= this.numBits; i++) {
             answerBits[i] = (answer & (1 << i)) > 0;
         }
-        console.log(answerBits);
+        //console.log(answerBits);
         return answerBits;
     }
 }

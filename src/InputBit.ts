@@ -11,14 +11,14 @@ class InputBit implements Component {
     inputWires: [];
     outputSockets: {x: number, y: number}[];
 
-    constructor(x: number, y: number, value: boolean = false) {
+    constructor(x: number, y: number, value: boolean = false, size: number = 20) {
         this.position = {
             x: x,
             y: y,
         };
         this.size = {
-            x: 20,
-            y: 20,
+            x: size,
+            y: size,
         };
 
         this.state = {
@@ -49,6 +49,7 @@ class InputBit implements Component {
     onClick(_offsetX: number, _offsetY: number): void {
         console.log("[InputBit] clicked");
         this.state.active = !this.state.active;
+        this.state.bits[0] = this.state.active;
         // bits will be updated when everything is
     };
 

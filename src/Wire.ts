@@ -2,19 +2,35 @@
 
 import Component from "./Component"
 
+type WireOptions = {color?: string};
+
 // not sure a wire really is a component but it uses them
 class Wire {
     // I use "from" and "to" because "input" and "output" are ambiguous
     toComponent: Component;
     toOutput: number;
 
+    color: string;
+
     // in case you want the wire to bend
     waypoints: Array<{x: number, y: number}> = [];
 
-    constructor(to: Component, toOutput: number, waypoints: {x: number, y: number}[]) {
+    constructor(
+        to: Component,
+        toOutput: number,
+        waypoints: {x: number, y: number}[] = [],
+        options: WireOptions = {}
+    ) {
         this.toComponent = to;
         this.toOutput = toOutput;
         this.waypoints = waypoints;
+
+        this.color = options.color ?? "#333";
+    }
+
+    get(): boolean {
+        // coerce undefined to false
+        return this.toComponent.state.bits[this.toOutput] || false;
     }
 
     addWaypoint(x: number, y: number) {
@@ -23,7 +39,7 @@ class Wire {
 
     render(ctx: CanvasRenderingContext2D, from: {x: number, y: number}) {
         ctx.save();
-        ctx.strokeStyle = "#333";
+        ctx.strokeStyle = this.color;
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(from.x, from.y);

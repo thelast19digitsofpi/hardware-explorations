@@ -235,13 +235,9 @@ exports.default = void 0;
 var InputBit =
 /** @class */
 function () {
-  function InputBit(x, y, value, size) {
+  function InputBit(x, y, value) {
     if (value === void 0) {
       value = false;
-    }
-
-    if (size === void 0) {
-      size = 20;
     }
 
     this.position = {
@@ -249,8 +245,8 @@ function () {
       y: y
     };
     this.size = {
-      x: size,
-      y: size
+      x: 20,
+      y: 20
     };
     this.state = {
       active: value,
@@ -283,8 +279,7 @@ function () {
 
   InputBit.prototype.onClick = function (_offsetX, _offsetY) {
     console.log("[InputBit] clicked");
-    this.state.active = !this.state.active;
-    this.state.bits[0] = this.state.active; // bits will be updated when everything is
+    this.state.active = !this.state.active; // bits will be updated when everything is
   };
 
   ;
@@ -311,18 +306,14 @@ exports.default = void 0;
 var OutputBit =
 /** @class */
 function () {
-  function OutputBit(x, y, size) {
-    if (size === void 0) {
-      size = 20;
-    }
-
+  function OutputBit(x, y) {
     this.position = {
       x: x,
       y: y
     };
     this.size = {
-      x: size,
-      y: size
+      x: 20,
+      y: 20
     };
     this.state = {
       bits: [false]
@@ -330,12 +321,8 @@ function () {
     this.inputSockets = [{
       x: 0,
       y: 0
-    }]; // this might be convenient
-
-    this.outputSockets = [{
-      x: 0,
-      y: 0
     }];
+    this.outputSockets = [];
     this.inputWires = [];
   }
 
@@ -357,7 +344,7 @@ function () {
   ;
 
   OutputBit.prototype.evaluate = function (bits) {
-    //console.log(bits);
+    console.log(bits);
     return bits;
   };
 
@@ -504,9 +491,9 @@ function () {
 
     for (var i = 0; i <= this.numBits; i++) {
       answerBits[i] = (answer & 1 << i) > 0;
-    } //console.log(answerBits);
+    }
 
-
+    console.log(answerBits);
     return answerBits;
   };
 
@@ -528,23 +515,12 @@ exports.default = void 0;
 var Wire =
 /** @class */
 function () {
-  function Wire(to, toOutput, waypoints, options) {
-    if (waypoints === void 0) {
-      waypoints = [];
-    }
-
-    if (options === void 0) {
-      options = {};
-    }
-
-    var _a; // in case you want the wire to bend
-
-
+  function Wire(to, toOutput, waypoints) {
+    // in case you want the wire to bend
     this.waypoints = [];
     this.toComponent = to;
     this.toOutput = toOutput;
     this.waypoints = waypoints;
-    this.color = (_a = options.color) !== null && _a !== void 0 ? _a : "#333";
   }
 
   Wire.prototype.get = function () {
@@ -561,7 +537,7 @@ function () {
 
   Wire.prototype.render = function (ctx, from) {
     ctx.save();
-    ctx.strokeStyle = this.color;
+    ctx.strokeStyle = "#333";
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(from.x, from.y);
@@ -999,8 +975,6 @@ var _Adder = _interopRequireDefault(require("./Adder"));
 
 var _Wire = _interopRequireDefault(require("./Wire"));
 
-var _Gates = require("./Gates");
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 // MultiplierExploration.ts
@@ -1038,162 +1012,34 @@ function (_super) {
   function MultiplierExploration(canvas) {
     var _this = _super.call(this, canvas) || this;
 
-    var BITS = 6;
-    var startButton = new _InputBit.default(50, 50, false, 40);
+    var adder = new _Adder.default(300, 200, 4);
 
-    _this.components.push(startButton);
+    _this.components.push(adder);
 
-    var clockAnd = new _Gates.AndGate(50, 100, 25, 0);
-    var clockNot = new _Gates.Not(50, 150, 25, 0);
-    var clockBit = new _OutputBit.default(50, 200);
-    clockAnd.inputWires.push(new _Wire.default(clockNot, 0, [{
-      x: 45,
-      y: 75
-    }, {
-      x: 30,
-      y: 75
-    }, {
-      x: 30,
-      y: 175
-    }, {
-      x: 50,
-      y: 175
-    }]));
-    clockAnd.inputWires.push(new _Wire.default(startButton, 0));
-    clockBit.inputWires.push(new _Wire.default(clockNot, 0));
-    clockNot.inputWires.push(new _Wire.default(clockAnd, 0));
-
-    _this.components.push(clockAnd, clockNot, clockBit);
-
-    _this.outputComponents.push(clockBit);
-
-    var adder = new _Adder.default(300, 200, BITS, 240);
-
-    for (var i = 0; i < BITS; i++) {
-      var d = 3;
+    for (var i = 0; i < 4; i++) {
       adder.inputWires.push(new _Wire.default(adder, i, [{
-        x: adder.position.x + adder.inputSockets[i].x,
-        y: 110 + d * i
+        x: 100 + 10 * i,
+        y: 100 + 10 * i
       }, {
-        x: 110 + d * i,
-        y: 110 + d * i
-      }, {
-        x: 110 + d * i,
-        y: 290 - d * i
-      }, {
-        x: adder.position.x + adder.outputSockets[i].x,
-        y: 290 - d * i
-      }], {
-        color: "rgba(0, 128, 128, 0.75)"
-      }));
-    } // Two inputs.
+        x: 100 + 10 * i,
+        y: 300 - 10 * i
+      }]));
+    }
 
-
-    var inputA = [];
-    var inputB = [];
-
-    for (var i = 0; i < BITS; i++) {
-      var input = new _InputBit.default(400 - i * 25, 50);
+    for (var i = 0; i < 4; i++) {
+      var input = new _InputBit.default(420 - i * 40, 50);
       adder.inputWires.push(new _Wire.default(input, 0, []));
 
       _this.components.push(input);
-
-      inputA.push(input); // in case we need it
     }
 
-    for (var i = 0; i < BITS; i++) {
-      var input = new _InputBit.default(600 - i * 25, 50); //adder.inputWires.push(new Wire(input, 0, []));
-
-      _this.components.push(input);
-
-      inputB.push(input);
-    }
-
-    for (var i = 0; i < BITS; i++) {
+    for (var i = 0; i < 4; i++) {
       var output = new _OutputBit.default(270 + i * 20, 350);
 
       _this.outputComponents.push(output);
 
       output.inputWires.push(new _Wire.default(adder, i, []));
-    } // Registers
-
-
-    var productRegister = [];
-
-    for (var i = 0; i < 2 * BITS + 1; i++) {
-      var reg = new _OutputBit.default(600 - 45 * i, 400, 20);
-      productRegister.push(reg);
-
-      _this.outputComponents.push(reg); // todo: is needed?
-
-
-      _this.components.push(reg);
-    } // Wire Coloring
-
-
-    var purple = {
-      color: "rgb(128, 0, 128)"
-    };
-    var purpleFaded = {
-      color: "rgba(128, 0, 128, 0.25)"
-    };
-    var teal = {
-      color: "rgb(0, 128, 128)"
-    };
-    var tealFaded = {
-      color: "rgba(0, 128, 128, 0.25)"
-    }; // Shifting the Multiplication Register
-
-    for (var i = 0; i < 2 * BITS + 1; i++) {
-      var regBit = productRegister[i];
-      var or = new _Gates.OrGate(regBit.position.x, regBit.position.y - 30, 20, 0);
-
-      _this.components.push(or);
-
-      regBit.inputWires.push(new _Wire.default(or, 0));
-      var and1 = new _Gates.AndGate(regBit.position.x - 10, regBit.position.y - 60, 20, 0);
-      and1.inputWires.push(new _Wire.default(clockNot, 0, [], purpleFaded)); // Shifting
-
-      if (i < 2 * BITS) {
-        and1.inputWires.push(new _Wire.default(productRegister[i + 1], 0, [{
-          x: regBit.position.x - 6,
-          y: regBit.position.y - 80
-        }, {
-          x: regBit.position.x - 21,
-          y: regBit.position.y - 80
-        }, {
-          x: regBit.position.x - 21,
-          y: regBit.position.y
-        }], purple));
-      }
-
-      var and2 = new _Gates.AndGate(regBit.position.x + 10, regBit.position.y - 60, 20, 0);
-      and2.inputWires.push(new _Wire.default(clockAnd, 0, [], tealFaded));
-
-      _this.components.push(and1, and2);
-
-      if (i >= BITS && i < 2 * BITS) {
-        // Upper Half of the Register: Connect to the adder.
-        and2.inputWires.push(new _Wire.default(adder, i - BITS, [], teal));
-      } else {
-        // Lower Half of the Register: Connect to itself.
-        and2.inputWires.push(new _Wire.default(regBit, 0, [{
-          x: regBit.position.x + 14,
-          y: regBit.position.y - 75
-        }, {
-          x: regBit.position.x + 21,
-          y: regBit.position.y - 75
-        }, {
-          x: regBit.position.x + 21,
-          y: regBit.position.y
-        }], teal));
-      }
-
-      or.inputWires.push(new _Wire.default(and1, 0));
-      or.inputWires.push(new _Wire.default(and2, 0));
     }
-
-    _this.components.push(adder);
 
     return _this;
   }
@@ -1203,241 +1049,12 @@ function (_super) {
 
 var _default = MultiplierExploration;
 exports.default = _default;
-},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./Adder":"Adder.ts","./Wire":"Wire.ts","./Gates":"Gates.ts"}],"RegisterBit.ts":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-// RegisterBit.ts
-//
-// Has an "on" input and an "off" input.
-// Does nothing if both are on or both are off.
-var RegisterBit =
-/** @class */
-function () {
-  // bits=8 means an 8-bit plus 8-bit
-  function RegisterBit(x, y, size) {
-    if (size === void 0) {
-      size = 30;
-    }
-
-    this.position = {
-      x: x,
-      y: y
-    };
-    this.size = {
-      x: size,
-      y: size
-    };
-    this.state = {
-      bits: [false]
-    }; // [0] is the off switch and [1] is the on switch
-
-    var offset = size * 0.44;
-    this.inputSockets = [{
-      x: -offset,
-      y: -offset
-    }, {
-      x: offset,
-      y: -offset
-    }];
-    this.outputSockets = [{
-      x: 0,
-      y: size / 2
-    }];
-    this.inputWires = [];
-  }
-
-  RegisterBit.prototype.onClick = function (_offsetX, _offsetY) {
-    return;
-  };
-
-  ;
-
-  RegisterBit.prototype.render = function (ctx) {
-    ctx.save();
-    var left = this.position.x - this.size.x / 2;
-    var top = this.position.y - this.size.y / 2;
-    ctx.translate(left, top); // base
-
-    ctx.fillStyle = this.state.bits[0] ? "#33ff33" : "#990000";
-    ctx.beginPath();
-    ctx.moveTo(this.size.x * 0.5, 0);
-    ctx.lineTo(this.size.x * 1.0, this.size.y * 0.5);
-    ctx.lineTo(this.size.x * 0.5, this.size.y);
-    ctx.lineTo(this.size.x * 0.0, this.size.y * 0.5);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke(); // red input
-
-    ctx.fillStyle = "#ccffff";
-    ctx.beginPath();
-    ctx.arc(this.size.x * 0.25, this.size.y * 0.25, this.size.x * 0.25, 135 * Math.PI / 180, 315 * Math.PI / 180);
-    ctx.fill();
-    ctx.stroke();
-    /*ctx.fillStyle = "#33ff33";
-    ctx.beginPath();
-    ctx.arc(this.size.x * 0.75, this.size.y * 0.25, this.size.x * 0.25, -135*Math.PI/180, 45*Math.PI/180);
-    ctx.fill();
-    ctx.stroke();*/
-
-    if (this.inputWires[0] && this.inputWires[0].get()) {
-      ctx.beginPath();
-      ctx.moveTo(this.size.x * 0.75, this.size.y * 0.25);
-      ctx.lineTo(this.size.x * 1.0, 0);
-      ctx.stroke();
-    }
-
-    ctx.restore();
-  }; // If the "set" input is on, change to the "what" input
-
-
-  RegisterBit.prototype.evaluate = function (bits) {
-    return bits[0] ? [bits[1]] : this.state.bits;
-  };
-
-  return RegisterBit;
-}();
-
-var _default = RegisterBit;
-exports.default = _default;
-},{}],"RegisterExploration.ts":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _Exploration = _interopRequireDefault(require("./Exploration"));
-
-var _Wire = _interopRequireDefault(require("./Wire"));
-
-var _RegisterBit = _interopRequireDefault(require("./RegisterBit"));
-
-var _InputBit = _interopRequireDefault(require("./InputBit"));
-
-var _OutputBit = _interopRequireDefault(require("./OutputBit"));
-
-var _Gates = require("./Gates");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-// RegisterExploration
-//
-// Exploration that shows how a register bit works.
-// Most of these (not multipliers and dividers) have the expanded version on the left and a compact version on the right.
-var __extends = void 0 && (void 0).__extends || function () {
-  var _extendStatics = function extendStatics(d, b) {
-    _extendStatics = Object.setPrototypeOf || {
-      __proto__: []
-    } instanceof Array && function (d, b) {
-      d.__proto__ = b;
-    } || function (d, b) {
-      for (var p in b) {
-        if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p];
-      }
-    };
-
-    return _extendStatics(d, b);
-  };
-
-  return function (d, b) {
-    _extendStatics(d, b);
-
-    function __() {
-      this.constructor = d;
-    }
-
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-  };
-}();
-
-var RegisterExploration =
-/** @class */
-function (_super) {
-  __extends(RegisterExploration, _super);
-
-  function RegisterExploration(canvas) {
-    var _this = _super.call(this, canvas) || this;
-
-    var inputSet = new _InputBit.default(50, 100);
-
-    _this.components.push(inputSet);
-
-    var inputWhat = new _InputBit.default(150, 100);
-
-    _this.components.push(inputWhat);
-
-    var inverter = new _Gates.Not(50, 150, 30, 0);
-
-    _this.components.push(inverter);
-
-    inverter.inputWires.push(new _Wire.default(inputSet, 0)); // recursive components are a bit weird
-
-    var andWhat = new _Gates.AndGate(140, 150, 50, 0);
-    var andStay = new _Gates.AndGate(80, 200, 50, 0);
-    var or = new _Gates.OrGate(100, 250, 50, 0);
-    andWhat.inputWires = [new _Wire.default(inputSet, 0, [{
-      x: 50,
-      y: 125
-    }]), new _Wire.default(inputWhat, 0, [])];
-    andStay.inputWires = [new _Wire.default(or, 0, [{
-      x: 50,
-      y: 175
-    }, {
-      x: 50,
-      y: 270
-    }]), new _Wire.default(inverter, 0, [{
-      x: 90,
-      y: 165
-    }, {
-      x: 50,
-      y: 165
-    }])];
-    or.inputWires = [new _Wire.default(andStay, 0, []), new _Wire.default(andWhat, 0, [])];
-
-    _this.components.push(andWhat, andStay, or);
-
-    var output = new _OutputBit.default(100, 300);
-    output.inputWires.push(new _Wire.default(or, 0));
-
-    _this.components.push(output);
-
-    _this.outputComponents.push(output); // the simplified version
-
-
-    var inputOff2 = new _InputBit.default(250, 150);
-    var inputOn2 = new _InputBit.default(350, 150);
-    var register = new _RegisterBit.default(300, 200, 40);
-    var output2 = new _OutputBit.default(300, 250);
-    register.inputWires.push(new _Wire.default(inputOff2, 0));
-    register.inputWires.push(new _Wire.default(inputOn2, 0));
-    output2.inputWires.push(new _Wire.default(register, 0));
-
-    _this.components.push(inputOn2, inputOff2, register, output2);
-
-    _this.outputComponents.push(output2);
-
-    return _this;
-  }
-
-  return RegisterExploration;
-}(_Exploration.default);
-
-var _default = RegisterExploration;
-exports.default = _default;
-},{"./Exploration":"Exploration.ts","./Wire":"Wire.ts","./RegisterBit":"RegisterBit.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./Gates":"Gates.ts"}],"main.ts":[function(require,module,exports) {
+},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./Adder":"Adder.ts","./Wire":"Wire.ts"}],"main.ts":[function(require,module,exports) {
 "use strict";
 
 var _AdderExploration = _interopRequireDefault(require("./AdderExploration"));
 
 var _MultiplierExploration = _interopRequireDefault(require("./MultiplierExploration"));
-
-var _RegisterExploration = _interopRequireDefault(require("./RegisterExploration"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -1463,12 +1080,6 @@ function createExploration(id, width, height, type) {
   canvas.addEventListener("click", function (event) {
     exploration.onClick(event.offsetX, event.offsetY);
   });
-  var controls = document.createElement("div");
-  controls.innerHTML = "\n        <form>\n            <p><strong>Speed:</strong> Slow\n                <input id=\"speed-" + id + "\" name=\"speed\" type=\"range\" min=\"0.5\" max=\"2\" step=\"0.25\" />\n                Fast\n            </p>\n        </form>\n    ";
-  controls.querySelector("#speed-" + id).addEventListener("change", function (event) {
-    exploration.updateTime = 1000 / Number(event.target.value);
-  });
-  element.appendChild(controls);
   return exploration;
 } // Explorations
 
@@ -1476,7 +1087,6 @@ function createExploration(id, width, height, type) {
 var ALL_EXPLORATIONS = [];
 ALL_EXPLORATIONS.push(createExploration('1', 640, 480, _AdderExploration.default));
 ALL_EXPLORATIONS.push(createExploration('2', 640, 480, _MultiplierExploration.default));
-ALL_EXPLORATIONS.push(createExploration('3', 400, 400, _RegisterExploration.default));
 
 function renderLoop() {
   for (var i = 0; i < ALL_EXPLORATIONS.length; i++) {
@@ -1492,7 +1102,7 @@ function renderLoop() {
 }
 
 renderLoop();
-},{"./AdderExploration":"AdderExploration.ts","./MultiplierExploration":"MultiplierExploration.ts","./RegisterExploration":"RegisterExploration.ts"}],"../../../../../usr/local/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"./AdderExploration":"AdderExploration.ts","./MultiplierExploration":"MultiplierExploration.ts"}],"../../../../../usr/local/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -1520,7 +1130,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58952" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51654" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

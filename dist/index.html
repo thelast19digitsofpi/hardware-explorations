@@ -1,11 +1,24 @@
 <!DOCTYPE html>
 <html>
 	<head>
+		<style>canvas {
+	border: 1px solid black;
+}</style>
 	</head>
 	<body>
 		<h1>Binary Operations</h1>
+		<h3>Registers</h3>
+		<p>We've seen operations like addition, where all of the logic happens at once and you see the result at the end. However, multiplication and division are more complicated, and so we need to break up the problem into several steps.</p>
+		<p>In order to do that, we need some more persistent components, something that can "remember" what it had before. That looks difficult, but we can actually implement it fairly easily with a simple trick: we take the output and wire it back into the input!</p>
+		<p>The design I am going to use is non-informatively called a "D latch". The button on the left controls which signal goes in to the </p>
+
+		<div class="exploration" id="3"></div>
+		<p>Now, of course, in practice there are easier ways to do this using transistors, but this is a little easier to grasp. Usually we think of a register as being 32 or 64 bits, but we can just repeat this design for each bit of the register. On the right I've simplified this down to a single component.</p>
 		<div class="exploration" id="1"></div>
-		<p>Nothing yet</p>
+
+		<h3>Multiplication</h3>
+		
+		<div class="exploration" id="2"></div>
 	</body>
 
 	<script src="/main.c39d6dcf.js"></script>

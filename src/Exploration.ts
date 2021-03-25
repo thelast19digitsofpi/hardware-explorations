@@ -11,16 +11,24 @@ class Exploration {
     // The idea is that all components update their state recursively starting here
     public outputComponents: Array<Component>;
 
+    public updateTime: number = 1000;
+    public lastUpdated: number = Date.now();
+
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
         this.context = canvas.getContext('2d')!;
         this.components = [];
         this.outputComponents = [];
 
-        window['exploration'] = this;
+        // TS-safe way of putting a random debug name
+        let id = Math.floor(Math.random() * 1e6);
+        Object.defineProperty(window, "exploration" + id, {
+            value: this,
+        });
+        console.log(id, this);
     }
 
-    // addComponent() maybe?
+    // todo: addComponent() maybe?
 
     render() {
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -61,6 +69,8 @@ class Exploration {
         for (let i = 0; i < this.outputComponents.length; i++) {
             this.updateComponent(this.outputComponents[i], visitedNodes);
         }
+
+        this.lastUpdated = Date.now();
     }
 
     updateComponent(component: Component, visitedNodes: {[i: number]: boolean}) {

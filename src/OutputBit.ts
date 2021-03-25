@@ -12,13 +12,14 @@ class OutputBit implements Component {
     outputSockets: { x: number; y: number; }[];
     inputWires: Wire[];
 
-    constructor(x: number, y: number) {
+    constructor(x: number, y: number, size: number = 20) {
         this.position = { x: x, y: y };
-        this.size = { x: 20, y: 20 };
+        this.size = { x: size, y: size };
         this.state = { bits: [false] };
 
         this.inputSockets = [{x: 0, y: 0}];
-        this.outputSockets = [];
+        // this might be convenient
+        this.outputSockets = [{x: 0, y: 0}];
         this.inputWires = [];
     }
     render(ctx: CanvasRenderingContext2D): void {
@@ -38,7 +39,7 @@ class OutputBit implements Component {
         return;
     };
     evaluate(bits: boolean[]): boolean[] {
-        console.log(bits);
+        //console.log(bits);
         return bits;
     };
 }
