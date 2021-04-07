@@ -13,7 +13,7 @@ class Adder implements Component {
     public numBits: number;
 
     // bits=8 means an 8-bit plus 8-bit
-    constructor(x: number, y: number, bits: number, width: number = bits*50) {
+    constructor(x: number, y: number, bits: number, width: number = bits*50, height: number = width/2) {
         this.position = {
             x: x,
             y: y,
@@ -21,7 +21,7 @@ class Adder implements Component {
 
         this.size = {
             x: width,
-            y: 100,
+            y: height,
         };
 
         this.state = {

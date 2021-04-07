@@ -53,7 +53,7 @@ abstract class Gate implements Component {
 
         this.outputSockets = [
             {
-                x: size * 0.4*sine,
+                x: size * -0.4*sine,
                 y: size * 0.4*cosine,
             }
         ];

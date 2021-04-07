@@ -40,6 +40,7 @@ class OutputBit implements Component {
     };
     evaluate(bits: boolean[]): boolean[] {
         //console.log(bits);
+        //console.log("evaluating", this.position);
         return bits;
     };
 }

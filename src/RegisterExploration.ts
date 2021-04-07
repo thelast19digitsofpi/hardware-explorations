@@ -29,7 +29,7 @@ class RegisterExploration extends Exploration {
         const andStay = new AndGate(80, 200, 50, 0);
         const or = new OrGate(100, 250, 50, 0);
 
-        andWhat.inputWires= [
+        andWhat.inputWires = [
             new Wire(inputSet, 0, [
                 {x: 50, y: 125},
             ]),

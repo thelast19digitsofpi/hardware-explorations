@@ -15,7 +15,7 @@ interface Component {
     size: {x: number, y: number},
     inputSockets: {x: number, y: number}[],
     outputSockets: {x: number, y: number}[],
-    inputWires: Wire[],
+    inputWires: (Wire | null)[],
 
     render: (ctx: CanvasRenderingContext2D) => void,
     onClick: (offsetX: number, offsetY: number) => void,
@@ -23,3 +23,4 @@ interface Component {
 }
 
 export default Component;
+export {StateObject};

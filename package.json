@@ -8,5 +8,10 @@
 	},
 	"scripts": {
 		"tsc": "tsc"
+	},
+	"targets": {
+		"browser": {
+			"sourceMap": true
+		}
 	}
 }

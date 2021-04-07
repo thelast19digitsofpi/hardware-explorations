@@ -29,6 +29,8 @@ class Wire {
     }
 
     get(): boolean {
+        // empty wire is zero
+        if (!this.toComponent) return false;
         // coerce undefined to false
         return this.toComponent.state.bits[this.toOutput] || false;
     }
@@ -38,6 +40,7 @@ class Wire {
     }
 
     render(ctx: CanvasRenderingContext2D, from: {x: number, y: number}) {
+        if (!this.toComponent) return;
         ctx.save();
         ctx.strokeStyle = this.color;
         ctx.lineWidth = 2;
