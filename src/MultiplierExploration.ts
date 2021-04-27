@@ -6,26 +6,37 @@ import OutputBit from './OutputBit';
 import RegisterBit from './RegisterBit';
 import Adder from './Adder';
 import Wire from './Wire';
-import {AndGate, OrGate, XorGate, Not} from './Gates';
+import Clock from './Clock';
+import Display from './Display';
+import {AndGate, OrGate, Not} from './Gates';
 import ChoiceGate from './ChoiceGate';
 
 class MultiplierExploration extends Exploration {
+    countdown: Clock;
+    regSpacing: number;
+    regRight: number;
+    numBits: number;
+    startButton: InputBit;
+
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
+        canvas.width = 800;
+        canvas.height = 600;
 
         const BITS = 6;
+        this.numBits = BITS;
 
-        const startButton = new InputBit(600, 40, false, 50);
-        const startNot = new Not(550, 40, 30, 90);
+        const startButton = new InputBit(760, 40, false, 50);
+        this.startButton = startButton;
+        const startNot = new Not(680, 40, 30, 90);
         startNot.inputWires.push(new Wire(startButton, 0));
         this.components.push(startNot);
 
-        const clockX = 595;
+        const clockX = 755;
 
         const clockAnd = new AndGate(clockX, 100, 25, 0);
         const clockNot = new Not(clockX, 150, 25, 0);
         const clockBit = new OutputBit(clockX, 200);
-
 
         clockAnd.inputWires.push(new Wire(clockNot, 0, [
             {x: clockX - 5, y: 75},
@@ -39,13 +50,26 @@ class MultiplierExploration extends Exploration {
         this.components.push(clockAnd, clockNot, clockBit);
         this.outputComponents.push(clockBit);
 
-        const adder = new Adder(160, 190, BITS, 210, 90);
+        // ironic that I called the above a "clock"
+        // when the clock strikes 2*BITS + 1 it will end the operation
+        const countdown = new Clock(730, 260, 14, 80, 50);
+        countdown.inputWires.push(new Wire(startButton, 0, [
+            {x: countdown.position.x, y: countdown.position.y - 40},
+            {x: 705, y: countdown.position.y - 40},
+            {x: 705, y: 40},
+        ]));
+        this.countdown = countdown;
+
+        const adder = new Adder(180, 190, BITS, 270, 90);
+        //this.outputComponents.push(adder);
 
         // The "Register" that really isn't.
         // The Add and Shift steps should be successfully separated...
         let productRegister = [];
+        this.regRight = 730;
+        this.regSpacing = 55;
         for (let i = 0; i < 2*BITS+1; i++) {
-            const reg = new OutputBit(600 - 45*i, 400, 20);
+            const reg = new OutputBit(this.regRight - this.regSpacing*i, 430, 20);
             productRegister.push(reg);
             this.outputComponents.unshift(reg); // todo: is needed?
             this.components.push(reg);
@@ -53,16 +77,16 @@ class MultiplierExploration extends Exploration {
 
         // Wire Coloring
         const purple = {color: "rgb(128, 32, 128)"};
-        const purpleFaded = {color: "rgba(128, 0, 128, 0.25)"};
+        const purpleFaded = {color: "rgba(128, 0, 128, 0.4)"};
         const teal = {color: "rgb(0, 128, 128)"};
-        const tealFaded = {color: "rgba(0, 128, 128, 0.25)"};
+        const tealFaded = {color: "rgba(0, 128, 128, 0.35)"};
 
         // Wires from the registers to the adder.
         for (let i = 0; i < BITS; i++) {
             const d = 3;
             const bit = productRegister[i + BITS];
             // basically, we want the most significant bit to be highest
-            const y1 = bit.position.y + 20 + d * (BITS - i);
+            const y1 = bit.position.y + 15 + d * (BITS - i);
             adder.inputWires.push(new Wire(bit, 0, [
                 {x: adder.position.x + adder.inputSockets[i].x, y: 110 + d*i},
                 {x: 10 + d*i, y: 110 + d*i},
@@ -72,72 +96,70 @@ class MultiplierExploration extends Exploration {
         }
 
         // And Gates coming out of the adder (for the clock).
-        let adderAndGates = [];
+        let adderChoiceGates = [];
         for (let i = 0; i <= BITS; i++) {
             // and gate
-            const x = adder.position.x + adder.outputSockets[i].x;
+            //const x = adder.position.x + adder.outputSockets[i].x;
             const y = adder.position.y + adder.outputSockets[0].y; // put them all on the same line
             // space them a bit
-            const and = new AndGate(x + 4 * ((BITS - 1)/2 - i), y + 40, 20, 0);
-            and.inputWires.push(new Wire(adder, i));
-            adderAndGates.push(and);
-            this.components.push(and);
+            const choice = new ChoiceGate(productRegister[i+BITS].position.x + 7, y + 50, 10);
+            // this will be input 0 temporarily but we will unshift later
+            choice.inputWires.push(new Wire(adder, i));
+            adderChoiceGates.push(choice);
+            this.components.push(choice);
         }
 
         // Shifting the Multiplication Register
         for (let i = 0; i < 2*BITS + 1; i++) {
             const regBit = productRegister[i];
-            const or = new OrGate(regBit.position.x, regBit.position.y - 30, 20, 0);
+            /*const or = new OrGate(regBit.position.x, regBit.position.y - 30, 20, 0);
             this.components.push(or);
-            regBit.inputWires.push(new Wire(or, 0));
+            regBit.inputWires.push(new Wire(or, 0));*/
 
-            const and1 = new AndGate(regBit.position.x - 10, regBit.position.y - 60, 20, 0);
-            and1.inputWires.push(new Wire(clockNot, 0, [
-                {x: regBit.position.x + 6, y: regBit.position.y - 100},
-                {x: 540 - 2*i, y: regBit.position.y - 110 - 1*i},
+            const choice = new ChoiceGate(regBit.position.x, regBit.position.y - 60, 14);
+            // Selection Wire (from clock's NOT)
+            choice.inputWires.push(new Wire(clockNot, 0, [
+                {x: choice.position.x - 18, y: choice.position.y},
+                {x: choice.position.x - 18, y: choice.position.y - 24},
+                {x: 630 - 2*i, y: choice.position.y - 60 - i},
             ], tealFaded));
             // Shifting
             if (i < 2*BITS) {
-                and1.inputWires.push(new Wire(productRegister[i+1], 0, [
-                    {x: regBit.position.x - 6, y: regBit.position.y - 80},
-                    {x: regBit.position.x - 21, y: regBit.position.y - 80},
-                    {x: regBit.position.x - 21, y: regBit.position.y},
+                choice.inputWires.push(new Wire(productRegister[i+1], 0, [
+                    {x: regBit.position.x - 7, y: choice.position.y - 20},
+                    {x: regBit.position.x - 24, y: choice.position.y - 20},
+                    {x: regBit.position.x - 24, y: regBit.position.y},
                 ], teal));
+            } else {
+                choice.inputWires.push(null);
             }
-            const and2 = new AndGate(regBit.position.x + 10, regBit.position.y - 60, 20, 0);
-            and2.inputWires.push(new Wire(clockAnd, 0, [
-                {x: regBit.position.x + 6, y: regBit.position.y - 100},
-                {x: 540 - 2*i, y: regBit.position.y - 110 - 1*i},
-            ], purpleFaded));
-            this.components.push(and1, and2);
-
             if (i >= BITS) {
-                // Upper Half of the Register: Connect to the adder.
-                and2.inputWires.push(new Wire(adderAndGates[i - BITS], 0, [], purple));
+                // Upper Half of the Register: Conditionally connect to the adder.
+                choice.inputWires.push(new Wire(adderChoiceGates[i - BITS], 0, [], purple));
             } else {
                 // Lower Half of the Register: Connect to itself.
-                and2.inputWires.push(new Wire(regBit, 0, [
-                    {x: regBit.position.x + 14, y: regBit.position.y - 75},
-                    {x: regBit.position.x + 21, y: regBit.position.y - 75},
-                    {x: regBit.position.x + 21, y: regBit.position.y},
+                choice.inputWires.push(new Wire(regBit, 0, [
+                    {x: regBit.position.x + 7, y: choice.position.y - 20},
+                    {x: regBit.position.x + 20, y: choice.position.y - 20},
+                    {x: regBit.position.x + 20, y: regBit.position.y},
                 ], purple));
             }
 
-            or.inputWires.push(new Wire(and1, 0));
-            or.inputWires.push(new Wire(and2, 0));
+            this.components.push(choice);
+            regBit.inputWires.push(new Wire(choice, 0));
         }
 
         // Input Numbers (A and B).
         let inputA = [];
         let inputB = [];
         for (let i = 0; i < BITS; i++) {
-            const input = new InputBit(270 - i*25, 60);
+            const input = new InputBit(320 - i*30, 60, false, 25);
             this.components.push(input);
             adder.inputWires.push(new Wire(input, 0));
             inputA.push(input); // in case we need it
         }
         for (let i = 0; i < BITS; i++) {
-            const input = new InputBit(540 - i*45, 60);
+            const input = new InputBit(630 - i*50, 60, false, 25);
             this.components.push(input);
             inputB.push(input);
         }
@@ -174,9 +196,9 @@ class MultiplierExploration extends Exploration {
 
             // If the clock is off, the registers need to use the input bits
             choice.inputWires.push(new Wire(inputB[i], 0));
-            // Otherwise use the
+            // Otherwise hold
             choice.inputWires.push(new Wire(multiplierRegister[i+1] || null, 0, [
-                {x: reg.position.x + 14, y: reg.position.y - 80},
+                {x: reg.position.x + 15, y: reg.position.y - 80},
                 {x: reg.position.x - 22, y: reg.position.y - 80},
                 {x: reg.position.x - 22, y: reg.position.y + 10},
             ]));
@@ -186,25 +208,90 @@ class MultiplierExploration extends Exploration {
 
         // Control Wire from the final register bit to the adder's output
         const regLSB = multiplierRegister[0];
-        for (let i = 0; i < BITS; i++) {
-            const and = adderAndGates[i];
-            console.log(regLSB);
-            and.inputWires.push(new Wire(regLSB, 0, [
-                {x: and.position.x + 10, y: and.position.y - 20},
-                {x: 282, y: and.position.y - 20},
-                {x: 282, y: regLSB.position.y + 20},
+        for (let i = 0; i <= BITS; i++) {
+            const choice = adderChoiceGates[i];
+            // Selector Wire
+            choice.inputWires.unshift(new Wire(regLSB, 0, [
+                {x: choice.position.x - 13, y: choice.position.y},
+                {x: choice.position.x - 13, y: choice.position.y - 20},
+                {x: 400, y: choice.position.y - 20},
+                {x: 400, y: regLSB.position.y + 20},
                 {x: regLSB.position.x, y: regLSB.position.y + 20},
             ], {color: "rgb(127, 127, 127)"}));
+
+            // Else wire
+            const outBit = productRegister[i + BITS];
+            choice.inputWires.push(new Wire(outBit, 0, [
+                {x: choice.position.x + 4, y: choice.position.y - 10},
+                {x: choice.position.x + 11, y: choice.position.y - 10},
+                {x: outBit.position.x + 18, y: 305 + 2*i},
+                {x: outBit.position.x + 18, y: outBit.position.y - 18},
+            ], purpleFaded));
         }
 
-        const testBit = new OutputBit(640, 100);
-        this.components.push(testBit);
-        this.outputComponents.push(testBit);
-        testBit.inputWires.push(new Wire(clockAnd, 0, [], purple));
+        // Answer Register
+        const finalAnswer: RegisterBit[] = [];
+        for (let i = 0; i <= 2*BITS; i++) {
+            const offset = 5;
+            const bit = new RegisterBit(productRegister[i].position.x + offset, 530, 30);
+            this.components.push(bit);
+            this.outputComponents.push(bit);
+
+            // set wire: on at the 12th clock cycle
+            bit.inputWires.push(new Wire(countdown, 12, [
+                {x: bit.position.x - 15, y: bit.position.y - 15},
+                {x: bit.position.x - 15, y: bit.position.y - 30},
+                {x: 780, y: bit.position.y - 30},
+                {x: 780, y: countdown.position.y + 40},
+                {x: countdown.position.x + countdown.outputSockets[12].x, y: countdown.position.y + 40},
+            ], {color: "rgb(128, 128, 128)"}));
+
+            // what wire: from the corresponding from the product "register"
+            const from = productRegister[i];
+            const diagonal = 16;
+            bit.inputWires.push(new Wire(from, 0, [
+                {x: bit.position.x + diagonal, y: bit.position.y - diagonal},
+                {x: from.position.x + diagonal + offset, y: from.position.y + diagonal + offset},
+            ]));
+
+            finalAnswer.push(bit);
+        }
+
+        // finally, add displays
+        const displayA = new Display(245, 25, inputA, false, 30);
+        const displayB = new Display(510, 20, inputB, false, 30);
+        const displayEnd = new Display(400, 575, finalAnswer, false, 48);
+        displayEnd.size.x = 2*displayEnd.size.y;
 
         // rendering trick, because input wires are drawn with a component
-        // so rendering these last makes it look cleaner
-        this.components.push(adder, startButton);
+        // so pushing these last makes them render last so it looks cleaner
+        this.components.push(adder, countdown, startButton, displayA, displayB, displayEnd);
+    }
+
+    afterRender = () => {
+        const ctx = this.context;
+
+        const cycle = this.countdown.state.clock;
+        if (cycle >= 0) {
+            const n = 5 - ((cycle + 1) >> 1);
+            if (n >= 0) {
+                ctx.fillStyle = "rgba(255,255,255,0.75)";
+                const west = (this.regRight - this.regSpacing * n) - 20;
+                const north = 340, south = 480;
+                const east = (this.regRight) + 22;
+                ctx.beginPath();
+                ctx.moveTo(west, north);
+                ctx.lineTo(east, north);
+                ctx.lineTo(east, south);
+                ctx.lineTo(west, south);
+                ctx.fill();
+            }
+        }
+
+        if (cycle == 2*this.numBits + 1) {
+            this.startButton.state.active = false;
+            this.startButton.state.bits = [false];
+        }
     }
 }
 

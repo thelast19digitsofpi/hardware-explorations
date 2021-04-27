@@ -11,6 +11,7 @@ class OutputBit implements Component {
     inputSockets: { x: number; y: number; }[];
     outputSockets: { x: number; y: number; }[];
     inputWires: Wire[];
+    beforeUpdate: undefined;
 
     constructor(x: number, y: number, size: number = 20) {
         this.position = { x: x, y: y };

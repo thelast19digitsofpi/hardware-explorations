@@ -12,49 +12,33 @@ class Display implements Component {
     public inputSockets: {x: number, y: number}[];
     public inputWires: Wire[];
     public outputSockets: {x: number, y: number}[];
-    public numBits: number;
+    public signed: boolean;
+    public components: Component[];
+    beforeUpdate: undefined;
 
     // bits=8 means an 8-bit plus 8-bit
-    constructor(x: number, y: number, bits: number) {
+    // note that I'm thinking about using this for InputBits, OutputBits, and RegisterBits
+    // and those only have one state to get
+    constructor(x: number, y: number, components: Component[], signed: boolean = false, size: number = 30) {
         this.position = {
             x: x,
             y: y,
         };
 
-        const width = 200;
         this.size = {
-            x: width,
-            y: 100
+            x: size * 2,
+            y: size
         };
+        this.signed = signed;
+        this.components = components;
 
         this.state = {
+            // unused
             bits: [],
         };
-
-        this.numBits = bits;
+        // unused, it doesn't use wires because they make visual clutter
         this.inputSockets = [];
-        // spacing between the bits
-        const spacing = width / (bits + 1);
-        for (let i = 0; i < bits; i++) {
-            this.inputSockets.push({
-                x: -spacing * (i - bits/2) + width/2,
-                y: -this.size.y/2,
-            });
-        }
-
         this.outputSockets = [];
-        for (let i = 0; i < bits; i++) {
-            this.outputSockets.push({
-                x: -spacing * (i - (bits-1)/2),
-                y: this.size.y/2,
-            });
-        }
-        // carry
-        this.outputSockets.push({
-            x: -this.size.x*0.375,
-            y: 0,
-        });
-
         this.inputWires = [];
     }
 
@@ -78,29 +62,26 @@ class Display implements Component {
         ctx.fill();
         ctx.stroke();
 
+        // get the state
+        let totalValue = 0;
+        for (let i = 0; i < this.components.length; i++) {
+            const comp = this.components[i];
+            const value = (comp.state.bits[0] ? 1 : 0) << i;
+            // use 2's complement if signed on the last bit
+            totalValue += (this.signed && i == this.components.length-1) ? -value : value;
+        }
+
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.font = Math.round(Math.min(this.size.x/2, this.size.y*2/3)) + "px monospace";
-
+        ctx.font = Math.round(this.size.y*4/5) + "px monospace";
+        ctx.fillStyle = "#000";
+        ctx.fillText(String(totalValue), this.position.x, this.position.y);
 
         ctx.restore();
     }
 
     evaluate(bits: boolean[]): boolean[] {
-        let num1 = 0, num2 = 0;
-        // cheating here but that's not the point
-        for (let i = 0; i < this.numBits; i++) {
-            num1 += Number(bits[i]) * (1 << i);
-            num2 += Number(bits[i + this.numBits]) * (1 << i);
-        }
-
-        const answer = num1 + num2;
-        let answerBits = Array(this.numBits + 1);
-        for (let i = 0; i <= this.numBits; i++) {
-            answerBits[i] = (answer & (1 << i)) > 0;
-        }
-        console.log(answerBits);
-        return answerBits;
+        return [];
     }
 }
 

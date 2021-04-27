@@ -13,6 +13,7 @@ class RegisterBit implements Component {
     public inputSockets: {x: number, y: number}[];
     public inputWires: Wire[];
     public outputSockets: {x: number, y: number}[];
+    beforeUpdate: undefined;
 
     // bits=8 means an 8-bit plus 8-bit
     constructor(x: number, y: number, size: number = 30) {

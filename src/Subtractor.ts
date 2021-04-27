@@ -3,7 +3,7 @@
 import Component from "./Component";
 import Wire from "./Wire";
 
-class Adder implements Component {
+class Subtractor implements Component {
     public state: {bits: boolean[]};
     public position: {x: number, y: number};
     public size: {x: number, y: number};
@@ -32,7 +32,7 @@ class Adder implements Component {
 
         this.inputSockets = [];
         // spacing between the bits
-        const spacing = width / (2 * bits);
+        const spacing = width / (2 * bits + 1);
         for (let i = 0; i < bits; i++) {
             this.inputSockets.push({
                 x: -spacing * (i + 0.5) + width/2,
@@ -73,6 +73,9 @@ class Adder implements Component {
         ctx.fillStyle = "#cccccc";
         ctx.beginPath();
         ctx.moveTo(left,                    top);
+        ctx.lineTo(left + this.size.x*0.46, top);
+        ctx.lineTo(left + this.size.x*0.5,  top + this.size.x*0.05);
+        ctx.lineTo(left + this.size.x*0.54, top);
         ctx.lineTo(left + this.size.x,      top);
         ctx.lineTo(left + this.size.x*0.75, top + this.size.y);
         ctx.lineTo(left + this.size.x*0.25, top + this.size.y);
@@ -89,7 +92,7 @@ class Adder implements Component {
             ctx.arc(this.position.x + socket.x, this.position.y + socket.y, 6, 0, 2*Math.PI);
             ctx.fill();
             ctx.fillStyle = "black";
-            ctx.fillText(String(i), this.position.x + socket.x, this.position.y + socket.y - 15);
+            ctx.fillText(String(i), this.position.x + socket.x*0.95, this.position.y + socket.y + 10);
         }
 
         for (let i = 0; i < this.outputSockets.length; i++) {
@@ -112,7 +115,7 @@ class Adder implements Component {
         const textSize = Math.round(Math.min(this.size.x * 0.125, this.size.y * 0.5));
         ctx.font = textSize + "px monospace";
         ctx.fillStyle = "black";
-        ctx.fillText(String(num1) + " + " + String(num2), this.position.x, this.position.y);
+        ctx.fillText(String(num1) + " - " + String(num2), this.position.x, this.position.y);
 
         ctx.restore();
     }
@@ -125,10 +128,10 @@ class Adder implements Component {
             num2 += Number(bits[i + this.numBits]) * (1 << i);
         }
 
-        const answer = num1 + num2;
+        const answer = num1 - num2;
         let answerBits = Array(this.numBits + 1);
         for (let i = 0; i <= this.numBits; i++) {
-            answerBits[i] = (answer & (1 << i)) > 0;
+            answerBits[i] = (answer & (1 << i)) != 0;
         }
         //console.log(answerBits);
         return answerBits;
@@ -140,4 +143,4 @@ class Adder implements Component {
     }
 }
 
-export default Adder;
+export default Subtractor;

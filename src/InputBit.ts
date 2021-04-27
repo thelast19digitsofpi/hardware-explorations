@@ -10,6 +10,7 @@ class InputBit implements Component {
     inputSockets: [];
     inputWires: [];
     outputSockets: {x: number, y: number}[];
+    beforeUpdate: undefined;
 
     constructor(x: number, y: number, value: boolean = false, size: number = 20) {
         this.position = {
@@ -32,6 +33,7 @@ class InputBit implements Component {
             {x: 0, y: 0}
         ];
     }
+    beforeUpdate: undefined;
 
     render(ctx: CanvasRenderingContext2D) {
         if (this.state.active !== this.state.bits[0]) {

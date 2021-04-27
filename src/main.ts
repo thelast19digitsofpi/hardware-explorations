@@ -3,26 +3,27 @@ import Exploration from './Exploration';
 //import TestExploration from './TestExploration';
 import AdderExploration from './AdderExploration';
 import ChoiceExploration from './ChoiceExploration';
+import ClockExploration from './ClockExploration';
+import DividerExploration from './DividerExploration';
 import MultiplierExploration from './MultiplierExploration';
 import RegisterExploration from './RegisterExploration';
+import SubtractorExploration from './SubtractorExploration';
 
-function createCanvas(width: number, height: number): HTMLCanvasElement {
+function createCanvas(): HTMLCanvasElement {
     const canvas: HTMLCanvasElement = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
     return canvas;
 }
 
 // in milliseconds
 const UPDATE_TIMES = [4000, 2500, 1600, 1000, 630, 400, 250]
 
-function createExploration(id: string, width: number, height: number, type: typeof Exploration): Exploration {
+function createExploration(id: string, type: typeof Exploration): Exploration {
     const element = document.getElementById(id);
     if (!element) {
         throw new Error("Document element " + id + " not found.");
     }
 
-    const canvas = createCanvas(width, height);
+    const canvas = createCanvas();
     element.appendChild(canvas);
 
     const exploration = new type(canvas);
@@ -60,10 +61,14 @@ function createExploration(id: string, width: number, height: number, type: type
 
 // Explorations
 let ALL_EXPLORATIONS: Exploration[] = [];
-//ALL_EXPLORATIONS.push(createExploration('1', 640, 480, AdderExploration));
-ALL_EXPLORATIONS.push(createExploration('choice', 400, 400, ChoiceExploration));
-ALL_EXPLORATIONS.push(createExploration('multiplier-full', 640, 480, MultiplierExploration));
-//ALL_EXPLORATIONS.push(createExploration('3', 400, 400, RegisterExploration));
+ALL_EXPLORATIONS.push(createExploration('adder', AdderExploration));
+ALL_EXPLORATIONS.push(createExploration('subtractor', SubtractorExploration));
+//ALL_EXPLORATIONS.push(createExploration('choice', ChoiceExploration));
+//ALL_EXPLORATIONS.push(createExploration('clock', ClockExploration));
+
+ALL_EXPLORATIONS.push(createExploration('multiplier-full', MultiplierExploration));
+ALL_EXPLORATIONS.push(createExploration('divider-full', DividerExploration));
+//ALL_EXPLORATIONS.push(createExploration('3', RegisterExploration));
 
 function renderLoop() {
     // TODO: Put this in exploration

@@ -20,6 +20,9 @@ interface Component {
     render: (ctx: CanvasRenderingContext2D) => void,
     onClick: (offsetX: number, offsetY: number) => void,
     evaluate: (bits: boolean[]) => boolean[],
+
+    // optional function
+    beforeUpdate: (() => void) | null | undefined;
 }
 
 export default Component;

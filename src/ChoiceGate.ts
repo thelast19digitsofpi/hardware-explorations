@@ -11,8 +11,9 @@ class ChoiceGate implements Component {
     public position: {x: number, y: number};
     public size: {x: number, y: number};
     public inputSockets: {x: number, y: number}[];
-    public inputWires: Wire[];
+    public inputWires: (Wire | null)[];
     public outputSockets: {x: number, y: number}[];
+    beforeUpdate: undefined;
 
     // bits=8 means an 8-bit plus 8-bit
     constructor(x: number, y: number, size: number = 30) {
@@ -29,7 +30,7 @@ class ChoiceGate implements Component {
         this.state = {
             bits: [false],
         };
-        const offset = size * 0.44;
+        const offset = size * 0.5;
         this.inputSockets = [
             {x: -this.size.x * 1/3, y: 0},
             {x: -offset, y: -this.size.y/2},
@@ -65,6 +66,15 @@ class ChoiceGate implements Component {
         ctx.stroke();
 
         // red input
+        const sx = this.size.x;
+        ctx.fillStyle = "rgb(0, 204, 0, 0.75)";
+        ctx.beginPath();
+        ctx.arc(sx*0.25, 1, sx*0.15, 0, Math.PI);
+        ctx.fill();
+        ctx.fillStyle = "rgb(153, 0, 0, 0.75)";
+        ctx.beginPath();
+        ctx.arc(sx*0.75, 1, sx*0.15, 0, Math.PI);
+        ctx.fill();
 
         ctx.restore();
     }

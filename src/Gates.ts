@@ -60,6 +60,7 @@ abstract class Gate implements Component {
 
         this.inputWires = [];
     }
+    beforeUpdate: undefined;
 
     onClick(_offsetX: number, _offsetY: number): void {
         return;
