@@ -862,10 +862,10 @@ function (_super) {
     var s = this.size.x; // do the or's path...
 
     ctx.beginPath();
-    ctx.moveTo(s * 0.4, s * -0.4);
+    ctx.moveTo(s * 0.4, s * -0.35);
     ctx.quadraticCurveTo(s * 0.4, s * 0.1, 0, s * 0.4);
-    ctx.quadraticCurveTo(s * -0.4, s * 0.1, s * -0.4, s * -0.4);
-    ctx.quadraticCurveTo(s * 0, s * -0.2, s * 0.4, s * -0.4);
+    ctx.quadraticCurveTo(s * -0.4, s * 0.1, s * -0.4, s * -0.35);
+    ctx.quadraticCurveTo(s * 0, s * -0.15, s * 0.4, s * -0.35);
     ctx.closePath();
     ctx.stroke();
     ctx.fill(); // and the extra thing
@@ -938,6 +938,99 @@ function (_super) {
 }(Gate);
 
 exports.Not = Not;
+},{}],"Display.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+// Display.ts
+//
+// Given a set of bits, displays its value as a signed or unsigned integer.
+var Display =
+/** @class */
+function () {
+  // bits=8 means an 8-bit plus 8-bit
+  // note that I'm thinking about using this for InputBits, OutputBits, and RegisterBits
+  // and those only have one state to get
+  function Display(x, y, components, signed, size) {
+    if (signed === void 0) {
+      signed = false;
+    }
+
+    if (size === void 0) {
+      size = 30;
+    }
+
+    this.position = {
+      x: x,
+      y: y
+    };
+    this.size = {
+      x: size * 2,
+      y: size
+    };
+    this.signed = signed;
+    this.components = components;
+    this.state = {
+      // unused
+      bits: []
+    }; // unused, it doesn't use wires because they make visual clutter
+
+    this.inputSockets = [];
+    this.outputSockets = [];
+    this.inputWires = [];
+  }
+
+  Display.prototype.onClick = function (_offsetX, _offsetY) {
+    return;
+  };
+
+  ;
+
+  Display.prototype.render = function (ctx) {
+    ctx.save();
+    var left = this.position.x - this.size.x / 2;
+    var top = this.position.y - this.size.y / 2; // base
+
+    ctx.fillStyle = "#cccccc";
+    ctx.beginPath();
+    ctx.moveTo(left, top);
+    ctx.lineTo(left + this.size.x, top);
+    ctx.lineTo(left + this.size.x, top + this.size.y);
+    ctx.lineTo(left, top + this.size.y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke(); // get the state
+
+    var totalValue = 0;
+
+    for (var i = 0; i < this.components.length; i++) {
+      var comp = this.components[i];
+      var value = (comp.state.bits[0] ? 1 : 0) << i; // use 2's complement if signed on the last bit
+
+      totalValue += this.signed && i == this.components.length - 1 ? -value : value;
+    }
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = Math.round(this.size.y * 4 / 5) + "px monospace";
+    ctx.fillStyle = "#000";
+    ctx.fillText(String(totalValue), this.position.x, this.position.y);
+    ctx.restore();
+  };
+
+  Display.prototype.evaluate = function (bits) {
+    return [];
+  };
+
+  return Display;
+}();
+
+var _default = Display;
+exports.default = _default;
 },{}],"AdderExploration.ts":[function(require,module,exports) {
 "use strict";
 
@@ -957,6 +1050,8 @@ var _Adder = _interopRequireDefault(require("./Adder"));
 var _Wire = _interopRequireDefault(require("./Wire"));
 
 var _Gates = require("./Gates");
+
+var _Display = _interopRequireDefault(require("./Display"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -987,38 +1082,62 @@ var __extends = void 0 && (void 0).__extends || function () {
   };
 }();
 
+var __spreadArrays = void 0 && (void 0).__spreadArrays || function () {
+  for (var s = 0, i = 0, il = arguments.length; i < il; i++) {
+    s += arguments[i].length;
+  }
+
+  for (var r = Array(s), k = 0, i = 0; i < il; i++) {
+    for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++) {
+      r[k] = a[j];
+    }
+  }
+
+  return r;
+};
+
 var AdderExploration =
 /** @class */
 function (_super) {
   __extends(AdderExploration, _super);
 
   function AdderExploration(canvas) {
+    var _a, _b;
+
     var _this = _super.call(this, canvas) || this;
 
-    var adder = new _Adder.default(200, 200, 4);
+    canvas.width = 600;
+    canvas.height = 400;
+    var adder = new _Adder.default(120, 200, 4);
 
     _this.components.push(adder);
 
     for (var i = 0; i < 4; i++) {
-      var bit = new _InputBit.default(40 + i * 40, 30);
+      var bit = new _InputBit.default(adder.position.x - 100 + i * 25, 30);
       adder.inputWires.unshift(new _Wire.default(bit, 0, [{
-        x: 112.5 + i * 25,
+        x: bit.position.x + 12.5,
         y: 120 - i * 20
       }, {
-        x: 40 + i * 40,
+        x: bit.position.x,
         y: 120 - i * 20
       }]));
 
       _this.components.push(bit);
 
-      var bit2 = new _InputBit.default(360 - i * 40, 40);
-      adder.inputWires.push(new _Wire.default(bit2, 0, []));
+      var bit2 = new _InputBit.default(adder.position.x + 100 - i * 25, 30);
+      adder.inputWires.push(new _Wire.default(bit2, 0, [{
+        x: bit2.position.x - 12.5,
+        y: 120 - i * 20
+      }, {
+        x: bit2.position.x,
+        y: 120 - i * 20
+      }]));
 
       _this.components.push(bit2);
     }
 
     for (var i = 0; i < 4; i++) {
-      var output = new _OutputBit.default(245 - i * 30, 300);
+      var output = new _OutputBit.default(adder.position.x + 37.5 - i * 25, 300);
       output.inputWires.push(new _Wire.default(adder, i, []));
 
       _this.components.push(output);
@@ -1026,46 +1145,64 @@ function (_super) {
       _this.outputComponents.push(output);
     }
 
-    var andGate = new _Gates.AndGate(365, 240, 60, 0);
-    var orGate = new _Gates.OrGate(425, 240, 60, 0);
-    var xorGate = new _Gates.XorGate(485, 240, 60, 0);
-    var not = new _Gates.Not(545, 240, 60, 0);
-
-    _this.components.push(andGate);
-
-    _this.components.push(orGate);
-
-    _this.components.push(xorGate);
-
-    _this.components.push(not);
-
-    for (var i = 0; i < 7; i++) {
-      var bit = new _InputBit.default(350 + i * 30, 180);
-
-      _this.components.push(bit);
-
-      if (i < 2) {
-        andGate.inputWires.push(new _Wire.default(bit, 0, []));
-      } else if (i < 4) {
-        orGate.inputWires.push(new _Wire.default(bit, 0, []));
-      } else if (i < 6) {
-        xorGate.inputWires.push(new _Wire.default(bit, 0, []));
-      } else {
-        not.inputWires.push(new _Wire.default(bit, 0, []));
-      }
-    }
-
-    var testGates = [andGate, orGate, xorGate, not];
+    var rightInputA = [];
+    var rightInputB = [];
+    var rightOutput = [];
+    var carryOuts = [];
 
     for (var i = 0; i < 4; i++) {
-      var output = new _OutputBit.default(365 + 60 * i, 300);
+      var bitA = new _InputBit.default(530 - i * 80, 30);
+      rightInputA.push(bitA);
+      var bitB = new _InputBit.default(570 - i * 80, 90);
+      rightInputB.push(bitB); // full adder
 
-      _this.components.push(output);
+      var x1 = (bitA.position.x + bitB.position.x) / 2;
+      var y1 = bitB.position.y + 60;
+      var and = new _Gates.AndGate(x1 - 20, y1, 24, 0);
+      and.inputWires.push(new _Wire.default(bitA, 0, []));
+      and.inputWires.push(new _Wire.default(bitB, 0, []));
+      var xor = new _Gates.XorGate(x1 + 20, y1, 24, 0);
+      xor.inputWires.push(new _Wire.default(bitA, 0, []));
+      xor.inputWires.push(new _Wire.default(bitB, 0, []));
+      var outBit = new _OutputBit.default(x1, 300, 20);
+      rightOutput.push(outBit);
 
-      _this.outputComponents.push(output);
+      if (i > 0) {
+        // need a second phase of the adder
+        var and2 = new _Gates.AndGate(x1 - 10, y1 + 50, 24, 0);
+        and2.inputWires.push(new _Wire.default(xor, 0, []));
+        and2.inputWires.push(new _Wire.default(carryOuts[i - 1], 0, []));
+        var xor2 = new _Gates.XorGate(x1 + 15, y1 + 70, 24, 0);
+        xor2.inputWires.push(new _Wire.default(xor, 0, []));
+        xor2.inputWires.push(new _Wire.default(carryOuts[i - 1], 0, []));
+        var or2 = new _Gates.OrGate(x1 - 20, y1 + 80, 24, 0);
+        or2.inputWires.push(new _Wire.default(and, 0, []));
+        or2.inputWires.push(new _Wire.default(and2, 0, []));
+        carryOuts[i] = or2;
+        outBit.inputWires.push(new _Wire.default(xor2, 0, []));
 
-      output.inputWires.push(new _Wire.default(testGates[i], 0, []));
+        _this.components.push(or2, and2, xor2);
+      } else {
+        carryOuts[i] = and;
+        outBit.inputWires.push(new _Wire.default(xor, 0, []));
+      }
+
+      _this.components.push(and, xor, outBit);
     }
+
+    var finalCarry = new _OutputBit.default(250, 250, 20);
+    finalCarry.inputWires.push(new _Wire.default(carryOuts[3], 0, []));
+    rightOutput.push(finalCarry);
+
+    (_a = _this.components).push.apply(_a, __spreadArrays([finalCarry], rightInputA, rightInputB));
+
+    var displayA = new _Display.default(570, 30, rightInputA);
+    var displayB = new _Display.default(570, 90, rightInputB);
+    var displayResult = new _Display.default(400, 350, rightOutput, false, 40);
+
+    _this.components.push(displayA, displayB, displayResult);
+
+    (_b = _this.outputComponents).push.apply(_b, rightOutput);
 
     return _this;
   }
@@ -1075,7 +1212,7 @@ function (_super) {
 
 var _default = AdderExploration;
 exports.default = _default;
-},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./Adder":"Adder.ts","./Wire":"Wire.ts","./Gates":"Gates.ts"}],"RegisterBit.ts":[function(require,module,exports) {
+},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./Adder":"Adder.ts","./Wire":"Wire.ts","./Gates":"Gates.ts","./Display":"Display.ts"}],"RegisterBit.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1505,99 +1642,6 @@ function () {
 }();
 
 var _default = ChoiceGate;
-exports.default = _default;
-},{}],"Display.ts":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-// Display.ts
-//
-// Given a set of bits, displays its value as a signed or unsigned integer.
-var Display =
-/** @class */
-function () {
-  // bits=8 means an 8-bit plus 8-bit
-  // note that I'm thinking about using this for InputBits, OutputBits, and RegisterBits
-  // and those only have one state to get
-  function Display(x, y, components, signed, size) {
-    if (signed === void 0) {
-      signed = false;
-    }
-
-    if (size === void 0) {
-      size = 30;
-    }
-
-    this.position = {
-      x: x,
-      y: y
-    };
-    this.size = {
-      x: size * 2,
-      y: size
-    };
-    this.signed = signed;
-    this.components = components;
-    this.state = {
-      // unused
-      bits: []
-    }; // unused, it doesn't use wires because they make visual clutter
-
-    this.inputSockets = [];
-    this.outputSockets = [];
-    this.inputWires = [];
-  }
-
-  Display.prototype.onClick = function (_offsetX, _offsetY) {
-    return;
-  };
-
-  ;
-
-  Display.prototype.render = function (ctx) {
-    ctx.save();
-    var left = this.position.x - this.size.x / 2;
-    var top = this.position.y - this.size.y / 2; // base
-
-    ctx.fillStyle = "#cccccc";
-    ctx.beginPath();
-    ctx.moveTo(left, top);
-    ctx.lineTo(left + this.size.x, top);
-    ctx.lineTo(left + this.size.x, top + this.size.y);
-    ctx.lineTo(left, top + this.size.y);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke(); // get the state
-
-    var totalValue = 0;
-
-    for (var i = 0; i < this.components.length; i++) {
-      var comp = this.components[i];
-      var value = (comp.state.bits[0] ? 1 : 0) << i; // use 2's complement if signed on the last bit
-
-      totalValue += this.signed && i == this.components.length - 1 ? -value : value;
-    }
-
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.font = Math.round(this.size.y * 4 / 5) + "px monospace";
-    ctx.fillStyle = "#000";
-    ctx.fillText(String(totalValue), this.position.x, this.position.y);
-    ctx.restore();
-  };
-
-  Display.prototype.evaluate = function (bits) {
-    return [];
-  };
-
-  return Display;
-}();
-
-var _default = Display;
 exports.default = _default;
 },{}],"ChoiceGate.ts":[function(require,module,exports) {
 "use strict";
@@ -2971,7 +3015,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50423" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61178" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
@@ -3148,4 +3192,4 @@ function hmrAcceptRun(bundle, id) {
   }
 }
 },{}]},{},["../../../../../usr/local/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js","main.ts"], null)
-//# sourceMappingURL=/main.c39d6dcf.js.map
+//# sourceMappingURL=main.c39d6dcf.js.map

@@ -142,10 +142,10 @@ class XorGate extends Gate {
         const s = this.size.x;
         // do the or's path...
         ctx.beginPath();
-        ctx.moveTo(s * 0.4, s * -0.4);
+        ctx.moveTo(s * 0.4, s * -0.35);
         ctx.quadraticCurveTo(s * 0.4, s * 0.1, 0, s * 0.4);
-        ctx.quadraticCurveTo(s * -0.4, s * 0.1, s * -0.4, s * -0.4);
-        ctx.quadraticCurveTo(s * 0, s * -0.2, s * 0.4, s * -0.4);
+        ctx.quadraticCurveTo(s * -0.4, s * 0.1, s * -0.4, s * -0.35);
+        ctx.quadraticCurveTo(s * 0, s * -0.15, s * 0.4, s * -0.35);
         ctx.closePath();
         ctx.stroke();
         ctx.fill();
