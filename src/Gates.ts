@@ -190,7 +190,7 @@ class Not extends Gate {
     render(ctx: CanvasRenderingContext2D) {
         Gate.prototype.render.call(this, ctx);
     };
-    onClick(offsetX: number, offsetY: number) {};
+    onClick(_: number, __: number) {};
     evaluate(bits: boolean[]): boolean[] {
         return [!bits[0]];
     };

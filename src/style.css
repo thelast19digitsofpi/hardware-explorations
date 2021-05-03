@@ -1,0 +1,19 @@
+body {
+    font-family: sans-serif;
+}
+
+.exploration {
+    display: flex;
+}
+
+.controls {
+    padding: 0.5em;
+}
+
+.controls button {
+    font-size: 1em;
+}
+
+.canvas-wrapper {
+    border: 1px solid black;
+}

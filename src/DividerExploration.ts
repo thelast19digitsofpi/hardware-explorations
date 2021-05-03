@@ -35,7 +35,7 @@ import Subtractor from './Subtractor';
 import Wire from './Wire';
 import Clock from './Clock';
 import Display from './Display';
-import {AndGate, OrGate, Not} from './Gates';
+import {AndGate, Not} from './Gates';
 import ChoiceGate from './ChoiceGate';
 
 class DividerExploration extends Exploration {
@@ -44,6 +44,8 @@ class DividerExploration extends Exploration {
     remainderSpacing: number;
     startButton: InputBit;
     numBits: number;
+
+    animated: boolean = true;
 
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
@@ -110,7 +112,7 @@ class DividerExploration extends Exploration {
         const tealFaded = {color: "rgba(0, 128, 128, 0.35)"};
         const blue = {color: "rgba(32, 64, 128, 0.8)"};
         const blueFaded = {color: "rgba(32, 64, 128, 0.4)"};
-        const yellow = {color: "rgba(160, 160, 0)"};
+        //const yellow = {color: "rgba(160, 160, 0)"};
 
         // Input Numbers (N/D). D = divisor, N = dividend
         let inputN = [];
@@ -148,7 +150,7 @@ class DividerExploration extends Exploration {
         // Choice Gates coming out of the subtractor (writes if subtracted).
         let subtractorChoiceGates = [];
         for (let i = 0; i < BITS; i++) {
-            const x = subtractor.position.x + subtractor.outputSockets[i].x;
+            //const x = subtractor.position.x + subtractor.outputSockets[i].x;
             const y = subtractor.position.y + subtractor.outputSockets[0].y; // put them all on the same line
             // space them a bit
             const choice = new ChoiceGate(remainderRegister[i+BITS].position.x, y + 50, 10);

@@ -132,6 +132,8 @@ var Exploration =
 /** @class */
 function () {
   function Exploration(canvas) {
+    this.animated = false; // assume not unless proven otherwise
+
     this.paused = false;
     this.updateTime = 1000;
     this.lastUpdated = Date.now();
@@ -542,8 +544,8 @@ function () {
       ctx.beginPath();
       ctx.arc(this.position.x + socket.x, this.position.y + socket.y, 6, 0, 2 * Math.PI);
       ctx.fill();
-      ctx.fillStyle = "black";
-      ctx.fillText(String(i), this.position.x + socket.x, this.position.y + socket.y - 15);
+      /*ctx.fillStyle = "black";
+      ctx.fillText(String(i), this.position.x + socket.x, this.position.y + socket.y - 15);*/
     }
 
     for (var i = 0; i < this.outputSockets.length; i++) {
@@ -925,7 +927,7 @@ function (_super) {
 
   ;
 
-  Not.prototype.onClick = function (offsetX, offsetY) {};
+  Not.prototype.onClick = function (_, __) {};
 
   ;
 
@@ -1106,9 +1108,9 @@ function (_super) {
 
     var _this = _super.call(this, canvas) || this;
 
-    canvas.width = 600;
+    canvas.width = 640;
     canvas.height = 400;
-    var adder = new _Adder.default(120, 200, 4);
+    var adder = new _Adder.default(520, 200, 4);
 
     _this.components.push(adder);
 
@@ -1136,14 +1138,22 @@ function (_super) {
       _this.components.push(bit2);
     }
 
-    for (var i = 0; i < 4; i++) {
+    for (var i = 0; i < 5; i++) {
       var output = new _OutputBit.default(adder.position.x + 37.5 - i * 25, 300);
       output.inputWires.push(new _Wire.default(adder, i, []));
 
       _this.components.push(output);
 
       _this.outputComponents.push(output);
-    }
+    } // colors are nice
+
+
+    var blue = {
+      color: "rgba(96,96,160,1)"
+    };
+    var fakeCarry = new _InputBit.default(370, 200, false, 20);
+
+    _this.components.push(fakeCarry);
 
     var rightInputA = [];
     var rightInputB = [];
@@ -1151,31 +1161,56 @@ function (_super) {
     var carryOuts = [];
 
     for (var i = 0; i < 4; i++) {
-      var bitA = new _InputBit.default(530 - i * 80, 30);
+      var bitA = new _InputBit.default(290 - i * 70, 30);
       rightInputA.push(bitA);
-      var bitB = new _InputBit.default(570 - i * 80, 90);
+      var bitB = new _InputBit.default(bitA.position.x + 40, 90);
       rightInputB.push(bitB); // full adder
 
       var x1 = (bitA.position.x + bitB.position.x) / 2;
       var y1 = bitB.position.y + 60;
-      var and = new _Gates.AndGate(x1 - 20, y1, 24, 0);
+      var and = new _Gates.AndGate(x1 - 18, y1, 24, 0);
       and.inputWires.push(new _Wire.default(bitA, 0, []));
       and.inputWires.push(new _Wire.default(bitB, 0, []));
-      var xor = new _Gates.XorGate(x1 + 20, y1, 24, 0);
+      var xor = new _Gates.XorGate(x1 + 18, y1, 24, 0);
       xor.inputWires.push(new _Wire.default(bitA, 0, []));
       xor.inputWires.push(new _Wire.default(bitB, 0, []));
       var outBit = new _OutputBit.default(x1, 300, 20);
       rightOutput.push(outBit);
 
-      if (i > 0) {
-        // need a second phase of the adder
-        var and2 = new _Gates.AndGate(x1 - 10, y1 + 50, 24, 0);
+      if (i >= 0) {
+        var previous = i == 0 ? fakeCarry : carryOuts[i - 1]; // need a second phase of the adder
+
+        var and2 = new _Gates.AndGate(x1, y1 + 50, 24, 0);
         and2.inputWires.push(new _Wire.default(xor, 0, []));
-        and2.inputWires.push(new _Wire.default(carryOuts[i - 1], 0, []));
-        var xor2 = new _Gates.XorGate(x1 + 15, y1 + 70, 24, 0);
+        and2.inputWires.push(new _Wire.default(previous, 0, [{
+          x: and2.position.x + 5,
+          y: and2.position.y - 15
+        }, {
+          x: and2.position.x + 38,
+          y: and2.position.y - 15
+        }, {
+          x: and2.position.x + 38,
+          y: previous.position.y + 15
+        }, {
+          x: previous.position.x,
+          y: previous.position.y + 15
+        }], blue));
+        var xor2 = new _Gates.XorGate(x1 + 20, y1 + 80, 24, 0);
         xor2.inputWires.push(new _Wire.default(xor, 0, []));
-        xor2.inputWires.push(new _Wire.default(carryOuts[i - 1], 0, []));
-        var or2 = new _Gates.OrGate(x1 - 20, y1 + 80, 24, 0);
+        xor2.inputWires.push(new _Wire.default(previous, 0, [{
+          x: xor2.position.x + 5,
+          y: and2.position.y - 15
+        }, {
+          x: and2.position.x + 38,
+          y: and2.position.y - 15
+        }, {
+          x: and2.position.x + 38,
+          y: previous.position.y + 15
+        }, {
+          x: previous.position.x,
+          y: previous.position.y + 15
+        }], blue));
+        var or2 = new _Gates.OrGate(x1 - 15, y1 + 80, 24, 0);
         or2.inputWires.push(new _Wire.default(and, 0, []));
         or2.inputWires.push(new _Wire.default(and2, 0, []));
         carryOuts[i] = or2;
@@ -1190,15 +1225,15 @@ function (_super) {
       _this.components.push(and, xor, outBit);
     }
 
-    var finalCarry = new _OutputBit.default(250, 250, 20);
+    var finalCarry = new _OutputBit.default(30, 250, 20);
     finalCarry.inputWires.push(new _Wire.default(carryOuts[3], 0, []));
     rightOutput.push(finalCarry);
 
     (_a = _this.components).push.apply(_a, __spreadArrays([finalCarry], rightInputA, rightInputB));
 
-    var displayA = new _Display.default(570, 30, rightInputA);
-    var displayB = new _Display.default(570, 90, rightInputB);
-    var displayResult = new _Display.default(400, 350, rightOutput, false, 40);
+    var displayA = new _Display.default(35, 30, rightInputA);
+    var displayB = new _Display.default(35, 90, rightInputB);
+    var displayResult = new _Display.default(200, 350, rightOutput, false, 40);
 
     _this.components.push(displayA, displayB, displayResult);
 
@@ -1212,7 +1247,239 @@ function (_super) {
 
 var _default = AdderExploration;
 exports.default = _default;
-},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./Adder":"Adder.ts","./Wire":"Wire.ts","./Gates":"Gates.ts","./Display":"Display.ts"}],"RegisterBit.ts":[function(require,module,exports) {
+},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./Adder":"Adder.ts","./Wire":"Wire.ts","./Gates":"Gates.ts","./Display":"Display.ts"}],"ChoiceGate.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+// RegisterBit.ts
+//
+// Has an "on" input and an "off" input.
+// Does nothing if both are on or both are off.
+var ChoiceGate =
+/** @class */
+function () {
+  // bits=8 means an 8-bit plus 8-bit
+  function ChoiceGate(x, y, size) {
+    if (size === void 0) {
+      size = 30;
+    }
+
+    this.position = {
+      x: x,
+      y: y
+    };
+    this.size = {
+      x: size * 2,
+      y: size
+    };
+    this.state = {
+      bits: [false]
+    };
+    var offset = size * 0.5;
+    this.inputSockets = [{
+      x: -this.size.x * 1 / 3,
+      y: 0
+    }, {
+      x: -offset,
+      y: -this.size.y / 2
+    }, {
+      x: +offset,
+      y: -this.size.y / 2
+    }];
+    this.outputSockets = [{
+      x: 0,
+      y: size / 2
+    }];
+    this.inputWires = [];
+  }
+
+  ChoiceGate.prototype.onClick = function (_offsetX, _offsetY) {
+    return;
+  };
+
+  ;
+
+  ChoiceGate.prototype.render = function (ctx) {
+    ctx.save();
+    var left = this.position.x - this.size.x / 2;
+    var top = this.position.y - this.size.y / 2;
+    ctx.translate(left, top); // base
+
+    ctx.fillStyle = "#cccccc";
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(this.size.x * 1.0, 0);
+    ctx.lineTo(this.size.x * 0.67, this.size.y);
+    ctx.lineTo(this.size.x * 0.33, this.size.y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke(); // red input
+
+    var sx = this.size.x;
+    ctx.fillStyle = "rgb(0, 204, 0, 0.75)";
+    ctx.beginPath();
+    ctx.arc(sx * 0.25, 1, sx * 0.15, 0, Math.PI);
+    ctx.fill();
+    ctx.fillStyle = "rgb(153, 0, 0, 0.75)";
+    ctx.beginPath();
+    ctx.arc(sx * 0.75, 1, sx * 0.15, 0, Math.PI);
+    ctx.fill();
+    ctx.restore();
+  }; // If the "set" input is on, change to the "what" input
+
+
+  ChoiceGate.prototype.evaluate = function (bits) {
+    return [bits[0] ? bits[1] : bits[2]];
+  };
+
+  return ChoiceGate;
+}();
+
+var _default = ChoiceGate;
+exports.default = _default;
+},{}],"ChoiceExploration.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _Exploration = _interopRequireDefault(require("./Exploration"));
+
+var _Wire = _interopRequireDefault(require("./Wire"));
+
+var _ChoiceGate = _interopRequireDefault(require("./ChoiceGate"));
+
+var _InputBit = _interopRequireDefault(require("./InputBit"));
+
+var _OutputBit = _interopRequireDefault(require("./OutputBit"));
+
+var _Gates = require("./Gates");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+// ChoiceExploration
+//
+// Exploration that shows how a multiplexer works.
+// I called it a "choice gate" because "multiplexer" and "multiplier" look too similar.
+var __extends = void 0 && (void 0).__extends || function () {
+  var _extendStatics = function extendStatics(d, b) {
+    _extendStatics = Object.setPrototypeOf || {
+      __proto__: []
+    } instanceof Array && function (d, b) {
+      d.__proto__ = b;
+    } || function (d, b) {
+      for (var p in b) {
+        if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p];
+      }
+    };
+
+    return _extendStatics(d, b);
+  };
+
+  return function (d, b) {
+    _extendStatics(d, b);
+
+    function __() {
+      this.constructor = d;
+    }
+
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+  };
+}();
+
+var ChoiceExploration =
+/** @class */
+function (_super) {
+  __extends(ChoiceExploration, _super);
+
+  function ChoiceExploration(canvas) {
+    var _this = _super.call(this, canvas) || this;
+
+    var inputChoice = new _InputBit.default(50, 90, false, 30);
+    var inputElse = new _InputBit.default(100, 90, false, 30);
+    var inputIf = new _InputBit.default(150, 90, false, 30);
+
+    _this.components.push(inputChoice, inputIf, inputElse);
+
+    var inverter = new _Gates.Not(115, 150, 30, 0);
+
+    _this.components.push(inverter);
+
+    inverter.inputWires.push(new _Wire.default(inputChoice, 0, [{
+      x: 115,
+      y: 125
+    }, {
+      x: 50,
+      y: 125
+    }])); // recursive components are a bit weird
+
+    var andIf = new _Gates.AndGate(125, 200, 50, 0);
+    var andElse = new _Gates.AndGate(75, 200, 50, 0);
+    var or = new _Gates.OrGate(100, 250, 50, 0);
+    andIf.inputWires = [new _Wire.default(inverter, 0, []), new _Wire.default(inputIf, 0, [{
+      x: 135,
+      y: 170
+    }, {
+      x: 150,
+      y: 170
+    }])];
+    andElse.inputWires = [new _Wire.default(inputChoice, 0, [{
+      x: 65,
+      y: 170
+    }, {
+      x: 50,
+      y: 170
+    }]), new _Wire.default(inputElse, 0, [{
+      x: 85,
+      y: 170
+    }, {
+      x: 100,
+      y: 170
+    }])];
+    or.inputWires = [new _Wire.default(andElse, 0, []), new _Wire.default(andIf, 0, [])];
+
+    _this.components.push(andIf, andElse, or);
+
+    var output = new _OutputBit.default(100, 300);
+    output.inputWires.push(new _Wire.default(or, 0));
+
+    _this.components.push(output);
+
+    _this.outputComponents.push(output); // the simplified version
+
+
+    var inputChoice2 = new _InputBit.default(240, 120, false, 30);
+    var inputIf2 = new _InputBit.default(280, 120, false, 30);
+    var inputElse2 = new _InputBit.default(320, 120, false, 30);
+    var choice = new _ChoiceGate.default(300, 200, 40);
+    var output2 = new _OutputBit.default(300, 250);
+    choice.inputWires.push(new _Wire.default(inputChoice2, 0, [{
+      x: inputChoice2.position.x,
+      y: choice.position.y
+    }]));
+    choice.inputWires.push(new _Wire.default(inputIf2, 0));
+    choice.inputWires.push(new _Wire.default(inputElse2, 0));
+    output2.inputWires.push(new _Wire.default(choice, 0));
+
+    _this.components.push(inputChoice2, inputIf2, inputElse2, choice, output2);
+
+    _this.outputComponents.push(output2);
+
+    return _this;
+  }
+
+  return ChoiceExploration;
+}(_Exploration.default);
+
+var _default = ChoiceExploration;
+exports.default = _default;
+},{"./Exploration":"Exploration.ts","./Wire":"Wire.ts","./ChoiceGate":"ChoiceGate.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./Gates":"Gates.ts"}],"RegisterBit.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1643,100 +1910,6 @@ function () {
 
 var _default = ChoiceGate;
 exports.default = _default;
-},{}],"ChoiceGate.ts":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-// RegisterBit.ts
-//
-// Has an "on" input and an "off" input.
-// Does nothing if both are on or both are off.
-var ChoiceGate =
-/** @class */
-function () {
-  // bits=8 means an 8-bit plus 8-bit
-  function ChoiceGate(x, y, size) {
-    if (size === void 0) {
-      size = 30;
-    }
-
-    this.position = {
-      x: x,
-      y: y
-    };
-    this.size = {
-      x: size * 2,
-      y: size
-    };
-    this.state = {
-      bits: [false]
-    };
-    var offset = size * 0.5;
-    this.inputSockets = [{
-      x: -this.size.x * 1 / 3,
-      y: 0
-    }, {
-      x: -offset,
-      y: -this.size.y / 2
-    }, {
-      x: +offset,
-      y: -this.size.y / 2
-    }];
-    this.outputSockets = [{
-      x: 0,
-      y: size / 2
-    }];
-    this.inputWires = [];
-  }
-
-  ChoiceGate.prototype.onClick = function (_offsetX, _offsetY) {
-    return;
-  };
-
-  ;
-
-  ChoiceGate.prototype.render = function (ctx) {
-    ctx.save();
-    var left = this.position.x - this.size.x / 2;
-    var top = this.position.y - this.size.y / 2;
-    ctx.translate(left, top); // base
-
-    ctx.fillStyle = "#cccccc";
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(this.size.x * 1.0, 0);
-    ctx.lineTo(this.size.x * 0.67, this.size.y);
-    ctx.lineTo(this.size.x * 0.33, this.size.y);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke(); // red input
-
-    var sx = this.size.x;
-    ctx.fillStyle = "rgb(0, 204, 0, 0.75)";
-    ctx.beginPath();
-    ctx.arc(sx * 0.25, 1, sx * 0.15, 0, Math.PI);
-    ctx.fill();
-    ctx.fillStyle = "rgb(153, 0, 0, 0.75)";
-    ctx.beginPath();
-    ctx.arc(sx * 0.75, 1, sx * 0.15, 0, Math.PI);
-    ctx.fill();
-    ctx.restore();
-  }; // If the "set" input is on, change to the "what" input
-
-
-  ChoiceGate.prototype.evaluate = function (bits) {
-    return [bits[0] ? bits[1] : bits[2]];
-  };
-
-  return ChoiceGate;
-}();
-
-var _default = ChoiceGate;
-exports.default = _default;
 },{}],"DividerExploration.ts":[function(require,module,exports) {
 "use strict";
 
@@ -1828,6 +2001,8 @@ function (_super) {
 
   function DividerExploration(canvas) {
     var _this = _super.call(this, canvas) || this;
+
+    _this.animated = true;
 
     _this.afterRender = function () {
       // display the quotient
@@ -1938,10 +2113,8 @@ function (_super) {
     };
     var blueFaded = {
       color: "rgba(32, 64, 128, 0.4)"
-    };
-    var yellow = {
-      color: "rgba(160, 160, 0)"
-    }; // Input Numbers (N/D). D = divisor, N = dividend
+    }; //const yellow = {color: "rgba(160, 160, 0)"};
+    // Input Numbers (N/D). D = divisor, N = dividend
 
     var inputN = [];
     var inputD = [];
@@ -1995,7 +2168,7 @@ function (_super) {
     var subtractorChoiceGates = [];
 
     for (var i = 0; i < BITS; i++) {
-      var x = subtractor.position.x + subtractor.outputSockets[i].x;
+      //const x = subtractor.position.x + subtractor.outputSockets[i].x;
       var y = subtractor.position.y + subtractor.outputSockets[0].y; // put them all on the same line
       // space them a bit
 
@@ -2429,16 +2602,18 @@ function (_super) {
   function MultiplierExploration(canvas) {
     var _this = _super.call(this, canvas) || this;
 
+    _this.animated = true;
+
     _this.afterRender = function () {
       var ctx = _this.context;
       var cycle = _this.countdown.state.clock;
 
       if (cycle >= 0) {
-        var n = 5 - (cycle + 1 >> 1);
+        var n = cycle + 1 >> 1;
 
-        if (n >= 0) {
+        if (n <= 5) {
           ctx.fillStyle = "rgba(255,255,255,0.75)";
-          var west = _this.regRight - _this.regSpacing * n - 20;
+          var west = _this.regRight - _this.regSpacing * (5 - n) - 20;
           var north = 340,
               south = 480;
           var east = _this.regRight + 22;
@@ -2448,7 +2623,17 @@ function (_super) {
           ctx.lineTo(east, south);
           ctx.lineTo(west, south);
           ctx.fill();
+        } // product value
+
+
+        var productValue = 0;
+
+        for (var i = 0; i < _this.numBits + n; i++) {
+          var bit = _this.productRegister[i + (6 - n)];
+          productValue += Number(bit.state.bits[0]) * (1 << i);
         }
+
+        _this.drawProductGuide(2 * _this.numBits, _this.numBits - n, "#33c", "Product (" + productValue + ")");
       }
 
       if (cycle == 2 * _this.numBits + 1) {
@@ -2807,127 +2992,51 @@ function (_super) {
 
     _this.components.push(adder, countdown, startButton, displayA, displayB, displayEnd);
 
+    _this.productRegister = productRegister;
     return _this;
   }
+
+  MultiplierExploration.prototype.drawProductGuide = function (left, right, color, text) {
+    var ctx = this.context;
+    var x1 = this.regRight - left * this.regSpacing - 15;
+    var x2 = this.regRight - right * this.regSpacing + 15;
+    var y = 460;
+    ctx.save();
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "none";
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(x1, y);
+    ctx.lineTo(x1 + 10, y + 10);
+    ctx.lineTo(x2 - 10, y + 10);
+    ctx.lineTo(x2, y);
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.75)";
+    ctx.lineWidth = 2;
+    ctx.fillStyle = color;
+    ctx.font = "30px monospace";
+    ctx.strokeText(text, (x1 + x2) / 2, y + 25);
+    ctx.fillText(text, (x1 + x2) / 2, y + 25);
+    ctx.restore();
+  };
 
   return MultiplierExploration;
 }(_Exploration.default);
 
 var _default = MultiplierExploration;
 exports.default = _default;
-},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./RegisterBit":"RegisterBit.ts","./Adder":"Adder.ts","./Wire":"Wire.ts","./Clock":"Clock.ts","./Display":"Display.ts","./Gates":"Gates.ts","./ChoiceGate":"ChoiceGate.ts"}],"SubtractorExploration.ts":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _Exploration = _interopRequireDefault(require("./Exploration"));
-
-var _InputBit = _interopRequireDefault(require("./InputBit"));
-
-var _OutputBit = _interopRequireDefault(require("./OutputBit"));
-
-var _Subtractor = _interopRequireDefault(require("./Subtractor"));
-
-var _Wire = _interopRequireDefault(require("./Wire"));
-
-var _Display = _interopRequireDefault(require("./Display"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-// SubtractorExploration.ts
-var __extends = void 0 && (void 0).__extends || function () {
-  var _extendStatics = function extendStatics(d, b) {
-    _extendStatics = Object.setPrototypeOf || {
-      __proto__: []
-    } instanceof Array && function (d, b) {
-      d.__proto__ = b;
-    } || function (d, b) {
-      for (var p in b) {
-        if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p];
-      }
-    };
-
-    return _extendStatics(d, b);
-  };
-
-  return function (d, b) {
-    _extendStatics(d, b);
-
-    function __() {
-      this.constructor = d;
-    }
-
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-  };
-}();
-
-var SubtractorExploration =
-/** @class */
-function (_super) {
-  __extends(SubtractorExploration, _super);
-
-  function SubtractorExploration(canvas) {
-    var _a, _b;
-
-    var _this = _super.call(this, canvas) || this;
-
-    var subtractor = new _Subtractor.default(200, 200, 4);
-
-    _this.components.push(subtractor);
-
-    for (var i = 0; i < 4; i++) {
-      var bit = new _InputBit.default(40 + i * 40, 30);
-      subtractor.inputWires.unshift(new _Wire.default(bit, 0, [{
-        x: 112.5 + i * 25,
-        y: 120 - i * 20
-      }, {
-        x: 40 + i * 40,
-        y: 120 - i * 20
-      }]));
-
-      _this.components.push(bit);
-
-      var bit2 = new _InputBit.default(360 - i * 40, 40);
-      subtractor.inputWires.push(new _Wire.default(bit2, 0, []));
-
-      _this.components.push(bit2);
-    }
-
-    var outputBits = [];
-
-    for (var i = 0; i < 5; i++) {
-      var output = new _OutputBit.default(245 - i * 30, 300);
-      output.inputWires.push(new _Wire.default(subtractor, i, []));
-      outputBits.push(output);
-    }
-
-    (_a = _this.outputComponents).push.apply(_a, outputBits);
-
-    (_b = _this.components).push.apply(_b, outputBits);
-
-    _this.components.push(new _Display.default(200, 330, outputBits, true));
-
-    return _this;
-  }
-
-  return SubtractorExploration;
-}(_Exploration.default);
-
-var _default = SubtractorExploration;
-exports.default = _default;
-},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./Subtractor":"Subtractor.ts","./Wire":"Wire.ts","./Display":"Display.ts"}],"main.ts":[function(require,module,exports) {
+},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./RegisterBit":"RegisterBit.ts","./Adder":"Adder.ts","./Wire":"Wire.ts","./Clock":"Clock.ts","./Display":"Display.ts","./Gates":"Gates.ts","./ChoiceGate":"ChoiceGate.ts"}],"main.ts":[function(require,module,exports) {
 "use strict";
 
 var _AdderExploration = _interopRequireDefault(require("./AdderExploration"));
 
+var _ChoiceExploration = _interopRequireDefault(require("./ChoiceExploration"));
+
 var _DividerExploration = _interopRequireDefault(require("./DividerExploration"));
 
 var _MultiplierExploration = _interopRequireDefault(require("./MultiplierExploration"));
-
-var _SubtractorExploration = _interopRequireDefault(require("./SubtractorExploration"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -2947,31 +3056,51 @@ function createExploration(id, type) {
     throw new Error("Document element " + id + " not found.");
   }
 
+  element.className += " row";
+  var canvasWrapper = document.createElement("div");
+  canvasWrapper.className = "canvas-wrapper col-auto";
   var canvas = createCanvas();
-  element.appendChild(canvas);
+  canvasWrapper.appendChild(canvas);
+  element.appendChild(canvasWrapper);
   var exploration = new type(canvas);
   exploration.update();
   canvas.addEventListener("click", function (event) {
     exploration.onClick(event.offsetX, event.offsetY);
-  });
-  var controls = document.createElement("div");
-  controls.innerHTML = "\n        <form>\n            <p><strong>Speed:</strong> Slow\n                <input id=\"speed-" + id + "\" name=\"speed\" type=\"range\" min=\"0\" max=\"" + (UPDATE_TIMES.length - 1) + "\" />\n                Fast\n            </p>\n        </form>\n        <button id=\"pause-" + id + "\">Pause</button>\n        <button id=\"resume-" + id + "\">Resume</button>\n        <button id=\"step-" + id + "\">Step</button>\n    ";
-  controls.querySelector("#speed-" + id).addEventListener("change", function (event) {
-    exploration.updateTime = UPDATE_TIMES[Number(event.target.value)];
-  });
-  element.appendChild(controls);
-  controls.querySelector("#pause-" + id).addEventListener("click", exploration.pause.bind(exploration));
-  controls.querySelector("#resume-" + id).addEventListener("click", exploration.resume.bind(exploration));
-  controls.querySelector("#step-" + id).addEventListener("click", exploration.update.bind(exploration));
-  exploration.resume();
+  }); // For animated explorations, have speed controls
+
+  if (exploration.animated) {
+    var controls = document.createElement("div");
+    controls.className = "controls col-auto";
+    controls.innerHTML = "\n            <h4>Speed</h4>\n            <p style=\"margin-top: 0\">\n                Slow\n                <input id=\"speed-" + id + "\" name=\"speed\" type=\"range\" min=\"0\" max=\"" + (UPDATE_TIMES.length - 1) + "\" />\n                Fast\n            </p>\n            <div class=\"buttons\">\n                <button id=\"pause-" + id + "\">Pause</button>\n                <button id=\"resume-" + id + "\">Play</button>\n                <button id=\"step-" + id + "\">Step</button>\n            </div>\n        "; // get those buttons
+
+    controls.querySelector("#speed-" + id).addEventListener("change", function (event) {
+      exploration.updateTime = UPDATE_TIMES[Number(event.target.value)];
+    });
+    element.appendChild(controls);
+    var pauseButton_1 = controls.querySelector("#pause-" + id);
+    pauseButton_1.addEventListener("click", function () {
+      exploration.pause();
+      pauseButton_1.disabled = true;
+      resumeButton_1.disabled = false;
+    });
+    pauseButton_1.disabled = true;
+    var resumeButton_1 = controls.querySelector("#resume-" + id);
+    resumeButton_1.addEventListener("click", function () {
+      exploration.resume();
+      pauseButton_1.disabled = false;
+      resumeButton_1.disabled = true;
+    });
+    controls.querySelector("#step-" + id).addEventListener("click", exploration.update.bind(exploration)); //exploration.resume();
+  }
+
   return exploration;
 } // Explorations
 
 
 var ALL_EXPLORATIONS = [];
-ALL_EXPLORATIONS.push(createExploration('adder', _AdderExploration.default));
-ALL_EXPLORATIONS.push(createExploration('subtractor', _SubtractorExploration.default)); //ALL_EXPLORATIONS.push(createExploration('choice', ChoiceExploration));
-//ALL_EXPLORATIONS.push(createExploration('clock', ClockExploration));
+ALL_EXPLORATIONS.push(createExploration('adder', _AdderExploration.default)); //ALL_EXPLORATIONS.push(createExploration('subtractor', SubtractorExploration));
+
+ALL_EXPLORATIONS.push(createExploration('choice', _ChoiceExploration.default)); //ALL_EXPLORATIONS.push(createExploration('clock', ClockExploration));
 
 ALL_EXPLORATIONS.push(createExploration('multiplier-full', _MultiplierExploration.default));
 ALL_EXPLORATIONS.push(createExploration('divider-full', _DividerExploration.default)); //ALL_EXPLORATIONS.push(createExploration('3', RegisterExploration));
@@ -2987,7 +3116,7 @@ function renderLoop() {
 }
 
 renderLoop();
-},{"./AdderExploration":"AdderExploration.ts","./DividerExploration":"DividerExploration.ts","./MultiplierExploration":"MultiplierExploration.ts","./SubtractorExploration":"SubtractorExploration.ts"}],"../../../../../usr/local/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"./AdderExploration":"AdderExploration.ts","./ChoiceExploration":"ChoiceExploration.ts","./DividerExploration":"DividerExploration.ts","./MultiplierExploration":"MultiplierExploration.ts"}],"../../../../../usr/local/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -3015,7 +3144,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61178" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58815" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
@@ -3192,4 +3321,4 @@ function hmrAcceptRun(bundle, id) {
   }
 }
 },{}]},{},["../../../../../usr/local/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js","main.ts"], null)
-//# sourceMappingURL=main.c39d6dcf.js.map
+//# sourceMappingURL=/main.c39d6dcf.js.map

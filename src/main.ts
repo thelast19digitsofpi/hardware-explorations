@@ -23,8 +23,13 @@ function createExploration(id: string, type: typeof Exploration): Exploration {
         throw new Error("Document element " + id + " not found.");
     }
 
+    element.className += " row";
+
+    const canvasWrapper = document.createElement("div");
+    canvasWrapper.className = "canvas-wrapper col-auto";
     const canvas = createCanvas();
-    element.appendChild(canvas);
+    canvasWrapper.appendChild(canvas);
+    element.appendChild(canvasWrapper);
 
     const exploration = new type(canvas);
     exploration.update();
@@ -32,28 +37,46 @@ function createExploration(id: string, type: typeof Exploration): Exploration {
         exploration.onClick(event.offsetX, event.offsetY);
     });
 
-    const controls = document.createElement("div");
-    controls.innerHTML = `
-        <form>
-            <p><strong>Speed:</strong> Slow
+    // For animated explorations, have speed controls
+    if (exploration.animated) {
+        const controls = document.createElement("div");
+        controls.className = "controls col-auto";
+        controls.innerHTML = `
+            <h4>Speed</h4>
+            <p style="margin-top: 0">
+                Slow
                 <input id="speed-${id}" name="speed" type="range" min="0" max="${UPDATE_TIMES.length - 1}" />
                 Fast
             </p>
-        </form>
-        <button id="pause-${id}">Pause</button>
-        <button id="resume-${id}">Resume</button>
-        <button id="step-${id}">Step</button>
-    `;
-    controls.querySelector("#speed-" + id)!.addEventListener("change", function(event) {
-        exploration.updateTime = UPDATE_TIMES[Number((event.target as HTMLInputElement).value)];
-    });
-    element.appendChild(controls);
+            <div class="buttons">
+                <button id="pause-${id}">Pause</button>
+                <button id="resume-${id}">Play</button>
+                <button id="step-${id}">Step</button>
+            </div>
+        `;
+        // get those buttons
+        controls.querySelector("#speed-" + id)!.addEventListener("change", function(event) {
+            exploration.updateTime = UPDATE_TIMES[Number((event.target as HTMLInputElement).value)];
+        });
+        element.appendChild(controls);
 
-    controls.querySelector("#pause-" + id)!.addEventListener("click", exploration.pause.bind(exploration));
-    controls.querySelector("#resume-" + id)!.addEventListener("click", exploration.resume.bind(exploration));
-    controls.querySelector("#step-" + id)!.addEventListener("click", exploration.update.bind(exploration));
+        const pauseButton = (controls.querySelector("#pause-" + id) as HTMLButtonElement);
+        pauseButton.addEventListener("click", function() {
+            exploration.pause();
+            pauseButton.disabled = true;
+            resumeButton.disabled = false;
+        });
+        pauseButton.disabled = true;
+        const resumeButton = controls.querySelector("#resume-" + id) as HTMLButtonElement;
+        resumeButton.addEventListener("click", function() {
+            exploration.resume();
+            pauseButton.disabled = false;
+            resumeButton.disabled = true;
+        });
+        controls.querySelector("#step-" + id)!.addEventListener("click", exploration.update.bind(exploration));
 
-    exploration.resume();
+        //exploration.resume();
+    }
 
     return exploration;
 }
@@ -62,8 +85,8 @@ function createExploration(id: string, type: typeof Exploration): Exploration {
 // Explorations
 let ALL_EXPLORATIONS: Exploration[] = [];
 ALL_EXPLORATIONS.push(createExploration('adder', AdderExploration));
-ALL_EXPLORATIONS.push(createExploration('subtractor', SubtractorExploration));
-//ALL_EXPLORATIONS.push(createExploration('choice', ChoiceExploration));
+//ALL_EXPLORATIONS.push(createExploration('subtractor', SubtractorExploration));
+ALL_EXPLORATIONS.push(createExploration('choice', ChoiceExploration));
 //ALL_EXPLORATIONS.push(createExploration('clock', ClockExploration));
 
 ALL_EXPLORATIONS.push(createExploration('multiplier-full', MultiplierExploration));

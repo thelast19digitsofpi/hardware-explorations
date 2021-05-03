@@ -11,6 +11,8 @@ class Exploration {
     // The idea is that all components update their state recursively starting here
     public outputComponents: Array<Component>;
 
+    public animated: boolean = false; // assume not unless proven otherwise
+
     public paused: boolean = false;
     public updateTime: number = 1000;
     public lastUpdated: number = Date.now();

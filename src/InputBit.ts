@@ -33,7 +33,6 @@ class InputBit implements Component {
             {x: 0, y: 0}
         ];
     }
-    beforeUpdate: undefined;
 
     render(ctx: CanvasRenderingContext2D) {
         if (this.state.active !== this.state.bits[0]) {

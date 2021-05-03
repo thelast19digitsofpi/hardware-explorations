@@ -88,8 +88,8 @@ class Adder implements Component {
             ctx.beginPath();
             ctx.arc(this.position.x + socket.x, this.position.y + socket.y, 6, 0, 2*Math.PI);
             ctx.fill();
-            ctx.fillStyle = "black";
-            ctx.fillText(String(i), this.position.x + socket.x, this.position.y + socket.y - 15);
+            /*ctx.fillStyle = "black";
+            ctx.fillText(String(i), this.position.x + socket.x, this.position.y + socket.y - 15);*/
         }
 
         for (let i = 0; i < this.outputSockets.length; i++) {

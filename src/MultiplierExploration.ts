@@ -15,8 +15,11 @@ class MultiplierExploration extends Exploration {
     countdown: Clock;
     regSpacing: number;
     regRight: number;
+    productRegister: OutputBit[];
     numBits: number;
     startButton: InputBit;
+
+    animated: boolean = true;
 
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
@@ -266,6 +269,34 @@ class MultiplierExploration extends Exploration {
         // rendering trick, because input wires are drawn with a component
         // so pushing these last makes them render last so it looks cleaner
         this.components.push(adder, countdown, startButton, displayA, displayB, displayEnd);
+        this.productRegister = productRegister;
+    }
+
+    drawProductGuide(left: number, right: number, color: string, text: string) {
+        const ctx = this.context;
+        const x1 = (this.regRight - left*this.regSpacing) - 15;
+        const x2 = (this.regRight - right*this.regSpacing) + 15;
+        const y = 460;
+        ctx.save();
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "none";
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(x1, y);
+        ctx.lineTo(x1 + 10, y + 10);
+        ctx.lineTo(x2 - 10, y + 10);
+        ctx.lineTo(x2, y);
+        ctx.stroke();
+
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.75)";
+        ctx.lineWidth = 2;
+        ctx.fillStyle = color;
+        ctx.font = "30px monospace";
+        ctx.strokeText(text, (x1 + x2)/2, y + 25);
+        ctx.fillText(text, (x1 + x2)/2, y + 25);
+        ctx.restore();
     }
 
     afterRender = () => {
@@ -273,10 +304,10 @@ class MultiplierExploration extends Exploration {
 
         const cycle = this.countdown.state.clock;
         if (cycle >= 0) {
-            const n = 5 - ((cycle + 1) >> 1);
-            if (n >= 0) {
+            const n = (cycle + 1) >> 1;
+            if (n <= 5) {
                 ctx.fillStyle = "rgba(255,255,255,0.75)";
-                const west = (this.regRight - this.regSpacing * n) - 20;
+                const west = (this.regRight - this.regSpacing * (5-n)) - 20;
                 const north = 340, south = 480;
                 const east = (this.regRight) + 22;
                 ctx.beginPath();
@@ -286,6 +317,15 @@ class MultiplierExploration extends Exploration {
                 ctx.lineTo(west, south);
                 ctx.fill();
             }
+
+            // product value
+            let productValue = 0;
+            for (let i = 0; i < this.numBits + n; i++) {
+                const bit = this.productRegister[i + (6-n)];
+                productValue += Number(bit.state.bits[0]) * (1 << i);
+            }
+
+            this.drawProductGuide(2 * this.numBits, this.numBits - n, "#33c", `Product (${productValue})`);
         }
 
         if (cycle == 2*this.numBits + 1) {

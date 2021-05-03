@@ -1,0 +1,22 @@
+body {
+    font-family: sans-serif;
+}
+
+.exploration {
+    display: flex;
+}
+
+.controls {
+    padding: 0.5em;
+}
+
+.controls button {
+    font-size: 1em;
+}
+
+canvas {
+    border: 2px solid black;
+}
+
+
+/*# sourceMappingURL=/style.e308ff8e.css.map */
