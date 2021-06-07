@@ -3,12 +3,85 @@
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" type="text/css" href="./style.css" />
 		<link rel="stylesheet" type="text/css" href="../node_modules/bootstrap/dist/css/bootstrap.css"
-		<link rel="stylesheet" type="text/css" href="style.css" />
 	</head>
 	<body>
 		<div class="container">
 			<h1>Arithmetic in Computer Hardware</h1>
+
+			<h3>The Basics</h3>
+			<p>You're probably aware that computers store numbers as a series of 0's and 1's. These 0s and 1s are sent around in various complicated circuits to do calculations.</p>
+			<p>But how does the computer actually do arithmetic? Before we can get into that, we need to learn how the computer actually stores numbers in the first place. There are a few different methods, but we'll focus on whole numbers for now.</p>
+			<p>Humans generally use base ten notation, which means that a number like 314 means three hundreds, one ten, and four units. Computer wiring generally uses base two, or binary, where the only digits are 0 and 1. For example, 110 means not "one hundred and ten" but "one four and one two", or six. Instead of powers of ten, binary digits use powers of two.</p>
+			<p>I promised this would be interactive. Here's a simple exploration to show how binary numbers work. I've included six binary digits, or bits, which means the maximum number you can reach is 2<sup>6</sup>&nbsp;-&nbsp;1, or 63. (With six decimal digits you could reach 10<sup>6</sup>&nbsp;-&nbsp;1 = 999,999.)</p>
+
+			<h4>Exploration Instructions</h4>
+			<ul style="font-size: large">
+				<li><strong class="bit-0">Dark Red</strong> indicates a <strong class="bit-0">zero/off</strong> bit.</li>
+				<li><strong class="bit-1">Green</strong> indicates a <strong class="bit-1">one/on</strong> bit. (In the explorations the green is lighter.)</li>
+				<li>Clicking on <strong>circular</strong> ("input") bits switches them.</li>
+				<li>Other components <em>cannot</em> be interacted with directly.</li>
+			</ul>
+			<p>This one just shows you the value of a 6-bit number. You can click on the bits to change them.</p>
+			<div class="exploration" id="binary-basic"></div>
+
+			<h3>Simple Operations</h3>
+			<p>Now, in order to do anything useful with these numbers, we need to have ways do to computations on bits. As is common in computer design, we start with the most basic possible components, and work our way up.</p>
+			<p>What are the simplest possible operations? Well, taking the opposite of a bit (change 0 to 1 and vice versa) is useful. That's called a "NOT gate", because it takes in a value and outputs whatever that value is <em>not</em>.</p>
+			<p>But to do real computations, we need bits to interact with each other. The next simplest kind of operation involves <em>two</em> inputs. There are many possibilities, but the simplest ones that come to mind are the following:</p>
+			<ul>
+				<li>AND: Gives a 1 if both of the inputs are 1's. Otherwise it gives 0.</li>
+				<li>OR: Gives a 1 if either, or both, inputs are 1's. If both are zero, it outputs 0.</li>
+			</ul>
+			<p>The English word "or" is annoyingly ambiguous; sometimes it allows both ("you must be 48 inches tall or accompanied by an adult"; they wouldn't turn away two tall adults who want to ride together!) and other times it does not. Computer scientists cannot tolerate this kind of ambiguity, and so they have decided that "OR" allows both options to be true. When you want "one or the other, but <em>not</em> both", they call it "exclusive or", also known as "XOR".</p>
+			<p>Why am I saying this? Well, first, I want to make it clear what an "OR" gate does when you see it in a circuit. Second, the XOR gate, though more complicated, is surprisingly useful later on...</p>
+			<table class="table">
+				<thead>
+					<tr>
+						<th>First Input</th>
+						<th>Second Input</th>
+						<th>AND</th>
+						<th>OR</th>
+						<th>XOR</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<th>0</th>
+						<th>0</th>
+						<td>0</td>
+						<td>0</td>
+						<td>0</td>
+					</tr>
+					<tr>
+						<th>0</th>
+						<th>1</th>
+						<td>0</td>
+						<td>1</td>
+						<td>1</td>
+					</tr>
+					<tr>
+						<th>1</th>
+						<th>0</th>
+						<td>0</td>
+						<td>1</td>
+						<td>1</td>
+					</tr>
+					<tr>
+						<th>1</th>
+						<th>1</th>
+						<td>1</td>
+						<td>1</td>
+						<td>0</td>
+					</tr>
+				</tbody>
+			</table>
+			<p>The above is a "truth table" for three of the four main operations. (The fourth, NOT, only has one input.)</p>
+			<p>Now, I will not go into how one actually builds a NOT gate or an AND gate. That's getting a bit too far into electrical engineering. Instead, we'll treat those as "atoms", basic components from which everything else will be built.</p>
+			<p>Instead, here is another exploration. There are no numbers this time. The squares are the outputs; you can't change them directly. In case you skipped the instructions above: Green is 1, red is 0. Click on circles to switch them. Squares are the output.</p>
+			<div class="exploration" id="gates"></div>
+
 			<!--
 			<h3>Registers</h3>
 			<p>We've seen operations like addition, where all of the logic happens at once and you see the result at the end. However, multiplication and division are more complicated, and so we need to break up the problem into several steps.</p>

@@ -21,14 +21,15 @@ class Exploration {
     // Can possibly have an afterRender property
     public afterRender: (() => void) | null | undefined;
 
-    constructor(canvas: HTMLCanvasElement) {
+    constructor(canvas: HTMLCanvasElement, width: number = 400, height: number = 400) {
         this.canvas = canvas;
         this.context = canvas.getContext('2d')!;
         this.components = [];
         this.outputComponents = [];
 
-        // default
-        canvas.width = canvas.height = 400;
+        // sizing
+        canvas.width = width;
+        canvas.height = height;
 
         // TS-safe way of putting a random debug name
         let id = Math.floor(Math.random() * 1e6);

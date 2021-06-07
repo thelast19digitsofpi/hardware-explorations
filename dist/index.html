@@ -1,4 +1,137 @@
-<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" type="text/css" href="bootstrap.ca798e6c.css" <link=""></head><body> <div class="container"> <h1>Arithmetic in Computer Hardware</h1>  <h3>Addition</h3> <p><em>I don't yet have a detailed explanation of addition, but here's the circuit.</em></p> <p>On the left side, I've put a basic implementation of the hardware showing the individual gates that make a basic four-bit adder. On the right, I've abstracted that away to a single component that does the same thing.</p> <p>Click on red and green <strong>circles</strong> to change the input bits. Red = 0, green = 1. The square bits are the outputs. The numbers show what your inputs and outputs are in decimal, but you <strong>cannot</strong> type numbers in. I did that on purpose. Click on the bits directly!</p> <div class="exploration" id="adder"></div>  <h3>Making Decisions</h3> <p>Another important component we will need is a <b>selector</b>. Essentially, a choice gate allows the circuit to choose between two options based on the value of a third. (If you've done any programming, you might know this as the <code>condition ? thing1 : thing2</code> operator, or <code>thing1 <strong>if</strong> condition <strong>else</strong> thing2</code> in Python.)</p> <p>For our purposes, we will make selectors one bit at a time. Call the inputs A, B, and C. The logic is this:</p> <ul> <li>If A is on (1), then we ignore C and output B.</li> <li>If A is off (0), then we ignore B and output B.</li> </ul> <p>To do this "if-else" in terms of logic gates, we know that we only want B to be used when A is on, so that would be an AND gate: (A and B). For C, we want that to be used whenever A is off, so that looks like ((not A) and C). Finally, since either of those two options is allowed, we use an OR gate to connect them: (A and B) or ((not A) and C).</p> <p>As usual, the circuit implementation is on the left and the abstracted component is on the right. Click on red and green circles to switch them on and off.</p> <div class="exploration" id="choice"></div> <h3>Multiplication</h3> <p>So now we turn to multiplication. Let's think about how we might multiply two numbers in base ten. The standard method is to do something like this:</p> <pre style="font-size:large">
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" type="text/css" href="/style.e308ff8e.css">
+		<link rel="stylesheet" type="text/css" href="/bootstrap.5f792716.css" <="" head="">
+	<script src="/style.e308ff8e.js"></script><script src="/bootstrap.5f792716.js"></script></head><body>
+		<div class="container">
+			<h1>Arithmetic in Computer Hardware</h1>
+
+			<h3>The Basics</h3>
+			<p>You're probably aware that computers store numbers as a series of 0's and 1's. These 0s and 1s are sent around in various complicated circuits to do calculations.</p>
+			<p>But how does the computer actually do arithmetic? Before we can get into that, we need to learn how the computer actually stores numbers in the first place. There are a few different methods, but we'll focus on whole numbers for now.</p>
+			<p>Humans generally use base ten notation, which means that a number like 314 means three hundreds, one ten, and four units. Computer wiring generally uses base two, or binary, where the only digits are 0 and 1. For example, 110 means not "one hundred and ten" but "one four and one two", or six. Instead of powers of ten, binary digits use powers of two.</p>
+			<p>I promised this would be interactive. Here's a simple exploration to show how binary numbers work. I've included six binary digits, or bits, which means the maximum number you can reach is 2<sup>6</sup>&nbsp;-&nbsp;1, or 63. (With six decimal digits you could reach 10<sup>6</sup>&nbsp;-&nbsp;1 = 999,999.)</p>
+
+			<h4>Exploration Instructions</h4>
+			<ul style="font-size: large">
+				<li><strong class="bit-0">Dark Red</strong> indicates a <strong class="bit-0">zero/off</strong> bit.</li>
+				<li><strong class="bit-1">Green</strong> indicates a <strong class="bit-1">one/on</strong> bit. (In the explorations the green is lighter.)</li>
+				<li>Clicking on <strong>circular</strong> ("input") bits switches them.</li>
+				<li>Other components <em>cannot</em> be interacted with directly.</li>
+			</ul>
+			<p>This one just shows you the value of a 6-bit number. You can click on the bits to change them.</p>
+			<div class="exploration" id="binary-basic"></div>
+
+			<h3>Simple Operations</h3>
+			<p>Now, in order to do anything useful with these numbers, we need to have ways do to computations on bits. As is common in computer design, we start with the most basic possible components, and work our way up.</p>
+			<p>What are the simplest possible operations? Well, taking the opposite of a bit (change 0 to 1 and vice versa) is useful. That's called a "NOT gate", because it takes in a value and outputs whatever that value is <em>not</em>.</p>
+			<p>But to do real computations, we need bits to interact with each other. The next simplest kind of operation involves <em>two</em> inputs. There are many possibilities, but the simplest ones that come to mind are the following:</p>
+			<ul>
+				<li>AND: Gives a 1 if both of the inputs are 1's. Otherwise it gives 0.</li>
+				<li>OR: Gives a 1 if either, or both, inputs are 1's. If both are zero, it outputs 0.</li>
+			</ul>
+			<p>The English word "or" is annoyingly ambiguous; sometimes it allows both ("you must be 48 inches tall or accompanied by an adult"; they wouldn't turn away two tall adults who want to ride together!) and other times it does not. Computer scientists cannot tolerate this kind of ambiguity, and so they have decided that "OR" allows both options to be true. When you want "one or the other, but <em>not</em> both", they call it "exclusive or", also known as "XOR".</p>
+			<p>Why am I saying this? Well, first, I want to make it clear what an "OR" gate does when you see it in a circuit. Second, the XOR gate, though more complicated, is surprisingly useful later on...</p>
+			<table class="table">
+				<thead>
+					<tr>
+						<th>First Input</th>
+						<th>Second Input</th>
+						<th>AND</th>
+						<th>OR</th>
+						<th>XOR</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<th>0</th>
+						<th>0</th>
+						<td>0</td>
+						<td>0</td>
+						<td>0</td>
+					</tr>
+					<tr>
+						<th>0</th>
+						<th>1</th>
+						<td>0</td>
+						<td>1</td>
+						<td>1</td>
+					</tr>
+					<tr>
+						<th>1</th>
+						<th>0</th>
+						<td>0</td>
+						<td>1</td>
+						<td>1</td>
+					</tr>
+					<tr>
+						<th>1</th>
+						<th>1</th>
+						<td>1</td>
+						<td>1</td>
+						<td>0</td>
+					</tr>
+				</tbody>
+			</table>
+			<p>The above is a "truth table" for three of the four main operations. (The fourth, NOT, only has one input.)</p>
+			<p>Now, I will not go into how one actually builds a NOT gate or an AND gate. That's getting a bit too far into electrical engineering. Instead, we'll treat those as "atoms", basic components from which everything else will be built.</p>
+			<p>Instead, here is another exploration. There are no numbers this time. The squares are the outputs; you can't change them directly. In case you skipped the instructions above: Green is 1, red is 0. Click on circles to switch them. Squares are the output.</p>
+			<div class="exploration" id="gates"></div>
+
+			<!--
+			<h3>Registers</h3>
+			<p>We've seen operations like addition, where all of the logic happens at once and you see the result at the end. However, multiplication and division are more complicated, and so we need to break up the problem into several steps.</p>
+			<p>In order to do that, we need some more persistent components, something that can "remember" what it had before. That looks difficult, but we can actually implement it fairly easily with a simple trick: we take the output and wire it back into the input!</p>
+			<p>The design I am going to use is non-informatively called a "D latch". The button on the left controls which signal goes in to the </p>
+
+			<div class="exploration" id="register">
+				<h4>Register Exploration</h4>
+			</div>
+			<p>Now, of course, in practice there are easier ways to do this using transistors, but this is a little easier to grasp. Usually we think of a register as being 32 or 64 bits, but we can just repeat this design for each bit of the register. On the right I've simplified this down to a single component.</p>
+
+			<div class="exploration" id="choice">
+				<h4>Choice Exploration</h4>
+			</div>
+
+			<h3>Clocks</h3>
+			<p>To do multiplication and division, we're going to need some time. I've given the clock a "power" input that can be used to reset it, and arranged the output sockets horizontally.</p>
+			<div class="exploration" id="clock">
+				<h4>Clock Exploration</h4>
+			</div>-->
+
+			<h3>Addition</h3>
+			<p><em>I don't yet have a detailed explanation of addition, but here's the circuit.</em></p>
+			<p>On the left side, I've put a basic implementation of the hardware showing the individual gates that make a basic four-bit adder. On the right, I've abstracted that away to a single component that does the same thing.</p>
+			<p>Click on red and green <strong>circles</strong> to change the input bits. Red = 0, green = 1. The square bits are the outputs. The numbers show what your inputs and outputs are in decimal, but you <strong>cannot</strong> type numbers in. I did that on purpose. Click on the bits directly!</p>
+			<div class="exploration" id="adder"></div>
+			<!--
+			<p>Subtraction works quite similarly to addition if we use what is known as two's complement.
+			<div class="exploration" id="subtractor"></div>
+			<p>Here the inputs are actually unsigned, so we need 5 bits to represent the output (which can range from -15 to +15). Normally, however, the inputs would also be signed, and so what above appears as 11 - 13 would actually be (-5) - (-3), which is still -5 + 3 = -2. Computations like 6 - (-4) would give -6 instead of +10, but this is exactly the same overflow problem as with the signed addition 6 + 4.</p>
+
+			<h3>Longevity</h3>
+			-->
+
+			<h3>Making Decisions</h3>
+			<p>Another important component we will need is a <b>selector</b>. Essentially, a choice gate allows the circuit to choose between two options based on the value of a third. (If you've done any programming, you might know this as the <code>condition ? thing1 : thing2</code> operator, or <code>thing1 <strong>if</strong> condition <strong>else</strong> thing2</code> in Python.)</p>
+
+			<p>For our purposes, we will make selectors one bit at a time. Call the inputs A, B, and C. The logic is this:</p>
+			<ul>
+				<li>If A is on (1), then we ignore C and output B.</li>
+				<li>If A is off (0), then we ignore B and output B.</li>
+			</ul>
+
+			<p>To do this "if-else" in terms of logic gates, we know that we only want B to be used when A is on, so that would be an AND gate: (A and B). For C, we want that to be used whenever A is off, so that looks like ((not A) and C). Finally, since either of those two options is allowed, we use an OR gate to connect them: (A and B) or ((not A) and C).</p>
+			<p>As usual, the circuit implementation is on the left and the abstracted component is on the right. Click on red and green circles to switch them on and off.</p>
+
+			<div class="exploration" id="choice"></div>
+
+			<h3>Multiplication</h3>
+			<p>So now we turn to multiplication. Let's think about how we might multiply two numbers in base ten. The standard method is to do something like this:</p>
+			<pre style="font-size: large">
 	   471
 	&times; 1011
 	------
@@ -8,7 +141,11 @@
 	471
 	------
 	476181
-			</pre> <p>You might have noticed that I deliberately chose to make the second number only have the digits 0 and 1. This is a very useful feature of binary: since the bits can only ever be 0 or 1, at each step, we either add the number as is or we don't. (In contrast, with base ten we might have to add some multiple of 471.)</p> <p>Normally, a computer would store each number as 32 or 64 bits, but for simplicity we will only use 6 bits. Now, it is possible to arrange six adders and pipe in the correct inputs, but that gets a bit unwieldy if you try to imagine 64 of them. Instead, I'll use a slower but simpler approach that involves doing the adds one at a time. Part of the reason for this is in analogy with the division method we will see later.</p> <p>The trick is to start with a blank "canvas" (register) of zero bits. It's easier to keep the adder in one place and move bit values, so we add into the upper 6 bits (the final answer may be as large as 12 bits) and then shift the register downward. (By "shift", I mean to shift the <strong>values</strong> of the bits. So in a shift cycle, each bit inherits the value of its left neighbor.) In decimal, it looks like this:</p> <pre>
+			</pre>
+			<p>You might have noticed that I deliberately chose to make the second number only have the digits 0 and 1. This is a very useful feature of binary: since the bits can only ever be 0 or 1, at each step, we either add the number as is or we don't. (In contrast, with base ten we might have to add some multiple of 471.)</p>
+			<p>Normally, a computer would store each number as 32 or 64 bits, but for simplicity we will only use 6 bits. Now, it is possible to arrange six adders and pipe in the correct inputs, but that gets a bit unwieldy if you try to imagine 64 of them. Instead, I'll use a slower but simpler approach that involves doing the adds one at a time. Part of the reason for this is in analogy with the division method we will see later.</p>
+			<p>The trick is to start with a blank "canvas" (register) of zero bits. It's easier to keep the adder in one place and move bit values, so we add into the upper 6 bits (the final answer may be as large as 12 bits) and then shift the register downward. (By "shift", I mean to shift the <strong>values</strong> of the bits. So in a shift cycle, each bit inherits the value of its left neighbor.) In decimal, it looks like this:</p>
+			<pre>
 	Register:  000000    [1011]
 	Add:       471000    [101<strong>1</strong>]
 	Shift:     047100    [ 101]
@@ -17,7 +154,40 @@
 	Don't add: 051810    [  1<strong>0</strong>] (don't add because of the 0)
 	Shift:     005181    [   1]
 	Add:       476181    [   <strong>1</strong>]
-	</pre> <p>To implement this in hardware, we need to keep track of which bit in the second number we are on. The easiest way to do this is with a second register of size 6. It gets shifted when the large one does, and we just tell the adder to keep the original value of the register if that bit is 0. (Notice the "Don't add" step above because the hundreds digit was a zero.)</p> <p>So here we come to the hardware. There's a lot going on here, but don't panic! A detailed explanation follows, but see if you can figure out what's going on by watching it.</p> <p><strong>Heads up!</strong> Unlike the previous simulations that calculated immediately, multiplication and division take time. To operate this version:</p> <ol> <li>Click on the row of circles in the upper left to make the first number.</li> <li>Click on the row of circles in the upper right to make the second number.</li> <li>When you are ready, click the large red button to start. Once it starts, click the <strong>Step</strong> button to the right of (or below, on small screens) the exploration repeatedly.</li> <li>You can also adjust the speed and click <strong>Play</strong> to animate the exploration.</li> </ol> <p>For best results, try setting the second input to something with several 1 bits and several 0 bits. A good number for this is 110011 (51). <div class="exploration" id="multiplier-full"></div> </p><h3>Multiplication: What Just Happened?</h3> <p>All right, so maybe all that wiring confused you a little. Let's go through it piece by piece. You probably noticed there were two alternating actions, which I will call "add" and "shift". "Shift" moves a bunch of values and "add" helps the product grow. In more detail:</p> <div class="clearfix"> <img src="mult_b.91183ea8.png" alt="Closeup of the upper right" class="float-start img-thumbnail me-2" width="300"> <p>This portion of the circuit, surrounding the second input, copies that input into a register. The wires coming from the upper right come from a NOT gate on the start button. If the start button is off, that not gate is on, so the selectors will choose the input bits, effectively <b>resetting this register</b>. Otherwise, they will select the value of the <b>previous bit, thus trying to shift the register</b>.</p> <p>However, the "write" signal is connected to an OR gate. The "write" is active when the teal wires are on OR the start button is off. Teal is the "shift" signal, and the start button being off is a reset. So <b>in shift phase, the values all move one place right</b>, but <b>in add phase, this register stays put</b>. The value of the LSB (least significant bit) doesn't go anywhere in shift phase, but it does have another purpose...</p> </div> <div class="clearfix"> <img src="mult_adder.78c388b5.png" alt="Closeup of the Adder" class="float-start img-thumbnail me-2" width="300"> <p>...and for that, we come to the adder. Its purpose is to <b>add the first input</b> to the upper 6 bits of the product register. The selector decides whether to use this sum (if the LSB from above is 1) or keep the state as is (if 0). The faded purple wire is connected to the product register, while the solid purple wire comes down to more selectors.</p> </div> <div class="clearfix"> <img src="mult_prodReg.f234e68a.png" alt="Closeup of the Adder" class="float-start img-thumbnail me-2" width="300"> <p>Those selectors then control what happens to the product register. Because there are only two phases, I decided not to make these formal "register" bits, but in practice you can still think of it as a register. The faded teal wires are the control signal for shifting (just like above). When those are active, all the bit values slide one place to the right. Otherwise, the bits on the right hold their own state, while those on the left receive the value from the selector above (which might or might not be the addition result).</p> </div> <p>Of course, now we just made a value that has twice as many bits as the computer. If your computer is 64-bit, then the multiplication can theoretically use as many as 128 bits. (Challenge: Find a multiplication in the above where the 12th bit from the right is a 1.) One approach, used by the MIPS architecture, is to store the result in a special "high" and "low" register. Then, programs can use an instruction called <code>mfhi</code> and <code>mflo</code> ("move from high/low") to extract the two halves separately. Usually only the lower half is actually used; the upper half would only check if there is overflow.</p> <h3>Division</h3> <p>Long division is also rather tricky. Let's take the example from earlier with a slight modification:</p> <pre>
+	</pre>
+			<p>To implement this in hardware, we need to keep track of which bit in the second number we are on. The easiest way to do this is with a second register of size 6. It gets shifted when the large one does, and we just tell the adder to keep the original value of the register if that bit is 0. (Notice the "Don't add" step above because the hundreds digit was a zero.)</p>
+			<p>So here we come to the hardware. There's a lot going on here, but don't panic! A detailed explanation follows, but see if you can figure out what's going on by watching it.</p>
+			<p><strong>Heads up!</strong> Unlike the previous simulations that calculated immediately, multiplication and division take time. To operate this version:</p>
+			<ol>
+				<li>Click on the row of circles in the upper left to make the first number.</li>
+				<li>Click on the row of circles in the upper right to make the second number.</li>
+				<li>When you are ready, click the large red button to start. Once it starts, click the <strong>Step</strong> button to the right of (or below, on small screens) the exploration repeatedly.</li>
+				<li>You can also adjust the speed and click <strong>Play</strong> to animate the exploration.</li>
+			</ol>
+			<p>For best results, try setting the second input to something with several 1 bits and several 0 bits. A good number for this is 110011 (51).
+			<div class="exploration" id="multiplier-full"></div>
+
+			</p><h3>Multiplication: What Just Happened?</h3>
+			<p>All right, so maybe all that wiring confused you a little. Let's go through it piece by piece. You probably noticed there were two alternating actions, which I will call "add" and "shift". "Shift" moves a bunch of values and "add" helps the product grow. In more detail:</p>
+			<div class="clearfix">
+				<img src="/mult_b.b919f53d.png" alt="Closeup of the upper right" class="float-start img-thumbnail me-2" width="300">
+				<p>This portion of the circuit, surrounding the second input, copies that input into a register. The wires coming from the upper right come from a NOT gate on the start button. If the start button is off, that not gate is on, so the selectors will choose the input bits, effectively <b>resetting this register</b>. Otherwise, they will select the value of the <b>previous bit, thus trying to shift the register</b>.</p>
+				<p>However, the "write" signal is connected to an OR gate. The "write" is active when the teal wires are on OR the start button is off. Teal is the "shift" signal, and the start button being off is a reset. So <b>in shift phase, the values all move one place right</b>, but <b>in add phase, this register stays put</b>. The value of the LSB (least significant bit) doesn't go anywhere in shift phase, but it does have another purpose...</p>
+			</div>
+			<div class="clearfix">
+				<img src="/mult_adder.9cd7c507.png" alt="Closeup of the Adder" class="float-start img-thumbnail me-2" width="300">
+				<p>...and for that, we come to the adder. Its purpose is to <b>add the first input</b> to the upper 6 bits of the product register. The selector decides whether to use this sum (if the LSB from above is 1) or keep the state as is (if 0). The faded purple wire is connected to the product register, while the solid purple wire comes down to more selectors.</p>
+			</div>
+			<div class="clearfix">
+				<img src="/mult_prodReg.2efe3b26.png" alt="Closeup of the Adder" class="float-start img-thumbnail me-2" width="300">
+				<p>Those selectors then control what happens to the product register. Because there are only two phases, I decided not to make these formal "register" bits, but in practice you can still think of it as a register. The faded teal wires are the control signal for shifting (just like above). When those are active, all the bit values slide one place to the right. Otherwise, the bits on the right hold their own state, while those on the left receive the value from the selector above (which might or might not be the addition result).</p>
+			</div>
+
+			<p>Of course, now we just made a value that has twice as many bits as the computer. If your computer is 64-bit, then the multiplication can theoretically use as many as 128 bits. (Challenge: Find a multiplication in the above where the 12th bit from the right is a 1.) One approach, used by the MIPS architecture, is to store the result in a special "high" and "low" register. Then, programs can use an instruction called <code>mfhi</code> and <code>mflo</code> ("move from high/low") to extract the two halves separately. Usually only the lower half is actually used; the upper half would only check if there is overflow.</p>
+
+			<h3>Division</h3>
+			<p>Long division is also rather tricky. Let's take the example from earlier with a slight modification:</p>
+			<pre>
 &nbsp;   <u>    1011</u>
 471 | 476223
 &nbsp;   &nbsp; 471
@@ -32,4 +202,20 @@
 &nbsp;   &nbsp;    471
 &nbsp;   &nbsp;    ---
 &nbsp;   &nbsp;     42
-			</pre> <p>Many things are similar to multiplication, actually. If you remember the multiplication hardware, we started with an empty register, and added to the left half and then shifted all the bits to the right. Here, we do the opposite: the register now starts with the numerator, and we repeatedly subtract and shift <em>left</em>.</p> <p>When the subtractor gets its result, we first check the carry-out bit and see if it is 0. (If it were 1, then we got a negative result.) This is sent into choice gates to decide whether or not to use the subtraction.</p> <p>Now, a naive implementation of the hardware would just have a second register for storing the quotient. However, because of the way we shift the register upward, we can actually just use the lower half of the register to hold the quotient.</p> <p>Why is this? Well, when done this way, we can now use the same hardware for multiplication and division! The <code>mfhi</code> instruction would now mean "extract the remainder", and <code>mflo</code> now gets the quotient. </p> <p>Like before, I made the power button shut itself off when the computation is done. Notice how it immediately resets the big row now. The top number is the numerator and the bottom number is the denominator.</p> <div class="exploration" id="divider-full"></div> <p>Here's a few things to try:</p> <ul> <li>Try some stress tests: 63 divided by 1, 63 divided by 63, 1 divided by 63, 1 divided by 1, 0 divided by 1 or 63.</li> <li>What happens if you divide by zero? See if you can guess, then try it. (A real computer would issue some kind of error if you tried to do so, but that requires more work.)</li> </ul> </div> </body><script src="main.7dc3aad3.js"></script></html>
+			</pre>
+			<p>Many things are similar to multiplication, actually. If you remember the multiplication hardware, we started with an empty register, and added to the left half and then shifted all the bits to the right. Here, we do the opposite: the register now starts with the numerator, and we repeatedly subtract and shift <em>left</em>.</p>
+			<p>When the subtractor gets its result, we first check the carry-out bit and see if it is 0. (If it were 1, then we got a negative result.) This is sent into choice gates to decide whether or not to use the subtraction.</p>
+			<p>Now, a naive implementation of the hardware would just have a second register for storing the quotient. However, because of the way we shift the register upward, we can actually just use the lower half of the register to hold the quotient.</p>
+			<p>Why is this? Well, when done this way, we can now use the same hardware for multiplication and division! The <code>mfhi</code> instruction would now mean "extract the remainder", and <code>mflo</code> now gets the quotient. </p>
+			<p>Like before, I made the power button shut itself off when the computation is done. Notice how it immediately resets the big row now. The top number is the numerator and the bottom number is the denominator.</p>
+			<div class="exploration" id="divider-full"></div>
+			<p>Here's a few things to try:</p>
+			<ul>
+				<li>Try some stress tests: 63 divided by 1, 63 divided by 63, 1 divided by 63, 1 divided by 1, 0 divided by 1 or 63.</li>
+				<li>What happens if you divide by zero? See if you can guess, then try it. (A real computer would issue some kind of error if you tried to do so, but that requires more work.)</li>
+			</ul>
+		</div>
+	</body>
+
+	<script src="/main.c39d6dcf.js"></script>
+</html>

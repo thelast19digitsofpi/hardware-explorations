@@ -159,7 +159,7 @@ class XorGate extends Gate {
         return [bits[0] !== bits[1]];
     };
 }
-// Doesn't extend Gate because it only has 1 input and is smaller
+
 class Not extends Gate {
     constructor(x: number, y: number, size: number, degrees: number) {
         super(x, y, size, degrees, 1);

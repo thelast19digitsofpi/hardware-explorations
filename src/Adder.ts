@@ -44,6 +44,12 @@ class Adder implements Component {
             });
         }
 
+        // carry input
+        this.inputSockets.push({
+            x: this.size.x * 3/8,
+            y: 0,
+        });
+
         this.outputSockets = [];
         for (let i = 0; i < bits; i++) {
             this.outputSockets.push({

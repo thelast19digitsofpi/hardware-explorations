@@ -2,6 +2,13 @@ body {
     font-family: sans-serif;
 }
 
+.bit-0 {
+    color: #990000;
+}
+.bit-1 {
+    color: #009900;
+}
+
 .exploration {
     display: flex;
 }
@@ -14,8 +21,8 @@ body {
     font-size: 1em;
 }
 
-canvas {
-    border: 2px solid black;
+.canvas-wrapper {
+    border: 1px solid black;
 }
 
 

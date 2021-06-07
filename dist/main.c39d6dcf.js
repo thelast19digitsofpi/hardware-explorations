@@ -131,7 +131,15 @@ exports.default = void 0;
 var Exploration =
 /** @class */
 function () {
-  function Exploration(canvas) {
+  function Exploration(canvas, width, height) {
+    if (width === void 0) {
+      width = 400;
+    }
+
+    if (height === void 0) {
+      height = 400;
+    }
+
     this.animated = false; // assume not unless proven otherwise
 
     this.paused = false;
@@ -140,9 +148,10 @@ function () {
     this.canvas = canvas;
     this.context = canvas.getContext('2d');
     this.components = [];
-    this.outputComponents = []; // default
+    this.outputComponents = []; // sizing
 
-    canvas.width = canvas.height = 400; // TS-safe way of putting a random debug name
+    canvas.width = width;
+    canvas.height = height; // TS-safe way of putting a random debug name
 
     var id = Math.floor(Math.random() * 1e6);
     Object.defineProperty(window, "exploration" + id, {
@@ -496,8 +505,13 @@ function () {
         x: spacing * (i + 0.5) - width / 2,
         y: -this.size.y / 2
       });
-    }
+    } // carry input
 
+
+    this.inputSockets.push({
+      x: this.size.x * 3 / 8,
+      y: 0
+    });
     this.outputSockets = [];
 
     for (var i = 0; i < bits; i++) {
@@ -886,8 +900,7 @@ function (_super) {
 
   ;
   return XorGate;
-}(Gate); // Doesn't extend Gate because it only has 1 input and is smaller
-
+}(Gate);
 
 exports.XorGate = XorGate;
 
@@ -1106,10 +1119,8 @@ function (_super) {
   function AdderExploration(canvas) {
     var _a, _b;
 
-    var _this = _super.call(this, canvas) || this;
+    var _this = _super.call(this, canvas, 640, 400) || this;
 
-    canvas.width = 640;
-    canvas.height = 400;
     var adder = new _Adder.default(520, 200, 4);
 
     _this.components.push(adder);
@@ -1247,7 +1258,154 @@ function (_super) {
 
 var _default = AdderExploration;
 exports.default = _default;
-},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./Adder":"Adder.ts","./Wire":"Wire.ts","./Gates":"Gates.ts","./Display":"Display.ts"}],"ChoiceGate.ts":[function(require,module,exports) {
+},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./Adder":"Adder.ts","./Wire":"Wire.ts","./Gates":"Gates.ts","./Display":"Display.ts"}],"Text.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+// Text.ts
+//
+// Simple text display
+var Text =
+/** @class */
+function () {
+  function Text(x, y, size, text, options) {
+    if (options === void 0) {
+      options = {};
+    }
+
+    this.state = {
+      bits: []
+    };
+    this.inputSockets = [];
+    this.outputSockets = [];
+    this.inputWires = [];
+
+    this.onClick = function () {};
+
+    this.evaluate = function () {
+      return [];
+    };
+
+    this.beforeUpdate = undefined;
+    this.position = {
+      x: x,
+      y: y
+    };
+    this.size = {
+      x: 0,
+      y: size
+    };
+    this.text = text;
+    this.options = options;
+  }
+
+  Text.prototype.render = function (ctx) {
+    ctx.save();
+    var message = typeof this.text === "function" ? this.text() : this.text;
+    ctx.font = this.size.y + "px monospace"; // if function, call it; if string, use it; if undefined, default to #333
+
+    ctx.fillStyle = typeof this.options.color === "function" ? this.options.color() : this.options.color || "#333"; // positioning
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(message, this.position.x, this.position.y);
+    ctx.restore();
+  };
+
+  return Text;
+}();
+
+var _default = Text;
+exports.default = _default;
+},{}],"BinaryExploration.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _Exploration = _interopRequireDefault(require("./Exploration"));
+
+var _InputBit = _interopRequireDefault(require("./InputBit"));
+
+var _Display = _interopRequireDefault(require("./Display"));
+
+var _Text = _interopRequireDefault(require("./Text"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+// BinaryExploration.ts
+var __extends = void 0 && (void 0).__extends || function () {
+  var _extendStatics = function extendStatics(d, b) {
+    _extendStatics = Object.setPrototypeOf || {
+      __proto__: []
+    } instanceof Array && function (d, b) {
+      d.__proto__ = b;
+    } || function (d, b) {
+      for (var p in b) {
+        if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p];
+      }
+    };
+
+    return _extendStatics(d, b);
+  };
+
+  return function (d, b) {
+    _extendStatics(d, b);
+
+    function __() {
+      this.constructor = d;
+    }
+
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+  };
+}();
+
+var BinaryExploration =
+/** @class */
+function (_super) {
+  __extends(BinaryExploration, _super);
+
+  function BinaryExploration(canvas) {
+    var _a, _b;
+
+    var _this = _super.call(this, canvas, 480, 240) || this;
+
+    var NUM_BITS = 6;
+    var bitArray = [];
+
+    for (var i = 0; i < NUM_BITS; i++) {
+      var bit = new _InputBit.default(440 - 80 * i, 80, false, 30);
+      bitArray.push(bit);
+      var text = new _Text.default(bit.position.x, bit.position.y / 2, 30, String(Math.pow(2, i)));
+
+      _this.components.push(text);
+    }
+
+    (_a = _this.components).push.apply(_a, bitArray);
+
+    (_b = _this.outputComponents).push.apply(_b, bitArray);
+
+    var display = new _Display.default(240, 160, bitArray, false, 48);
+
+    _this.components.push(display);
+
+    _this.outputComponents.push(display);
+
+    return _this;
+  }
+
+  return BinaryExploration;
+}(_Exploration.default);
+
+var _default = BinaryExploration;
+exports.default = _default;
+},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./Display":"Display.ts","./Text":"Text.ts"}],"ChoiceGate.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2537,7 +2695,110 @@ function (_super) {
 
 var _default = DividerExploration;
 exports.default = _default;
-},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./RegisterBit":"RegisterBit.ts","./Subtractor":"Subtractor.ts","./Wire":"Wire.ts","./Clock":"Clock.ts","./Display":"Display.ts","./Gates":"Gates.ts","./ChoiceGate":"ChoiceGate.ts"}],"MultiplierExploration.ts":[function(require,module,exports) {
+},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./RegisterBit":"RegisterBit.ts","./Subtractor":"Subtractor.ts","./Wire":"Wire.ts","./Clock":"Clock.ts","./Display":"Display.ts","./Gates":"Gates.ts","./ChoiceGate":"ChoiceGate.ts"}],"GateExploration.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _Exploration = _interopRequireDefault(require("./Exploration"));
+
+var _Wire = _interopRequireDefault(require("./Wire"));
+
+var _InputBit = _interopRequireDefault(require("./InputBit"));
+
+var _OutputBit = _interopRequireDefault(require("./OutputBit"));
+
+var _Gates = require("./Gates");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+// GateExploration
+//
+// Basic exploration of AND, OR, XOR, and NOT gates
+var __extends = void 0 && (void 0).__extends || function () {
+  var _extendStatics = function extendStatics(d, b) {
+    _extendStatics = Object.setPrototypeOf || {
+      __proto__: []
+    } instanceof Array && function (d, b) {
+      d.__proto__ = b;
+    } || function (d, b) {
+      for (var p in b) {
+        if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p];
+      }
+    };
+
+    return _extendStatics(d, b);
+  };
+
+  return function (d, b) {
+    _extendStatics(d, b);
+
+    function __() {
+      this.constructor = d;
+    }
+
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+  };
+}();
+
+var GateExploration =
+/** @class */
+function (_super) {
+  __extends(GateExploration, _super);
+
+  function GateExploration(canvas) {
+    var _this = _super.call(this, canvas, 480, 240) || this;
+
+    var types = [_Gates.AndGate, _Gates.OrGate, _Gates.XorGate];
+
+    for (var i = 0; i < 3; i++) {
+      var bit1 = new _InputBit.default(i * 120 + 60, 40, false, 30);
+      var bit2 = new _InputBit.default(i * 120 + 120, 40, false, 30);
+      var gate = new types[i](i * 120 + 90, 120, 60, 0);
+      gate.inputWires.push(new _Wire.default(bit1, 0, [{
+        x: gate.position.x - 12,
+        y: gate.position.y - 40
+      }, {
+        x: bit1.position.x,
+        y: gate.position.y - 40
+      }]));
+      gate.inputWires.push(new _Wire.default(bit2, 0, [{
+        x: gate.position.x + 12,
+        y: gate.position.y - 40
+      }, {
+        x: bit2.position.x,
+        y: gate.position.y - 40
+      }]));
+      var out = new _OutputBit.default(i * 120 + 90, 200, 30);
+      out.inputWires.push(new _Wire.default(gate, 0));
+
+      _this.components.push(gate, bit1, bit2, out);
+
+      _this.outputComponents.push(out);
+    }
+
+    var notInput = new _InputBit.default(420, 40, false, 30);
+    var notGate = new _Gates.Not(420, 120, 60, 0);
+    notGate.inputWires.push(new _Wire.default(notInput, 0));
+    var notOutput = new _OutputBit.default(420, 200, 30);
+    notOutput.inputWires.push(new _Wire.default(notGate, 0));
+
+    _this.components.push(notGate, notInput, notOutput);
+
+    _this.outputComponents.push(notOutput);
+
+    return _this;
+  }
+
+  return GateExploration;
+}(_Exploration.default);
+
+var _default = GateExploration;
+exports.default = _default;
+},{"./Exploration":"Exploration.ts","./Wire":"Wire.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./Gates":"Gates.ts"}],"MultiplierExploration.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3032,9 +3293,13 @@ exports.default = _default;
 
 var _AdderExploration = _interopRequireDefault(require("./AdderExploration"));
 
+var _BinaryExploration = _interopRequireDefault(require("./BinaryExploration"));
+
 var _ChoiceExploration = _interopRequireDefault(require("./ChoiceExploration"));
 
 var _DividerExploration = _interopRequireDefault(require("./DividerExploration"));
+
+var _GateExploration = _interopRequireDefault(require("./GateExploration"));
 
 var _MultiplierExploration = _interopRequireDefault(require("./MultiplierExploration"));
 
@@ -3098,9 +3363,8 @@ function createExploration(id, type) {
 
 
 var ALL_EXPLORATIONS = [];
-ALL_EXPLORATIONS.push(createExploration('adder', _AdderExploration.default)); //ALL_EXPLORATIONS.push(createExploration('subtractor', SubtractorExploration));
-
-ALL_EXPLORATIONS.push(createExploration('choice', _ChoiceExploration.default)); //ALL_EXPLORATIONS.push(createExploration('clock', ClockExploration));
+ALL_EXPLORATIONS.push(createExploration('binary-basic', _BinaryExploration.default), createExploration('adder', _AdderExploration.default), createExploration('gates', _GateExploration.default), //ALL_EXPLORATIONS.push(createExploration('subtractor', SubtractorExploration));
+createExploration('choice', _ChoiceExploration.default)); //ALL_EXPLORATIONS.push(createExploration('clock', ClockExploration));
 
 ALL_EXPLORATIONS.push(createExploration('multiplier-full', _MultiplierExploration.default));
 ALL_EXPLORATIONS.push(createExploration('divider-full', _DividerExploration.default)); //ALL_EXPLORATIONS.push(createExploration('3', RegisterExploration));
@@ -3116,7 +3380,7 @@ function renderLoop() {
 }
 
 renderLoop();
-},{"./AdderExploration":"AdderExploration.ts","./ChoiceExploration":"ChoiceExploration.ts","./DividerExploration":"DividerExploration.ts","./MultiplierExploration":"MultiplierExploration.ts"}],"../../../../../usr/local/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"./AdderExploration":"AdderExploration.ts","./BinaryExploration":"BinaryExploration.ts","./ChoiceExploration":"ChoiceExploration.ts","./DividerExploration":"DividerExploration.ts","./GateExploration":"GateExploration.ts","./MultiplierExploration":"MultiplierExploration.ts"}],"../../../../../usr/local/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -3144,7 +3408,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58815" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61355" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

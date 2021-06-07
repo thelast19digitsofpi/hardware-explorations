@@ -2,9 +2,11 @@
 import Exploration from './Exploration';
 //import TestExploration from './TestExploration';
 import AdderExploration from './AdderExploration';
+import BinaryExploration from './BinaryExploration';
 import ChoiceExploration from './ChoiceExploration';
 import ClockExploration from './ClockExploration';
 import DividerExploration from './DividerExploration';
+import GateExploration from './GateExploration';
 import MultiplierExploration from './MultiplierExploration';
 import RegisterExploration from './RegisterExploration';
 import SubtractorExploration from './SubtractorExploration';
@@ -84,9 +86,12 @@ function createExploration(id: string, type: typeof Exploration): Exploration {
 
 // Explorations
 let ALL_EXPLORATIONS: Exploration[] = [];
-ALL_EXPLORATIONS.push(createExploration('adder', AdderExploration));
+ALL_EXPLORATIONS.push(
+    createExploration('binary-basic', BinaryExploration),
+    createExploration('adder', AdderExploration),
+    createExploration('gates', GateExploration),
 //ALL_EXPLORATIONS.push(createExploration('subtractor', SubtractorExploration));
-ALL_EXPLORATIONS.push(createExploration('choice', ChoiceExploration));
+    createExploration('choice', ChoiceExploration));
 //ALL_EXPLORATIONS.push(createExploration('clock', ClockExploration));
 
 ALL_EXPLORATIONS.push(createExploration('multiplier-full', MultiplierExploration));

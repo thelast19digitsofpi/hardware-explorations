@@ -10,9 +10,7 @@ import Display from './Display';
 
 class AdderExploration extends Exploration {
     constructor(canvas: HTMLCanvasElement) {
-        super(canvas);
-        canvas.width = 640;
-        canvas.height = 400;
+        super(canvas, 640, 400);
 
         const adder = new Adder(520, 200, 4);
         this.components.push(adder);
