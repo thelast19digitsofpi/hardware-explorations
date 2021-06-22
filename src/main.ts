@@ -1,12 +1,15 @@
 
 import Exploration from './Exploration';
-//import TestExploration from './TestExploration';
+
+// Alphabetized because... idunno
 import AdderExploration from './AdderExploration';
 import BinaryExploration from './BinaryExploration';
 import ChoiceExploration from './ChoiceExploration';
 import ClockExploration from './ClockExploration';
 import DividerExploration from './DividerExploration';
+import FullAdderExploration1 from './FullAdderGates';
 import GateExploration from './GateExploration';
+import HalfAdderCheat from './HalfAdderCheat';
 import MultiplierExploration from './MultiplierExploration';
 import RegisterExploration from './RegisterExploration';
 import SubtractorExploration from './SubtractorExploration';
@@ -19,10 +22,11 @@ function createCanvas(): HTMLCanvasElement {
 // in milliseconds
 const UPDATE_TIMES = [4000, 2500, 1600, 1000, 630, 400, 250]
 
-function createExploration(id: string, type: typeof Exploration): Exploration {
+function createExploration(id: string, type: typeof Exploration): Exploration | undefined {
     const element = document.getElementById(id);
     if (!element) {
-        throw new Error("Document element " + id + " not found.");
+        console.warn("Document element " + id + " not found.");
+        return;
     }
 
     element.className += " row";
@@ -85,13 +89,17 @@ function createExploration(id: string, type: typeof Exploration): Exploration {
 
 
 // Explorations
-let ALL_EXPLORATIONS: Exploration[] = [];
+let ALL_EXPLORATIONS: (Exploration | undefined)[] = [];
 ALL_EXPLORATIONS.push(
     createExploration('binary-basic', BinaryExploration),
     createExploration('adder', AdderExploration),
     createExploration('gates', GateExploration),
 //ALL_EXPLORATIONS.push(createExploration('subtractor', SubtractorExploration));
-    createExploration('choice', ChoiceExploration));
+    createExploration('choice', ChoiceExploration),
+    createExploration('half-adder-cheat', HalfAdderCheat),
+    createExploration('gates-again', GateExploration),
+    createExploration('full-adder1', FullAdderExploration1)
+);
 //ALL_EXPLORATIONS.push(createExploration('clock', ClockExploration));
 
 ALL_EXPLORATIONS.push(createExploration('multiplier-full', MultiplierExploration));
@@ -102,8 +110,26 @@ function renderLoop() {
     // TODO: Put this in exploration
     for (let i = 0; i < ALL_EXPLORATIONS.length; i++) {
         const exploration = ALL_EXPLORATIONS[i];
-        exploration.render();
+        if (exploration) {
+            exploration.render();
+        }
     }
     requestAnimationFrame(renderLoop);
 }
 renderLoop();
+
+// some other stuff
+function fillInteractiveTable(table: HTMLTableElement) {
+    if (table === null) return;
+    const html = `<input type="number" min="0" max="1" size="3" />`;
+    const fillIn = table.tBodies[0].getElementsByTagName("tr");
+    for (let i = 0; i < fillIn.length; i++) {
+        const out1 = document.createElement("td");
+        out1.innerHTML = html;
+        const out2 = document.createElement("td");
+        out2.innerHTML = html;
+        fillIn[i].appendChild(out1);
+        fillIn[i].appendChild(out2);
+    }
+}
+fillInteractiveTable(document.getElementById("fill-in"));

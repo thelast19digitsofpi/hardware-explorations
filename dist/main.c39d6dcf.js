@@ -683,6 +683,16 @@ function () {
     var endOffset = this.toComponent.outputSockets[this.toOutput];
     ctx.lineTo(endOffset.x + this.toComponent.position.x, endOffset.y + this.toComponent.position.y);
     ctx.stroke();
+    ctx.lineWidth = 6;
+
+    for (var i = 0; i < this.waypoints.length; i++) {
+      if (this.waypoints[i].node) {
+        ctx.beginPath();
+        ctx.arc(this.waypoints[i].x, this.waypoints[i].y, 1, 0, 2 * Math.PI);
+        ctx.stroke();
+      }
+    }
+
     ctx.restore();
   };
 
@@ -716,6 +726,8 @@ var __extends = void 0 && (void 0).__extends || function () {
   };
 
   return function (d, b) {
+    if (typeof b !== "function" && b !== null) throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+
     _extendStatics(d, b);
 
     function __() {
@@ -731,6 +743,7 @@ var Gate =
 function () {
   // bits=8 means an 8-bit plus 8-bit
   function Gate(x, y, size, rotation, bits) {
+    this.symbol = "";
     this.position = {
       x: x,
       y: y
@@ -794,6 +807,12 @@ function () {
     }
 
     this.drawGate(ctx);
+    ctx.rotate(-this.rotation);
+    ctx.font = Math.round(this.size.y * 0.6) + "px monospace";
+    ctx.fillStyle = "#333";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(this.symbol, 0, 0);
     ctx.restore();
   };
 
@@ -806,7 +825,10 @@ function (_super) {
   __extends(AndGate, _super);
 
   function AndGate(x, y, size, degrees) {
-    return _super.call(this, x, y, size, degrees, 2) || this;
+    var _this = _super.call(this, x, y, size, degrees, 2) || this;
+
+    _this.symbol = "&";
+    return _this;
   }
 
   AndGate.prototype.drawGate = function (ctx) {
@@ -838,7 +860,10 @@ function (_super) {
   __extends(OrGate, _super);
 
   function OrGate(x, y, size, degrees) {
-    return _super.call(this, x, y, size, degrees, 2) || this;
+    var _this = _super.call(this, x, y, size, degrees, 2) || this;
+
+    _this.symbol = "O";
+    return _this;
   }
 
   OrGate.prototype.drawGate = function (ctx) {
@@ -871,7 +896,10 @@ function (_super) {
   __extends(XorGate, _super);
 
   function XorGate(x, y, size, degrees) {
-    return _super.call(this, x, y, size, degrees, 2) || this;
+    var _this = _super.call(this, x, y, size, degrees, 2) || this;
+
+    _this.symbol = "X";
+    return _this;
   }
 
   XorGate.prototype.drawGate = function (ctx) {
@@ -1087,6 +1115,8 @@ var __extends = void 0 && (void 0).__extends || function () {
   };
 
   return function (d, b) {
+    if (typeof b !== "function" && b !== null) throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+
     _extendStatics(d, b);
 
     function __() {
@@ -1097,18 +1127,12 @@ var __extends = void 0 && (void 0).__extends || function () {
   };
 }();
 
-var __spreadArrays = void 0 && (void 0).__spreadArrays || function () {
-  for (var s = 0, i = 0, il = arguments.length; i < il; i++) {
-    s += arguments[i].length;
+var __spreadArray = void 0 && (void 0).__spreadArray || function (to, from) {
+  for (var i = 0, il = from.length, j = to.length; i < il; i++, j++) {
+    to[j] = from[i];
   }
 
-  for (var r = Array(s), k = 0, i = 0; i < il; i++) {
-    for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++) {
-      r[k] = a[j];
-    }
-  }
-
-  return r;
+  return to;
 };
 
 var AdderExploration =
@@ -1240,7 +1264,7 @@ function (_super) {
     finalCarry.inputWires.push(new _Wire.default(carryOuts[3], 0, []));
     rightOutput.push(finalCarry);
 
-    (_a = _this.components).push.apply(_a, __spreadArrays([finalCarry], rightInputA, rightInputB));
+    (_a = _this.components).push.apply(_a, __spreadArray(__spreadArray([finalCarry], rightInputA), rightInputB));
 
     var displayA = new _Display.default(35, 30, rightInputA);
     var displayB = new _Display.default(35, 90, rightInputB);
@@ -1356,6 +1380,8 @@ var __extends = void 0 && (void 0).__extends || function () {
   };
 
   return function (d, b) {
+    if (typeof b !== "function" && b !== null) throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+
     _extendStatics(d, b);
 
     function __() {
@@ -1541,6 +1567,8 @@ var __extends = void 0 && (void 0).__extends || function () {
   };
 
   return function (d, b) {
+    if (typeof b !== "function" && b !== null) throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+
     _extendStatics(d, b);
 
     function __() {
@@ -2115,6 +2143,8 @@ var __extends = void 0 && (void 0).__extends || function () {
   };
 
   return function (d, b) {
+    if (typeof b !== "function" && b !== null) throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+
     _extendStatics(d, b);
 
     function __() {
@@ -2695,7 +2725,167 @@ function (_super) {
 
 var _default = DividerExploration;
 exports.default = _default;
-},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./RegisterBit":"RegisterBit.ts","./Subtractor":"Subtractor.ts","./Wire":"Wire.ts","./Clock":"Clock.ts","./Display":"Display.ts","./Gates":"Gates.ts","./ChoiceGate":"ChoiceGate.ts"}],"GateExploration.ts":[function(require,module,exports) {
+},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./RegisterBit":"RegisterBit.ts","./Subtractor":"Subtractor.ts","./Wire":"Wire.ts","./Clock":"Clock.ts","./Display":"Display.ts","./Gates":"Gates.ts","./ChoiceGate":"ChoiceGate.ts"}],"FullAdderGates.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _Exploration = _interopRequireDefault(require("./Exploration"));
+
+var _InputBit = _interopRequireDefault(require("./InputBit"));
+
+var _OutputBit = _interopRequireDefault(require("./OutputBit"));
+
+var _Wire = _interopRequireDefault(require("./Wire"));
+
+var _Display = _interopRequireDefault(require("./Display"));
+
+var _Text = _interopRequireDefault(require("./Text"));
+
+var _Gates = require("./Gates");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+// FullAdderGates.ts
+//
+// Still just one bit each. That is, three total (A,B,carry).
+var __extends = void 0 && (void 0).__extends || function () {
+  var _extendStatics = function extendStatics(d, b) {
+    _extendStatics = Object.setPrototypeOf || {
+      __proto__: []
+    } instanceof Array && function (d, b) {
+      d.__proto__ = b;
+    } || function (d, b) {
+      for (var p in b) {
+        if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p];
+      }
+    };
+
+    return _extendStatics(d, b);
+  };
+
+  return function (d, b) {
+    if (typeof b !== "function" && b !== null) throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+
+    _extendStatics(d, b);
+
+    function __() {
+      this.constructor = d;
+    }
+
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+  };
+}();
+
+var FullAdderExploration1 =
+/** @class */
+function (_super) {
+  __extends(FullAdderExploration1, _super);
+
+  function FullAdderExploration1(canvas) {
+    var _this = _super.call(this, canvas, 400, 400) || this;
+
+    var inputA = new _InputBit.default(80, 50, false, 30);
+    var inputB = new _InputBit.default(200, 50, false, 30);
+    var inputC = new _InputBit.default(300, 200, false, 30);
+    var output1 = new _OutputBit.default(200, 340, 30);
+    var output2 = new _OutputBit.default(100, 340, 30);
+    var and1 = new _Gates.AndGate(inputA.position.x + 10, 140, 50, 0);
+    and1.inputWires.push(new _Wire.default(inputA, 0));
+    and1.inputWires.push(new _Wire.default(inputB, 0, [{
+      x: and1.position.x + 10,
+      y: and1.position.y - 40
+    }]));
+    var xor1 = new _Gates.XorGate(inputB.position.x - 10, 140, 50, 0);
+    xor1.inputWires.push(new _Wire.default(inputA, 0, [{
+      x: xor1.position.x - 10,
+      y: and1.position.y - 40
+    }]));
+    xor1.inputWires.push(new _Wire.default(inputB, 0));
+    var xor2 = new _Gates.XorGate(200, 280, 50, 0);
+    xor2.inputWires.push(new _Wire.default(xor1, 0));
+    xor2.inputWires.push(new _Wire.default(inputC, 0, [{
+      x: xor2.position.x + 10,
+      y: inputC.position.y,
+      node: true
+    }]));
+    output1.inputWires.push(new _Wire.default(xor2, 0));
+    var and2 = new _Gates.AndGate(output2.position.x + 30, 230, 50, 0);
+    and2.inputWires.push(new _Wire.default(xor1, 0, [{
+      x: and2.position.x - 10,
+      y: 180
+    }, {
+      x: xor1.position.x,
+      y: 180,
+      node: true
+    }]));
+    and2.inputWires.push(new _Wire.default(inputC, 0, [{
+      x: and2.position.x + 10,
+      y: inputC.position.y
+    }])); // or gate for the "2" output
+
+    var or2 = new _Gates.OrGate(output2.position.x, output2.position.y - 44, 50, 0);
+    or2.inputWires.push(new _Wire.default(and1, 0, [{
+      x: or2.position.x - 10,
+      y: and1.position.y + 30
+    }, {
+      x: and1.position.x,
+      y: and1.position.y + 30
+    }]));
+    or2.inputWires.push(new _Wire.default(and2, 0, [// add 12 because of the output bit
+    {
+      x: or2.position.x + 10,
+      y: (and2.position.y + or2.position.y + 12) / 2
+    }, {
+      x: and2.position.x,
+      y: (and2.position.y + or2.position.y + 12) / 2
+    }]));
+    output2.inputWires.push(new _Wire.default(or2, 0));
+
+    _this.components.push(output1, output2, and1, xor1, and2, xor2, or2, inputA, inputB, inputC); // for ease of visualization
+
+
+    var aid1 = new _OutputBit.default(xor1.position.x, xor1.position.y + 27, 12);
+    aid1.inputWires.push(new _Wire.default(xor1, 0));
+    var aid2 = new _OutputBit.default(and1.position.x, and1.position.y + 27, 12);
+    aid2.inputWires.push(new _Wire.default(and1, 0));
+    var aid3 = new _OutputBit.default(and2.position.x, and2.position.y + 27, 12);
+    aid3.inputWires.push(new _Wire.default(and2, 0));
+
+    _this.components.push(aid1, aid2, aid3); // Number Display
+
+
+    var displayResult = new _Display.default(320, 340, [output1, output2], false, 42);
+
+    _this.components.push(displayResult);
+
+    var labelA = new _Text.default(inputA.position.x, 20, 30, "A");
+    var labelB = new _Text.default(inputB.position.x, 20, 30, "B");
+    var labelC = new _Text.default(inputC.position.x, inputC.position.y - 40, 30, "C");
+    var text1 = new _Text.default(output1.position.x, 375, 30, "1", {
+      color: '#333'
+    });
+    var text2 = new _Text.default(output2.position.x, 375, 30, "2", {
+      color: '#333'
+    });
+
+    _this.components.push(labelA, labelB, labelC, text1, text2); // Updating
+
+
+    _this.outputComponents.push(output1, output2, aid1, aid2);
+
+    return _this;
+  }
+
+  return FullAdderExploration1;
+}(_Exploration.default);
+
+var _default = FullAdderExploration1;
+exports.default = _default;
+},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./Wire":"Wire.ts","./Display":"Display.ts","./Text":"Text.ts","./Gates":"Gates.ts"}],"GateExploration.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2734,6 +2924,8 @@ var __extends = void 0 && (void 0).__extends || function () {
   };
 
   return function (d, b) {
+    if (typeof b !== "function" && b !== null) throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+
     _extendStatics(d, b);
 
     function __() {
@@ -2798,7 +2990,105 @@ function (_super) {
 
 var _default = GateExploration;
 exports.default = _default;
-},{"./Exploration":"Exploration.ts","./Wire":"Wire.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./Gates":"Gates.ts"}],"MultiplierExploration.ts":[function(require,module,exports) {
+},{"./Exploration":"Exploration.ts","./Wire":"Wire.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./Gates":"Gates.ts"}],"HalfAdderCheat.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _Exploration = _interopRequireDefault(require("./Exploration"));
+
+var _InputBit = _interopRequireDefault(require("./InputBit"));
+
+var _OutputBit = _interopRequireDefault(require("./OutputBit"));
+
+var _Adder = _interopRequireDefault(require("./Adder"));
+
+var _Wire = _interopRequireDefault(require("./Wire"));
+
+var _Display = _interopRequireDefault(require("./Display"));
+
+var _Text = _interopRequireDefault(require("./Text"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+// HalfAdderCheat.ts
+//
+// The finished product with no accompanying circuit.
+var __extends = void 0 && (void 0).__extends || function () {
+  var _extendStatics = function extendStatics(d, b) {
+    _extendStatics = Object.setPrototypeOf || {
+      __proto__: []
+    } instanceof Array && function (d, b) {
+      d.__proto__ = b;
+    } || function (d, b) {
+      for (var p in b) {
+        if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p];
+      }
+    };
+
+    return _extendStatics(d, b);
+  };
+
+  return function (d, b) {
+    if (typeof b !== "function" && b !== null) throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+
+    _extendStatics(d, b);
+
+    function __() {
+      this.constructor = d;
+    }
+
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+  };
+}();
+
+var HalfAdderCheat =
+/** @class */
+function (_super) {
+  __extends(HalfAdderCheat, _super);
+
+  function HalfAdderCheat(canvas) {
+    var _this = _super.call(this, canvas, 300, 300) || this;
+
+    var inputA = new _InputBit.default(100, 40, false, 30);
+    var inputB = new _InputBit.default(200, 40, false, 30);
+    var output1 = new _OutputBit.default(150, 240, 30);
+    var output2 = new _OutputBit.default(75, 240, 30);
+    var adder = new _Adder.default(150, 150, 1, 200, 100);
+
+    _this.components.push(adder, inputA, inputB, output1, output2);
+
+    adder.inputWires.push(new _Wire.default(inputA, 0));
+    adder.inputWires.push(new _Wire.default(inputB, 0));
+    output1.inputWires.push(new _Wire.default(adder, 0));
+    output2.inputWires.push(new _Wire.default(adder, 1));
+    var displayResult = new _Display.default(240, 250, [output1, output2], false, 40);
+
+    _this.components.push(displayResult);
+
+    _this.outputComponents.push(output1, output2);
+
+    var text1 = new _Text.default(150, 275, 24, "1", {
+      color: '#333'
+    });
+    var text2 = new _Text.default(75, 275, 24, "2", {
+      color: '#333'
+    });
+
+    _this.components.push(text1, text2);
+
+    return _this;
+  }
+
+  return HalfAdderCheat;
+}(_Exploration.default);
+
+var _default = HalfAdderCheat;
+exports.default = _default;
+},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./Adder":"Adder.ts","./Wire":"Wire.ts","./Display":"Display.ts","./Text":"Text.ts"}],"MultiplierExploration.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2845,6 +3135,8 @@ var __extends = void 0 && (void 0).__extends || function () {
   };
 
   return function (d, b) {
+    if (typeof b !== "function" && b !== null) throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+
     _extendStatics(d, b);
 
     function __() {
@@ -3123,10 +3415,12 @@ function (_super) {
       reg.inputWires.push(new _Wire.default(or, 0), new _Wire.default(choice, 0));
       var wirePath = [{
         x: reg.position.x - 13,
-        y: choice.position.y
+        y: choice.position.y,
+        node: true
       }, {
         x: reg.position.x - 13,
-        y: startNot.position.y
+        y: startNot.position.y,
+        node: i < BITS - 1
       }];
       or.inputWires.push(new _Wire.default(startNot, 0, wirePath, {
         color: "rgba(100, 100, 130, 0.75)"
@@ -3299,13 +3593,17 @@ var _ChoiceExploration = _interopRequireDefault(require("./ChoiceExploration"));
 
 var _DividerExploration = _interopRequireDefault(require("./DividerExploration"));
 
+var _FullAdderGates = _interopRequireDefault(require("./FullAdderGates"));
+
 var _GateExploration = _interopRequireDefault(require("./GateExploration"));
+
+var _HalfAdderCheat = _interopRequireDefault(require("./HalfAdderCheat"));
 
 var _MultiplierExploration = _interopRequireDefault(require("./MultiplierExploration"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-//import TestExploration from './TestExploration';
+// Alphabetized because... idunno
 function createCanvas() {
   var canvas = document.createElement("canvas");
   return canvas;
@@ -3318,7 +3616,8 @@ function createExploration(id, type) {
   var element = document.getElementById(id);
 
   if (!element) {
-    throw new Error("Document element " + id + " not found.");
+    console.warn("Document element " + id + " not found.");
+    return;
   }
 
   element.className += " row";
@@ -3364,7 +3663,7 @@ function createExploration(id, type) {
 
 var ALL_EXPLORATIONS = [];
 ALL_EXPLORATIONS.push(createExploration('binary-basic', _BinaryExploration.default), createExploration('adder', _AdderExploration.default), createExploration('gates', _GateExploration.default), //ALL_EXPLORATIONS.push(createExploration('subtractor', SubtractorExploration));
-createExploration('choice', _ChoiceExploration.default)); //ALL_EXPLORATIONS.push(createExploration('clock', ClockExploration));
+createExploration('choice', _ChoiceExploration.default), createExploration('half-adder-cheat', _HalfAdderCheat.default), createExploration('gates-again', _GateExploration.default), createExploration('full-adder1', _FullAdderGates.default)); //ALL_EXPLORATIONS.push(createExploration('clock', ClockExploration));
 
 ALL_EXPLORATIONS.push(createExploration('multiplier-full', _MultiplierExploration.default));
 ALL_EXPLORATIONS.push(createExploration('divider-full', _DividerExploration.default)); //ALL_EXPLORATIONS.push(createExploration('3', RegisterExploration));
@@ -3373,14 +3672,34 @@ function renderLoop() {
   // TODO: Put this in exploration
   for (var i = 0; i < ALL_EXPLORATIONS.length; i++) {
     var exploration = ALL_EXPLORATIONS[i];
-    exploration.render();
+
+    if (exploration) {
+      exploration.render();
+    }
   }
 
   requestAnimationFrame(renderLoop);
 }
 
-renderLoop();
-},{"./AdderExploration":"AdderExploration.ts","./BinaryExploration":"BinaryExploration.ts","./ChoiceExploration":"ChoiceExploration.ts","./DividerExploration":"DividerExploration.ts","./GateExploration":"GateExploration.ts","./MultiplierExploration":"MultiplierExploration.ts"}],"../../../../../usr/local/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+renderLoop(); // some other stuff
+
+function fillInteractiveTable(table) {
+  if (table === null) return;
+  var html = "<input type=\"number\" min=\"0\" max=\"1\" size=\"3\" />";
+  var fillIn = table.tBodies[0].getElementsByTagName("tr");
+
+  for (var i = 0; i < fillIn.length; i++) {
+    var out1 = document.createElement("td");
+    out1.innerHTML = html;
+    var out2 = document.createElement("td");
+    out2.innerHTML = html;
+    fillIn[i].appendChild(out1);
+    fillIn[i].appendChild(out2);
+  }
+}
+
+fillInteractiveTable(document.getElementById("fill-in"));
+},{"./AdderExploration":"AdderExploration.ts","./BinaryExploration":"BinaryExploration.ts","./ChoiceExploration":"ChoiceExploration.ts","./DividerExploration":"DividerExploration.ts","./FullAdderGates":"FullAdderGates.ts","./GateExploration":"GateExploration.ts","./HalfAdderCheat":"HalfAdderCheat.ts","./MultiplierExploration":"MultiplierExploration.ts"}],"../../../../../usr/local/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -3408,7 +3727,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61355" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "56903" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

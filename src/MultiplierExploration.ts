@@ -184,8 +184,8 @@ class MultiplierExploration extends Exploration {
             reg.inputWires.push(new Wire(or, 0), new Wire(choice, 0));
 
             const wirePath = [
-                {x: reg.position.x - 13, y: choice.position.y},
-                {x: reg.position.x - 13, y: startNot.position.y},
+                {x: reg.position.x - 13, y: choice.position.y, node: true},
+                {x: reg.position.x - 13, y: startNot.position.y, node: (i < BITS-1)},
             ];
             or.inputWires.push(new Wire(startNot, 0, wirePath, {color: "rgba(100, 100, 130, 0.75)"}));
             or.inputWires.push(new Wire(clockNot, 0, [

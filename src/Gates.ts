@@ -11,6 +11,7 @@ abstract class Gate implements Component {
     public inputWires: Wire[];
     public outputSockets: {x: number, y: number}[];
     public rotation: number;
+    public symbol: string = "";
 
     // bits=8 means an 8-bit plus 8-bit
     constructor(x: number, y: number, size: number, rotation: number, bits: number) {
@@ -89,6 +90,13 @@ abstract class Gate implements Component {
 
         this.drawGate(ctx);
 
+        ctx.rotate(-this.rotation);
+        ctx.font = Math.round(this.size.y * 0.6) + "px monospace";
+        ctx.fillStyle = "#333";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(this.symbol, 0, 0);
+
         ctx.restore();
     }
 
@@ -98,6 +106,7 @@ abstract class Gate implements Component {
 class AndGate extends Gate {
     constructor(x: number, y: number, size: number, degrees: number) {
         super(x, y, size, degrees, 2);
+        this.symbol = "&";
     }
     drawGate(ctx: CanvasRenderingContext2D) {
         ctx.beginPath();
@@ -117,6 +126,7 @@ class AndGate extends Gate {
 class OrGate extends Gate {
     constructor(x: number, y: number, size: number, degrees: number) {
         super(x, y, size, degrees, 2);
+        this.symbol = "O";
     }
     drawGate(ctx: CanvasRenderingContext2D) {
         const s = this.size.x;
@@ -137,6 +147,7 @@ class OrGate extends Gate {
 class XorGate extends Gate {
     constructor(x: number, y: number, size: number, degrees: number) {
         super(x, y, size, degrees, 2);
+        this.symbol = "X";
     }
     drawGate(ctx: CanvasRenderingContext2D) {
         const s = this.size.x;

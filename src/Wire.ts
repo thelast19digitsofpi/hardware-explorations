@@ -13,12 +13,12 @@ class Wire {
     color: string;
 
     // in case you want the wire to bend
-    waypoints: Array<{x: number, y: number}> = [];
+    waypoints: Array<{x: number, y: number, node?: boolean}> = [];
 
     constructor(
         to: Component,
         toOutput: number,
-        waypoints: {x: number, y: number}[] = [],
+        waypoints: {x: number, y: number, node?: boolean}[] = [],
         options: WireOptions = {}
     ) {
         this.toComponent = to;
@@ -52,6 +52,15 @@ class Wire {
         const endOffset = this.toComponent.outputSockets[this.toOutput];
         ctx.lineTo(endOffset.x + this.toComponent.position.x, endOffset.y + this.toComponent.position.y);
         ctx.stroke();
+
+        ctx.lineWidth = 6;
+        for (let i = 0; i < this.waypoints.length; i++) {
+            if (this.waypoints[i].node) {
+                ctx.beginPath();
+                ctx.arc(this.waypoints[i].x, this.waypoints[i].y, 1, 0, 2*Math.PI);
+                ctx.stroke();
+            }
+        }
         ctx.restore();
     }
 }

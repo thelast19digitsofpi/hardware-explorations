@@ -3,6 +3,7 @@
 	"version": "0.0.0",
 	"dependencies": {
 		"bootstrap": "^5.0.0-beta3",
+		"css-what": ">=5.0.1",
 		"express": "^4.17.1",
 		"parcel": "*",
 		"popper.js": "^1.16.1",
