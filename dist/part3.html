@@ -5,16 +5,10 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<link rel="stylesheet" type="text/css" href="/style.e308ff8e.css">
 		<link rel="stylesheet" type="text/css" href="/bootstrap.5f792716.css" <="" head="">
-	<script src="/style.e308ff8e.js"></script><script src="/bootstrap.5f792716.js"></script></head><body>
+	</head><body>
 		<div class="container">
             <h1>Part 3: Multiplication and Division</h1>
-
-
-			<h3>Clocks</h3>
-			<p>To do multiplication and division, we're going to need some time. There are a few different ways to make a clock in hardware, but that's mostly outside the scope of this exploration. For now, I've just made a magic box that moves the timer forward every second. All you have to do is click the <strong>Play</strong> button on the right of the exploration window (it might be below, if your screen is too small). Or click "step" to handle it one step at a time.</p>
-			<div class="exploration" id="clock">
-				<h4>Clock Exploration</h4>
-			</div>
+			<p>So we've figured out addition and subtraction. Multiplication, then, doesn't actually seem so bad; indeed, it is only repeated addition...</p>
 
 			<h3>Multiplication</h3>
 			<p>So now we turn to multiplication. Let's think about how we might multiply two numbers in base ten. The standard method is to do something like this:</p>
@@ -27,23 +21,92 @@
 	 000
 	471
 	------
+	  1     (carry from 4+7)
+	475181
+	------
 	476181
 			</pre>
 			<p>You might have noticed that I deliberately chose to make the second number only have the digits 0 and 1. This is a very useful feature of binary: since the bits can only ever be 0 or 1, at each step, we either add the number as is or we don't. (In contrast, with base ten we might have to add some multiple of 471.)</p>
-			<p>Normally, a computer would store each number as 32 or 64 bits, but for simplicity we will only use 6 bits. Now, it is possible to arrange six adders and pipe in the correct inputs, but that gets a bit unwieldy if you try to imagine 64 of them. Instead, I'll use a slower but simpler approach that involves doing the adds one at a time. Part of the reason for this is in analogy with the division method we will see later.</p>
-			<p>The trick is to start with a blank "canvas" (register) of zero bits. It's easier to keep the adder in one place and move bit values, so we add into the upper 6 bits (the final answer may be as large as 12 bits) and then shift the register downward. (By "shift", I mean to shift the <strong>values</strong> of the bits. So in a shift cycle, each bit inherits the value of its left neighbor.) In decimal, it looks like this:</p>
-			<pre>
+			<p>For now, we're also going to ignore overflow entirely, and just assume that we can somehow output twice as many bits. We'll also be using unsigned integers, so 1001 means 8+1 = 9, not -7. I'll explain how this is possible later. But for now, let's jump right to a naive attempt at building a circuit:</p>
+
+			<div class="exploration" id="multiplier-naive">
+
+			</div>
+
+			<p>Actually, the top right adder isn't really necessary, although if you wanted to have a multiply-add operation that computes (A * B) + C for three numbers A,B,C.</p>
+			<p>But that gets a bit unwieldy if you try to imagine 32 or 64 of them. In fact, that would be <em>extremely</em> slow. Although it all looks instantaneous here, each of those wires is distance that electrons have to move at some finite speed.</p>
+			<p>Even the "add" operation itself is fairly slow for a 32-bit machine; a signal has to travel through 32 full adders to make the final answer. (There are no shortcuts: imagine something like 7 + 3999994. You can't find out the millions digit until you finish adding the right six digits.) Multiplication would then require waiting for 32 of those add cycles.</p>
+			<p>There are actually more complicated designs that cut down on this time considerably, by using something called a "carry save adder". These designs are quite complicated, but the basic idea is similar to how I did the multiplication: I wrote (well, typed) all the 471's, then added each column and carried as needed.</p>
+			<p>But the reason this works is that multiplication is just repeated addition. All the information you need is right there in plain sight to begin with. This is not true of division, as we will see...</p>
+
+			<!-- Introducing Division -->
+			<h4>Division...</h4>
+			<p>Is it just me, or does division feel harder than multiplication? Here's an example of some long division, side-by-side with the multiplication from before.</p>
+			<div>
+				<pre style="display: inline-block">
+&nbsp;   <u>    1011</u>
+471 | 476223
+&nbsp;   &nbsp; 471
+&nbsp;   &nbsp; ---
+&nbsp;   &nbsp;  05223
+&nbsp;   &nbsp;  000
+&nbsp;   &nbsp;  -----
+&nbsp;   &nbsp;   5223
+&nbsp;   &nbsp;   471
+&nbsp;   &nbsp;   ----
+&nbsp;   &nbsp;    513
+&nbsp;   &nbsp;    471
+&nbsp;   &nbsp;    ---
+&nbsp;   &nbsp;     42
+				</pre>
+				<pre style="display: inline-block">
+   471
+&times; 1011
+------
+   471
+  471
+ 000
+471
+------
+  1
+475181
+------
+476181
+				</pre>
+			</div>
+
+
+			<p>One thing you may have noticed is that division took more steps. There is no column-by-column trick to make the subtraction faster. What's worse, we have to make a <em>decision</em> at each step, of whether or not to subtract 471 (actually, in base ten there are ten possible subtractions including zero). There's no good way to predict, say, whether the last step will need a subtraction or not without calculating it all the way down to 513.</p>
+			<p>This is going to involve a much different kind of circuit from the static ones we've seen so far. Our circuit is going to need a lot more time, and a bunch of new components. Since this is going to be a lot of content, I've decided to <strong>build a slow multiplier</strong> first that will feature a lot of the components we need to build a divider. But before we get to any of that, let's start with three new components...</p>
+
+			<h3>Clocks and Counters</h3>
+			<p>In computer hardware, one of the fundamental concepts is the <em>clock</em>. This is a signal that alternates up-down-up-down-up-down-... for as long as the computer has power. This is how it knows when, for instance, it is time to run the next instruction safely (any operations are required to take less time than one cycle of the clock, or else the program has to wait).</p>
+			<p>The clock can also be used with our multiplication and division hardware to
+			<div class="exploration" id="clock">
+				<h4>Clock Exploration</h4>
+			</div>
+
+
+			<!-- Slow Multiplication -->
+			</p><h3>Multiplication, the Slow Way</h3>
+			<p>What we're going to do this time is to start with a blank "canvas" of bits. It's easier to keep the adder in one place and move bit values, so we add into the upper 6 bits (the final answer may be as large as 12 bits) and then shift the register downward. (By "shift", I mean to shift the <strong>values</strong> of the bits. So in a shift cycle, each bit inherits the value of its left neighbor.) In decimal, it looks like this:</p>
+			<pre id="slow-mult-pre">
 	Register:  000000    [1011]
 	Add:       471000    [101<strong>1</strong>]
 	Shift:     047100    [ 101]
 	Add:       518100    [ 10<strong>1</strong>]
 	Shift:     051810    [  10]
-	Don't add: 051810    [  1<strong>0</strong>] (don't add because of the 0)
+	Don't add: 051810    [  1<span class="zero">0</span>] (don't add because of the 0)
 	Shift:     005181    [   1]
 	Add:       476181    [   <strong>1</strong>]
 	</pre>
 			<p>To implement this in hardware, we need to keep track of which bit in the second number we are on. The easiest way to do this is with a second register of size 6. It gets shifted when the large one does, and we just tell the adder to keep the original value of the register if that bit is 0. (Notice the "Don't add" step above because the hundreds digit was a zero.)</p>
-			<p>So here we come to the hardware. There's a lot going on here, but don't panic! A detailed explanation follows, but see if you can figure out what's going on by watching it.</p>
+
+
+
+
+
+			<p>So, at last, we come to the multiplier hardware. There's a lot going on here, but don't panic! A detailed explanation follows, but see if you can figure out what's going on by watching it. Remember, this isn't what multiplication usually looks like; it's just here to compare with division.</p>
 			<h4 class="text-success">Exploration Instructions</h4>
 			<p><strong>Heads up!</strong> Unlike the previous simulations that calculated immediately, multiplication and division take time. To operate this version:</p>
 			<ol start="0">
@@ -53,10 +116,10 @@
 				<li>When you are ready, click the <strong>large red button</strong> in the upper right corner to turn the machine "on". (Note that the "Play" button enables animation but won't actually start the calculation unless the big red bit is made green.)</li>
 				<li>Too fast? There is speed control to the right of (or below) the exploration. Click "pause" to pause the circuit and "step" to do one iteration at a time. You can also adjust the animation speed.</li>
 			</ol>
-			<p>For best results, try setting the second input to something with several 1 bits and several 0 bits. A good number for this is 110011 (51).
+			<p>For best results, try setting the second input to something with several 1 bits and several 0 bits. A good number for this is 110011 (51).</p>
 			<div class="exploration" id="multiplier-full"></div>
 
-			</p><h3>Multiplication: What Just Happened?</h3>
+			<h3 id="mult-what-happened">Multiplication: What Just Happened?</h3>
 			<p>All right, so maybe all that wiring confused you a little. Let's go through it piece by piece. You probably noticed there were two alternating actions, which I will call "add" and "shift". "Shift" moves a bunch of values and "add" helps the product grow. In more detail:</p>
 			<div class="clearfix">
 				<img src="/mult_b.b919f53d.png" alt="Closeup of the upper right" class="float-start img-thumbnail me-2" width="300">

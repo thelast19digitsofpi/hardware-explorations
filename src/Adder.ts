@@ -8,7 +8,7 @@ class Adder implements Component {
     public position: {x: number, y: number};
     public size: {x: number, y: number};
     public inputSockets: {x: number, y: number}[];
-    public inputWires: Wire[];
+    public inputWires: (Wire | null)[];
     public outputSockets: {x: number, y: number}[];
     public numBits: number;
 
@@ -66,9 +66,7 @@ class Adder implements Component {
         this.inputWires = [];
     }
 
-    onClick(_offsetX: number, _offsetY: number): void {
-        return;
-    };
+    onClick: undefined;
 
     render(ctx: CanvasRenderingContext2D) {
         ctx.save();
@@ -112,13 +110,19 @@ class Adder implements Component {
         let num1 = 0, num2 = 0;
         for (let i = 0; i < this.numBits; i++) {
             const wire1 = this.inputWires[i], wire2 = this.inputWires[i + this.numBits];
-            num1 += (wire1.toComponent.state.bits[wire1.toOutput] ? 1 : 0) * (1 << i);
-            num2 += (wire2.toComponent.state.bits[wire2.toOutput] ? 1 : 0) * (1 << i);
+            num1 += ((wire1 && wire1.toComponent.state.bits[wire1.toOutput]) ? 1 : 0) * (1 << i);
+            num2 += ((wire2 && wire2.toComponent.state.bits[wire2.toOutput]) ? 1 : 0) * (1 << i);
         }
         const textSize = Math.round(Math.min(this.size.x * 0.125, this.size.y * 0.5));
         ctx.font = textSize + "px monospace";
         ctx.fillStyle = "black";
         ctx.fillText(String(num1) + " + " + String(num2), this.position.x, this.position.y);
+
+        const carryWire = this.inputWires[2*this.numBits];
+        if (carryWire && carryWire.get()) {
+            ctx.font = Math.round(textSize*0.5) + "px monospace";
+            ctx.fillText("(+1 carry in)", this.position.x, this.position.y + this.size.y*0.25);
+        }
 
         ctx.restore();
     }
@@ -131,18 +135,25 @@ class Adder implements Component {
             num2 += Number(bits[i + this.numBits]) * (1 << i);
         }
 
-        const answer = num1 + num2;
+        // add plus the carry
+        const answer = num1 + num2 + (bits[2*this.numBits] ? 1 : 0);
         let answerBits = Array(this.numBits + 1);
         for (let i = 0; i <= this.numBits; i++) {
             answerBits[i] = (answer & (1 << i)) > 0;
         }
-        //console.log(answerBits);
+        if (this.position.x === 430 && this.numBits === 4) console.log("Adder gives ", answerBits, "with input", bits);
         return answerBits;
     }
 
     beforeUpdate() {
         // The simulation was having some bugs without this
-        this.state.bits = this.evaluate(this.inputWires.map(wire => (wire ? wire.get() : false)));
+        let inputs = [];
+        for (let i = 0; i <= 2*this.numBits; i++) {
+            const wire = this.inputWires[i];
+            inputs.push(wire ? wire.get() : false);
+        }
+        console.log("num inputs: ", inputs.length);
+        this.state.bits = this.evaluate(inputs);
     }
 }
 

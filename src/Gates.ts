@@ -63,18 +63,18 @@ abstract class Gate implements Component {
     }
     beforeUpdate: undefined;
 
-    onClick(_offsetX: number, _offsetY: number): void {
-        return;
+    onClick(_offsetX: number, _offsetY: number): boolean {
+        return false;
     };
 
     abstract drawGate(ctx: CanvasRenderingContext2D): void;
 
-    render(ctx: CanvasRenderingContext2D) {
+    render(ctx: CanvasRenderingContext2D, isDark: boolean) {
         ctx.save();
 
         // base
-        ctx.fillStyle = "#cccccc";
-        ctx.strokeStyle = "black";
+        ctx.fillStyle = isDark ? "#333" : "#ccc";
+        ctx.strokeStyle = isDark ? "#aaa" : "black";
         ctx.lineWidth = 2;
         ctx.translate(this.position.x, this.position.y);
         ctx.rotate(this.rotation);
@@ -92,7 +92,7 @@ abstract class Gate implements Component {
 
         ctx.rotate(-this.rotation);
         ctx.font = Math.round(this.size.y * 0.6) + "px monospace";
-        ctx.fillStyle = "#333";
+        ctx.fillStyle = isDark ? "#939699" : "#333";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText(this.symbol, 0, 0);
@@ -198,10 +198,9 @@ class Not extends Gate {
         ctx.fill();
     }
 
-    render(ctx: CanvasRenderingContext2D) {
-        Gate.prototype.render.call(this, ctx);
+    render(ctx: CanvasRenderingContext2D, isDark: boolean) {
+        Gate.prototype.render.call(this, ctx, isDark);
     };
-    onClick(_: number, __: number) {};
     evaluate(bits: boolean[]): boolean[] {
         return [!bits[0]];
     };

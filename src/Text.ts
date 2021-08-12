@@ -15,7 +15,7 @@ class Text implements Component {
     inputSockets = [];
     outputSockets = [];
     inputWires = [];
-    onClick = () => {};
+    onClick = undefined;
     evaluate = () => [];
     beforeUpdate = undefined;
 
@@ -29,12 +29,15 @@ class Text implements Component {
         this.options = options;
     }
 
-    render(ctx: CanvasRenderingContext2D) {
+    render(ctx: CanvasRenderingContext2D, isDark: boolean) {
         ctx.save();
         const message = (typeof this.text === "function" ? this.text() : this.text);
         ctx.font = `${this.size.y}px monospace`;
         // if function, call it; if string, use it; if undefined, default to #333
-        ctx.fillStyle = (typeof this.options.color === "function" ? this.options.color() : this.options.color || "#333");
+        ctx.fillStyle = (
+            typeof this.options.color === "function" ? this.options.color() :
+            typeof this.options.color === "string" ? this.options.color :
+            (isDark ? "#909396" : "#333"));
         // positioning
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";

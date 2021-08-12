@@ -45,9 +45,7 @@ class RegisterBit implements Component {
         this.inputWires = [];
     }
 
-    onClick(_offsetX: number, _offsetY: number): void {
-        return;
-    };
+    onClick: undefined;
 
     render(ctx: CanvasRenderingContext2D) {
         ctx.save();

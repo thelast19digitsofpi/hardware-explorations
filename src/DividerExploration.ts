@@ -59,9 +59,20 @@ class DividerExploration extends Exploration {
 
         const startButton = new InputBit(695, 40, false, 50);
         this.startButton = startButton;
-        const startNot = new Not(startButton.position.x - 50, 40, 30, 90);
-        startNot.inputWires.push(new Wire(startButton, 0));
-        this.components.push(startNot);
+
+        // probably more user friendly
+        const thisExploration = this;
+        startButton.onClick = function() {
+            startButton.constructor.prototype.onClick.apply(startButton, arguments);
+            if (startButton.state.active) {
+                thisExploration.resume();
+            }
+            return true;
+        };
+
+        //const startNot = new Not(startButton.position.x - 50, 40, 30, 90);
+        //startNot.inputWires.push(new Wire(startButton, 0));
+        //this.components.push(startNot);
 
         const clockX = 690;
 

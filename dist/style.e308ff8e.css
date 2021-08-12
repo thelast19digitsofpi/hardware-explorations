@@ -11,6 +11,7 @@ body {
 
 .exploration {
     display: flex;
+    margin-bottom: 2em;
 }
 
 .controls {
@@ -23,6 +24,15 @@ body {
 
 .canvas-wrapper {
     border: 1px solid black;
+}
+
+/* emphasizes some bits a little more */
+#slow-mult-pre strong {
+    background-color: rgb(64, 64, 64);
+    color: white;
+}
+#slow-mult-pre .zero {
+    background-color: rgb(192, 192, 192);
 }
 
 

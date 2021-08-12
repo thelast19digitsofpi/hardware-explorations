@@ -41,7 +41,7 @@ class Exploration {
 
     // todo: addComponent() maybe?
 
-    render() {
+    render(isDark: boolean) {
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
         for (let i = 0; i < this.components.length; i++) {
             this.context.save();
@@ -52,9 +52,9 @@ class Exploration {
                     x: comp.position.x + comp.inputSockets[j].x,
                     y: comp.position.y + comp.inputSockets[j].y,
                 };
-                comp.inputWires[j]?.render(this.context, position);
+                comp.inputWires[j]?.render(this.context, position, isDark);
             }
-            this.components[i].render(this.context);
+            this.components[i].render(this.context, isDark);
             this.context.restore();
         }
 
@@ -64,17 +64,20 @@ class Exploration {
     }
 
     onClick(canvasX: number, canvasY: number) {
+        let needsUpdate: boolean = false;
         for (let i = 0; i < this.components.length; i++) {
             const component = this.components[i];
             const offsetX = canvasX - component.position.x;
             const offsetY = canvasY - component.position.y;
-            if (Math.abs(offsetX) < component.size.x/2 && Math.abs(offsetY) < component.size.y/2) {
-                component.onClick(offsetX, offsetY);
+            if (Math.abs(offsetX) < component.size.x/2 && Math.abs(offsetY) < component.size.y/2 && component.onClick) {
+                needsUpdate ||= component.onClick(offsetX, offsetY);
             }
         }
 
-        // Right now I have nothing better than re-updating the whole tree
-        this.update();
+        if (needsUpdate && !this.animated) {
+            // Non-animated ones re-update the whole tree
+            this.update();
+        }
     }
 
     pause() {

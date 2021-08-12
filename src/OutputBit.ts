@@ -36,9 +36,7 @@ class OutputBit implements Component {
             this.size.y * 0.8
         );
     };
-    onClick(offsetX: number, offsetY: number): void {
-        return;
-    };
+    onClick: undefined;
     evaluate(bits: boolean[]): boolean[] {
         //console.log(bits);
         //console.log("evaluating", this.position);

@@ -14,7 +14,7 @@ import {AndGate, OrGate, XorGate, Not} from './Gates';
 // pass the components and output components arrays
 function makeClock(x: number, y: number, bits: number, components: Component[], outputComponents: Component[]) {
     const clock = new Clock(x, y, bits, 100, 60);
-    const powerButton = new InputBit(x, y - 100, false, 40);
+    const powerButton = new InputBit(x, y - 100, true, 40);
     clock.inputWires.push(new Wire(powerButton, 0));
     components.push(clock, powerButton);
     for (let i = 0; i < bits; i++) {
@@ -26,6 +26,8 @@ function makeClock(x: number, y: number, bits: number, components: Component[], 
 }
 
 class ClockExploration extends Exploration {
+    animated: boolean = true;
+
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
         makeClock(120, 200, 2, this.components, this.outputComponents);

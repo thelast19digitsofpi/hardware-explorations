@@ -10,7 +10,7 @@ class Wire {
     toComponent: Component;
     toOutput: number;
 
-    color: string;
+    color: string | undefined;
 
     // in case you want the wire to bend
     waypoints: Array<{x: number, y: number, node?: boolean}> = [];
@@ -25,7 +25,7 @@ class Wire {
         this.toOutput = toOutput;
         this.waypoints = waypoints;
 
-        this.color = options.color ?? "#333";
+        this.color = options.color;
     }
 
     get(): boolean {
@@ -39,10 +39,10 @@ class Wire {
         this.waypoints.push({x: x, y: y});
     }
 
-    render(ctx: CanvasRenderingContext2D, from: {x: number, y: number}) {
+    render(ctx: CanvasRenderingContext2D, from: {x: number, y: number}, isDark: boolean) {
         if (!this.toComponent) return;
         ctx.save();
-        ctx.strokeStyle = this.color;
+        ctx.strokeStyle = this.color ?? (isDark ? "#909396" : "#333");
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(from.x, from.y);

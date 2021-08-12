@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" type="text/css" href="/style.e308ff8e.css">
+		<link rel="stylesheet" type="text/css" href="/bootstrap.5f792716.css" <="" head="">
+	<script src="/part3.js"></script></head><body>
+		<div class="container">
+			<h1>Arithmetic in Computer Hardware</h1>
+			<h2>Part 2: Subtraction and Two's Complement</h2>
+			<h4>
+				<a href="/part2.html">Back to Part 1</a> or
+				<a href="/part3.html">Skip to Part 3</a>
+			</h4>
+
+			<h3>Negative Numbers</h3>
+			<p>So there are four basic arithmetic operations: addition, subtraction, multiplication, and division. We've already covered addition, so the next logical (pun intended) step is to handle subtraction.</p>
+			<p>Now, subtraction and negative numbers go hand in hand. You can't really have one without the other. So before we go into subtraction, let's consider the problem of how to represent a negative number.</p>
+			<p>The most obvious way to do this is to just add an extra bit that means "positive" or "negative". Of course, in practice there are certain advantages to using a specific number of bits, like 32 or 64, so that generally means one bit is lost for the sign bit. This means that instead of having range [0,&nbsp;63], our signed numbers have a range of [-31,&nbsp;31]. On a 32-bit computer, the range of unsigned integers is up to 4.3 billion, while signed integers can reach &plusmn;2.1 billion. That's not a bad tradeoff to get negative numbers!</p>
+
+			<h4>Exploration Instructions</h4>
+			<ul style="font-size: large">
+				<li><strong class="bit-0">Dark Red</strong> indicates a <strong class="bit-0">zero/off</strong> bit.</li>
+				<li><strong class="bit-1">Green</strong> indicates a <strong class="bit-1">one/on</strong> bit. (In the explorations the green is lighter.)</li>
+				<li>Clicking on <strong>circular</strong> ("input") bits switches them.</li>
+				<li>Other components <em>cannot</em> be interacted with directly.</li>
+			</ul>
+			<div class="exploration" id="signmag"></div>
+
+			<p>There is one annoying feature of this setup. Did you notice you can make negative zero? The bit patterns <code>100000</code> and <code>000000</code> both represent zero, but one is positive and the other is negative!</p>
+
+			<p>Anyway, let's ignore that for the moment and think about subtraction. Actually, both addition and subtraction are going to need new circuits, because adding a negative number is the same as subtracting a positive. Naively using the addition circuit can fail quite spectacularly...</p>
+			<p>Note: Try to find a case where the correct answer to the addition is between -7 and +7. While something like 6 + 3 does give the wrong answer -1, that's just due to overflow. The purpose here is to show that our normal adder circuit cannot handle the sign bits.</p>
+
+			<div class="exploration" id="adder-fail"></div>
+
+			<p>All right, so enough of what doesn't work. How would you build a subtractor? The easiest way to start would be to consider base-ten subtraction. Here's an example:</p>
+			<pre>
+   16
+ 2 <s>6</s> 12
+ <s>3</s> <s>7</s> <s>2</s> 9
+-  8 8 8
+--------
+       1  [ 9 - 8 = 1]
+     6 1  [12 - 6 = 6]
+   8 6 1  [16 - 8 = 8]
+ 2 8 6 1  [ 2 - 0 = 2]</pre>
+			<p>As you can see, borrowing can get fairly hectic; the 7 got scratched out not once, but twice. In binary it's not that much better. Let's look at the possible options for a "half subtractor":</p>
+			<ul>
+				<li>
+					<strong class="text-danger">0</strong> -
+					<strong class="text-danger">0</strong>: Digit =
+					<strong class="text-danger">0</strong>, borrow =
+					<strong class="text-danger">NO</strong>.
+				</li>
+				<li>
+					<strong class="text-danger">0</strong> -
+					<strong class="text-success">1</strong>: Digit =
+					<strong class="text-success">1</strong>, borrow =
+					<strong class="text-success">YES</strong>. (Remember this becomes 2 - 1 after we borrow from the next digit.)
+				</li>
+				<li>
+					<strong class="text-success">1</strong> -
+					<strong class="text-danger">0</strong>: Digit =
+					<strong class="text-success">1</strong>, borrow =
+					<strong class="text-danger">NO</strong>.
+				</li>
+				<li>
+					<strong class="text-success">1</strong> -
+					<strong class="text-success">1</strong>: Digit =
+					<strong class="text-danger">0</strong>, borrow =
+					<strong class="text-danger">NO</strong>.
+				</li>
+			</ul>
+
+			<p>As you can see, the "digit" part is exactly the same as for an adder. The only difference is that instead of carrying on 1+1, we borrow on 0-1.</p>
+			<!-- TODO: Decide if we should skip directly to the full subtractor, or have an exploration of the subtractor with the NOT gate -->
+			<p>For a full subtractor, we need to consider the possibility of a second subtraction from the borrow. (Remember that borrowing is really just subtracting 1 from the next higher digit.)</p>
+			<table class="table table-sm">
+				<thead>
+					<tr>
+						<th>Input A (+)</th>
+						<th>Input B (-)</th>
+						<th>Borrow In (-)</th>
+						<th>Output Digit</th>
+						<th>Output Borrow</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<th>0</th><th>0</th><th>0</th>
+						<td>0</td>
+						<td>0</td>
+					</tr>
+					<tr>
+						<th>1</th><th>0</th><th>0</th>
+						<td class="table-success">1</td>
+						<td>0</td>
+					</tr>
+					<tr>
+						<th>0</th><th>1</th><th>0</th>
+						<td class="table-success">1</td>
+						<td class="table-success">1</td>
+					</tr>
+					<tr>
+						<th>1</th><th>1</th><th>0</th>
+						<td>0</td>
+						<td>0</td>
+					</tr>
+					<tr>
+						<th>0</th><th>0</th><th>1</th>
+						<td class="table-success">1</td>
+						<td class="table-success">1</td>
+					</tr>
+					<tr>
+						<th>1</th><th>0</th><th>1</th>
+						<td>0</td>
+						<td>0</td>
+					</tr>
+					<tr>
+						<th>0</th><th>1</th><th>1</th>
+						<td>0</td>
+						<td class="table-success">1</td>
+					</tr>
+					<tr>
+						<th>1</th><th>1</th><th>1</th>
+						<td class="table-success">1</td>
+						<td class="table-success">1</td>
+					</tr>
+				</tbody>
+			</table>
+
+			<p>I'm not sure if you noticed this, but the "output digit" column is <em>exactly the same</em> as the 1's column for addition. So that entire part of our circuit can remain the same. For the borrow, it looks like it's going to be more complicated. I'll call the borrow bit "C" just because it's the third input and the first letter of "borrow" is already taken.</p>
+			<p>The four instances of a "1" in the rightmost column are B, C, BC, and ABC. In other words, it seems like the borrow happens whenever either (1) all three are on, or (2) A is off and B,C are not both off.</p>
+
+			<div class="exploration" id="full-subtractor1"></div>
+
+			<p>For comparison, here's our full adder from before:</p>
+			<div class="exploration" id="full-adder1"></div>
+
+			<p>There are only two things that are different! There are two NOT gates, one on the "A" input and one coming off the top XOR gate. Why is this? I think part of it is similar to how turning something 180&deg; to the left is the same as turning 180&deg; to the right. If a knob only has two positions, you can only either "keep it as is" or "change to the other position". It doesn't matter if you turn it clockwise or counterclockwise. But if it had ten positions, for instance, then the direction would matter (3 left is different from 3 right, although 5 still wouldn't matter).</p>
+			<p>Binary arithmetic is similar; you can only keep the bit as is, or flip it (0 -> 1 -> 0 -> 1 -> ...), possibly with a carry or borrow in the sequence. And even those both only happen in one circumstance each (carry at 1+1; borrow at 0-1).</p>
+
+			<!-- And this is where it gets interesting! -->
+			<h3>A completely different way of thinking about all this</h3>
+			<p>It <em>almost</em> looks like the only thing different between addition and subtraction is that the "A" input gets inverted. In fact, if you flip A before sending it through, that gets rid of both NOT gates... but unfortunately it messes up the "1" bit. Because of how XORs work, though, all we need to do is put a NOT gate right after the <em>second</em> XOR gate.</p>
+			<p>What this all means is that we've essentially declared that to subtract, we need only invert both "A" and "1". So we could just re-use the same exact adder circuit, but just put NOT gates around the entire A input and... well, the entire output, because the borrow bits don't ever leave the circuit the way the digits do.</p>
+			<p>Now, I don't know about you, but to me that suggests a rather crazy idea. I said how using sign bits for negative numbers was clunky and it messed up our addition hardware. Here's my crazy idea: What if we drop that system altogether, and instead represent a positive number by inverting all the bits? (This might require some fine-tuning to get all the special cases, but let's see how it works.)</p>
+			<p>So instead of 6 being <code>0110</code>, we write it as <code>1001</code>. Then when we want to subtract 3, we <em>add</em> the bits <code>1001</code> and <code>0011</code> (the normal 3). Let's see, does that work? We get <code>1100</code>... which corresponds to 3... yes, I think it worked!!</p>
+			<p>Actually, it's more common (and more reasonable) to represent the <em>negative</em> numbers by inverting them. So that subtraction of 6 minus 3 would really be <code>0110 + 1100</code>, or <code>10010</code>. Wait a second... even if we ignore that extra "1" on the front, that's 2, not 3!
+			</p><p>What about addition of negative numbers? Let's try (-2) + (-3): <code>1101 + 1100 = 11001</code>. That unfortunately looks like the inverse of 6, which is not what we wanted either.</p>
+			<p>But wait a second. Both of the bad versions were off by 1. (There's actually a joke in computer science that the "two" hardest problems are algorithms, naming things, and off-by-one errors.) This inversion thing looked so promising, what went wrong? Well, first let's investigate this. Here's an exploration with 1's complement. (It's a normal unsigned adder that we're pretending handles signed numbers.) When does it give wrong answers?</p>
+			<div class="exploration" id="ones-complement"></div>
+
+			<p>Go on, experiment. There's a case that I almost missed myself when I was writing this. You don't have to try every combination, but at least experiment with numbers of different magnitudes...</p>
+
+			<h3>A Small Adjustment</h3>
+			<p>So if you've earnestly experimented with that, you probably found either three or four possible Error values. It turns out that there are four: 0, -1, +14, and -15.</p>
+			<p>The +14 and -15 cases are suspiciously close to 16, which suggests overflow might be an issue. (You might have noticed the carry bit on the left side of the adder would signal a problem.) If you haven't discovered the +14 case, go back to the exploration now and see if you can make it happen.</p>
+			<p>In fact, now might be a good time to make sure you know roughly when <em>all</em> of the four possibilities happen. Go ahead, try to put it in your own words. I'll even give you a hint for one of them.</p>
+
+			<p>
+				<textarea style="width: 100%" rows="3">The error of 0 happens when both input numbers are positive, or when they have opposite signs and the negative number has larger magnitude (like -4 and +2).</textarea>
+			</p>
+			<p>
+				<textarea style="width: 100%">The error of -1 happens when...</textarea>
+			</p>
+			<p>
+				<textarea style="width: 100%">The error of -15 happens when...</textarea>
+			</p>
+			<p>
+				<textarea style="width: 100%">The error of +14 happens when...</textarea>
+			</p>
+
+			<p>Scroll down when you're ready. You won't be graded, but I encourage you to think about this and answer it yourself.</p>
+
+			<h4>Answers</h4>
+			<p>Here's what I found.</p>
+			<ul>
+				<li>The error of 0 happens when both input numbers are positive, or when they have opposite signs and the negative number has larger magnitude (like -4 and +2).</li>
+				<li>The error of -1 occurs when both inputs are negative, or when they have opposite signs and the <em>positive</em> number has larger magnitude (like +5 and -3).</li>
+				<li>The error of -15 happens when both numbers are positive and the calculation overflows (at least 8).</li>
+				<li>The error of +14 happens when both numbers are negative and the calculation overflows (goes below -8).</li>
+			</ul>
+			<p>While I normally wouldn't care too much about overflow, I find it interesting that negative overflow is off by <em>14</em>, not 15. When we add two negative numbers that overflow, we seem to be off by 2, but when we overflow once or cross into negative territory, we are off by 1.</p>
+			<p>So that leads to the second crazy idea: What if we correct for this by adding 1 when we invert all the bits? For instance, to form the negative of 3 = <code>0011</code>, we first invert it to <code>1100</code>, then add 1 to make <code>1101</code>. This system, called "two's complement", seems to make things even worse. But watch what happens when we put it through our "dumb adder"...</p>
+			<p>I encourage you to enter some negative numbers by mentally inverting and adding 1. If you find mental calculations challenging, here's a textbox you can use:</p>
+			<textarea rows="3">3 = 0011
+-3 = (1100) + 1 = 1101</textarea>
+			<div class="exploration" id="twos-comp-adder"></div>
+			<p>Go ahead, try as many different special cases as you can...</p>
+			<p>You'll find this is a lot better! All we have are 16s and 0s in the error field. We'll never be able to eliminate the 16s because of overflow, but at least it's a nice power of 2.</p>
+			<p>You might have also noticed we somehow have the number -8, but positives still only go up to 7. You <em>also</em> might have noticed that negative zero doesn't exist anymore:</p>
+			<pre>-(0000)
+= (1111) + 1
+= 10000
+= 0000  (in 4-bit arithmetic)</pre>
+			<p><strong>But wait, there's more!</strong> There's a much simpler way of thinking about two's complement that explains why subtracting works the same way as adding. To make the explanation a little simpler, let's look at 1's complement (the simple inversion one) for a moment. I've separated out the steps like so in case you find it hard to follow.</p>
+			<ol>
+				<li>In unsigned (positive-only) arithmetic, a number and its inverse always add up to <code>1111</code>, or fifteen. Example: <code>1001 + 0110 = 1111</code> (9 + 6 = 15).</li>
+				<li>So, inverting all the bits is the same as <em>subtracting</em> the number from 15: <code>1111 - 1001 = 0110</code> (15 - 9 = 6).</li>
+				<li>That means that if we're saying "invert all bits means negative", then that means we're representing -<var>x</var>, the negative of some number <var>x</var>, as 15-<var>x</var>.</li>
+				<li>In other words, we're effectively adding 15 to -<var>x</var>.</li>
+				<li>We're saying that numbers are to be considered negative when the left-most bit (formerly the "8" bit) is on. (This is just convention, so that positive and negative are exactly balanced.)</li>
+				<li>So what this means is that the "8" bit actually has value 8 - 15 = -7. It's a negative 7 bit!</li>
+			</ol>
+			<p class="small">(Wait, why did I <em>subtract</em> 15? To convert a number into one's complement we flip all the bits, which is the same as adding 15 to the negative. So if we have a bit pattern, like <code>1101</code>, we undo the add, i.e. subtract, 13 - 15 = -2 to get the original number. It's like if you drive, say, east to get to work... then you drive west to get home <em>from</em> work.)</p>
+
+			<p>So what this means is that we can think of 1's complement as saying the leftmost bit represents negative 7. For <em>two's</em> complement, in addition to inverting the bits we are adding 1, so instead of using 15-<var>x</var>, we use (15-<var>x</var>) + 1, or 16-<var>x</var>. Then the "8" bit instead has value 8 - 16 = -8, instead of -7.</p>
+			<p>This works for any number of bits. For example, in 8-bit two's complement, the leftmost bit has value -128, followed by positive 64, 32, 16, 8, 4, 2, and 1!</p>
+
+			<h3>Putting it All Together</h3>
+			<p>All right, so enough of me rambling. Here is a simple adder that's been turned into a subtractor. Notice it starts out by saying "0 + 15 (+1 carry in)". I've used the carry input (notice it has a NOT attached to nothing, i.e. NOT zero, i.e. 1) to get the "add 1" after inverting the second input, so we don't need a second adder. The text inside the adder is left as an addition, to emphasize that <em>the adder doesn't know it's being used for subtraction</em>. It's all about interpretation...</p>
+			<div class="exploration" id="subtractor"></div>
+
+			<p>In fact, we can go one step further. Because we're using the exact same component for the tough work, we can add a simple extra bit to <em>choose</em> between addition and subtraction. I'll leave it up to you to figure out the finishing touches. You want Green to add, and Red to subtract. (Note that you can't avoid overflow. An asterisk, like <code>Answer: -4*</code>, means you should get -4 due to overflow.)</p>
+
+			<div class="exploration" id="make-alu">
+				<h5>Goal: If <strong class="bit-1">OPER is green</strong>, output A + B. If <strong class="bit-0">OPER is red</strong>, output A - B.</h5>
+			</div>
+
+			<h3>Next Steps</h3>
+			<p>With subtraction out of the way, it's time for <a href="/part3.html">part 3</a>, where we learn about multipliers and dividers!</p>
+		</div>
+		<footer>
+			Copyright &copy; 2021 Croix Gyurek. All rights reserved.
+		</footer>
+	</body>
+
+	<script src="/main.c39d6dcf.js"></script>
+</html>

@@ -17,8 +17,13 @@ interface Component {
     outputSockets: {x: number, y: number}[],
     inputWires: (Wire | null)[],
 
-    render: (ctx: CanvasRenderingContext2D) => void,
-    onClick: (offsetX: number, offsetY: number) => void,
+    render: (
+        ((ctx: CanvasRenderingContext2D) => void) |
+        ((ctx: CanvasRenderingContext2D, isDark: boolean) => void)
+    ),
+    onClick: (
+        (offsetX: number, offsetY: number) => boolean
+    ) | undefined,
     evaluate: (bits: boolean[]) => boolean[],
 
     // optional function

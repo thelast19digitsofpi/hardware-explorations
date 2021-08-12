@@ -3,16 +3,23 @@ import Exploration from './Exploration';
 
 // Alphabetized because... idunno
 import AdderExploration from './AdderExploration';
+import AdderFailExploration from './AdderFailExploration';
 import BinaryExploration from './BinaryExploration';
 import ChoiceExploration from './ChoiceExploration';
 import ClockExploration from './ClockExploration';
 import DividerExploration from './DividerExploration';
 import FullAdderExploration1 from './FullAdderGates';
+import FullSubtractorExploration1 from './FullSubtractorGates';
 import GateExploration from './GateExploration';
 import HalfAdderCheat from './HalfAdderCheat';
+import MakeALUExploration from './MakeALUExploration';
 import MultiplierExploration from './MultiplierExploration';
+import MultiplierNaiveExploration from './MultiplierNaiveExploration';
+import OnesComplementExploration from './OnesComplementExploration';
 import RegisterExploration from './RegisterExploration';
+import SignMagnitudeExploration from './SignMagnitudeExploration';
 import SubtractorExploration from './SubtractorExploration';
+import TwosCompAdderExploration from './TwosCompAdderExploration';
 
 function createCanvas(): HTMLCanvasElement {
     const canvas: HTMLCanvasElement = document.createElement("canvas");
@@ -67,18 +74,20 @@ function createExploration(id: string, type: typeof Exploration): Exploration | 
         element.appendChild(controls);
 
         const pauseButton = (controls.querySelector("#pause-" + id) as HTMLButtonElement);
-        pauseButton.addEventListener("click", function() {
-            exploration.pause();
+        exploration.pause = function() {
+            exploration.constructor.prototype.pause.call(exploration);
             pauseButton.disabled = true;
             resumeButton.disabled = false;
-        });
+        };
+        pauseButton.addEventListener("click", exploration.pause);
         pauseButton.disabled = true;
         const resumeButton = controls.querySelector("#resume-" + id) as HTMLButtonElement;
-        resumeButton.addEventListener("click", function() {
-            exploration.resume();
+        exploration.resume = function() {
+            exploration.constructor.prototype.resume.call(exploration);
             pauseButton.disabled = false;
             resumeButton.disabled = true;
-        });
+        };
+        resumeButton.addEventListener("click", exploration.resume);
         controls.querySelector("#step-" + id)!.addEventListener("click", exploration.update.bind(exploration));
 
         //exploration.resume();
@@ -88,30 +97,47 @@ function createExploration(id: string, type: typeof Exploration): Exploration | 
 }
 
 
-// Explorations
-let ALL_EXPLORATIONS: (Exploration | undefined)[] = [];
-ALL_EXPLORATIONS.push(
-    createExploration('binary-basic', BinaryExploration),
-    createExploration('adder', AdderExploration),
-    createExploration('gates', GateExploration),
-//ALL_EXPLORATIONS.push(createExploration('subtractor', SubtractorExploration));
-    createExploration('choice', ChoiceExploration),
-    createExploration('half-adder-cheat', HalfAdderCheat),
-    createExploration('gates-again', GateExploration),
-    createExploration('full-adder1', FullAdderExploration1)
-);
-//ALL_EXPLORATIONS.push(createExploration('clock', ClockExploration));
 
-ALL_EXPLORATIONS.push(createExploration('multiplier-full', MultiplierExploration));
-ALL_EXPLORATIONS.push(createExploration('divider-full', DividerExploration));
-//ALL_EXPLORATIONS.push(createExploration('3', RegisterExploration));
+// Explorations
+// {htmlId: Class}
+const explorationMap: {[id: string]: typeof Exploration} = {
+    // part 1 (and maybe part 2 as well)
+    'binary-basic': BinaryExploration,
+    'adder': AdderExploration,
+    'gates': GateExploration,
+    'choice': ChoiceExploration,
+    'half-adder-cheat': HalfAdderCheat,
+    'gates-again': GateExploration,
+    'full-adder1': FullAdderExploration1,
+    'clock': ClockExploration,
+
+    // part 2
+    'signmag': SignMagnitudeExploration,
+    'adder-fail': AdderFailExploration,
+    'full-subtractor1': FullSubtractorExploration1,
+    'ones-complement': OnesComplementExploration,
+    'twos-comp-adder': TwosCompAdderExploration,
+    'subtractor': SubtractorExploration,
+    'make-alu': MakeALUExploration,
+
+    // part 3
+    'multiplier-naive': MultiplierNaiveExploration,
+    'multiplier-full': MultiplierExploration,
+    'divider-full': DividerExploration,
+};
+let ALL_EXPLORATIONS: (Exploration | undefined)[] = [];
+for (let id in explorationMap) {
+    ALL_EXPLORATIONS.push(createExploration(id, explorationMap[id]));
+}
+
+let isDark = false;
 
 function renderLoop() {
     // TODO: Put this in exploration
     for (let i = 0; i < ALL_EXPLORATIONS.length; i++) {
         const exploration = ALL_EXPLORATIONS[i];
         if (exploration) {
-            exploration.render();
+            exploration.render(isDark);
         }
     }
     requestAnimationFrame(renderLoop);
@@ -119,7 +145,7 @@ function renderLoop() {
 renderLoop();
 
 // some other stuff
-function fillInteractiveTable(table: HTMLTableElement) {
+function fillInteractiveTable(table: HTMLTableElement | null) {
     if (table === null) return;
     const html = `<input type="number" min="0" max="1" size="3" />`;
     const fillIn = table.tBodies[0].getElementsByTagName("tr");
@@ -132,4 +158,19 @@ function fillInteractiveTable(table: HTMLTableElement) {
         fillIn[i].appendChild(out2);
     }
 }
-fillInteractiveTable(document.getElementById("fill-in"));
+fillInteractiveTable(document.getElementById("fill-in") as (HTMLTableElement | null));
+
+function setDark(on: boolean) {
+    if (on) {
+        document.body.style.backgroundColor = "#212529";
+        document.body.style.color = "#909396";
+        isDark = true;
+    } else {
+        document.body.style.backgroundColor = "#fff";
+        document.body.style.color = "#212519";
+        isDark = false;
+    }
+    renderLoop();
+}
+
+setDark(false);

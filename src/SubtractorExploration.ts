@@ -1,41 +1,50 @@
-// SubtractorExploration.ts
+// adderExploration.ts
 
 import Exploration from './Exploration';
 import InputBit from './InputBit';
 import OutputBit from './OutputBit';
-import Subtractor from './Subtractor';
+import Adder from './Adder';
 import Wire from './Wire';
 import Display from './Display';
+import { Not } from './Gates';
 
 class SubtractorExploration extends Exploration {
     constructor(canvas: HTMLCanvasElement) {
-        super(canvas);
+        super(canvas, 400, 400);
 
-        const subtractor = new Subtractor(200, 200, 4);
-        this.components.push(subtractor);
+        const adder = new Adder(200, 200, 4, 216);
+        this.components.push(adder);
 
+        let inputA = [], inputB = [];
         for (let i = 0; i < 4; i++) {
-            const bit = new InputBit(40 + i*40, 30);
-            subtractor.inputWires.unshift(new Wire(bit, 0, [
-                {x: 112.5 + i*25, y: 120 - i*20},
-                {x: 40 + i*40, y: 120 - i*20},
-            ]));
+            const bit = new InputBit(adder.position.x + adder.inputSockets[3-i].x, 60);
+            adder.inputWires.unshift(new Wire(bit, 0));
             this.components.push(bit);
+            inputA.unshift(bit);
 
-            const bit2 = new InputBit(360 - i*40, 40);
-            subtractor.inputWires.push(new Wire(bit2, 0, []));
-            this.components.push(bit2);
+            const bit2 = new InputBit(adder.position.x + adder.inputSockets[4+i].x, 60);
+            const not = new Not(bit2.position.x, bit2.position.y + 50, 30, 0);
+            not.inputWires.push(new Wire(bit2, 0));
+            adder.inputWires.push(new Wire(not, 0));
+            this.components.push(bit2, not);
+            inputB.push(bit2);
         }
+        const floatingNot = new Not(320, 200, 30, 90);
+        adder.inputWires.push(new Wire(floatingNot, 0));
+        this.components.push(floatingNot);
         const outputBits = [];
-        for (let i = 0; i < 5; i++) {
-            const output = new OutputBit(245 - i*30, 300);
-            output.inputWires.push(new Wire(subtractor, i, []));
+        for (let i = 0; i < 4; i++) {
+            const output = new OutputBit(adder.position.x + adder.outputSockets[i].x, 310);
+            output.inputWires.push(new Wire(adder, i, []));
             outputBits.push(output);
         }
         this.outputComponents.push(...outputBits);
         this.components.push(...outputBits);
 
-        this.components.push(new Display(200, 330, outputBits, true));
+        this.components.push(new Display(150, 25, inputA, true));
+        this.components.push(new Display(250, 25, inputB, true));
+        this.components.push(new Display(adder.position.x, 360, outputBits, true, 40));
+
     }
 }
 

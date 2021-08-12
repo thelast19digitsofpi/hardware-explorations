@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" type="text/css" href="/style.e308ff8e.css">
+		<link rel="stylesheet" type="text/css" href="/bootstrap.5f792716.css" <="" head="">
+	</head><body>
+		<div class="container">
+            <h1>Multiplication and Division</h1>
+			<p>NOTE: This page has only the multiplication and division explorations. It has instructions, but the full explanation is <a href="/part3.html">here</a>.</p>
+
+			<h3>Multiplication</h3>
+			<h4 class="text-success">Exploration Instructions</h4>
+			<p><strong>Heads up!</strong> Multiplication and division take time. To operate this explorable:</p>
+			<ol start="0">
+				<li><strong class="text-danger">Dark Red = 0</strong> and <strong class="text-success">Light Green = 1</strong>.</li>
+				<li>Click the circles in the <strong>upper left</strong> to make the first number. <em>(You have to make the number in binary. The display number can NOT be typed into.)</em></li>
+				<li>Click on the row of circles in the <strong>upper mid-right</strong> to make the second number. <em>(These ones are surrounded by wires.)</em></li>
+				<li>When you are ready, click the <strong>large red button</strong> in the upper right corner to turn the machine "on". (Note that the "Play" button enables animation but won't actually start the calculation unless the big red bit is made green.)</li>
+				<ul>
+					<li>Changing bits while the calculation is running... might be entertaining, because it won't restart the computation. If you want to abort it, the large red start button will be green; click it to turn the simulation off again.</li>
+				</ul>
+				<li>Too fast? There is speed control to the right of (or below) the exploration. Click "pause" to pause the circuit and "step" to do one iteration at a time. You can also adjust the animation speed.</li>
+			</ol>
+			<p>For best results, try setting the second input to something with several 1 bits and several 0 bits. A good number for this is 110011 (51).</p>
+			<p>Oh, and one more thing — make sure <em>both</em> numbers are nonzero before you start!</p>
+			<div class="exploration" id="multiplier-full"></div>
+
+			<h3 id="mult-what-happened">Multiplication: What Just Happened?</h3>
+			<p>In part three of the main exploration I have a <a href="/part3.html#mult-what-happened">detailed explanation</a> of this hardware.</p>
+
+			<h3>Division</h3>
+			<h4 class="text-success">Exploration Instructions</h4>
+			<p><strong>Heads up!</strong> Division takes time. To operate this explorable:</p>
+			<ol start="0">
+				<li><strong class="text-danger">Dark Red = 0</strong> and <strong class="text-success">Light Green = 1</strong>.</li>
+				<li><strong>The inputs are the red circles up top. The one above is the numerator</strong>, and the one below is the denominator. <em>(You (still) have to make the number in binary. The display number can NOT be typed into.)</em></li>
+				<li>When you are ready, click the <strong>large red button</strong> in the upper right corner to turn the machine "on". (Note that the "Play" button enables animation but won't actually start the calculation unless the big red bit is made green.)</li>
+				<ul>
+					<li>Changing bits while the calculation is running... might be entertaining, because it won't restart the computation. If you want to abort it, the large red start button will be green; click it to turn the simulation off again.</li>
+				</ul>
+				<li>Too fast? There is speed control to the right of (or below) the exploration. Click "pause" to pause the circuit and "step" to do one iteration at a time. You can also adjust the animation speed.</li>
+			</ol>
+			<p>Oh, and one more thing — make sure <em>both</em> numbers are nonzero before you start!</p>
+			<div class="exploration" id="divider-full"></div>
+			<p>Here's a few things to try:</p>
+			<ul>
+				<li>Try some stress tests: 63 divided by 1, 63 divided by 63, 1 divided by 63, 1 divided by 1, 0 divided by 1 or 63.</li>
+				<li>What happens if you divide by zero? See if you can guess, then try it. (A real computer would issue some kind of error if you tried to do so, but that requires more work.)</li>
+			</ul>
+		</div>
+	</body>
+
+	<script src="/main.c39d6dcf.js"></script>
+</html>
