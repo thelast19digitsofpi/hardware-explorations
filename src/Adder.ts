@@ -1,6 +1,7 @@
 // Adder.ts
 
 import Component from "./Component";
+import { getBitColor, getStrokeColor, getTextColor } from "./dark";
 import Wire from "./Wire";
 
 class Adder implements Component {
@@ -68,13 +69,13 @@ class Adder implements Component {
 
     onClick: undefined;
 
-    render(ctx: CanvasRenderingContext2D) {
+    render(ctx: CanvasRenderingContext2D, isDark: boolean) {
         ctx.save();
 
         const left = this.position.x - this.size.x/2;
         const top = this.position.y - this.size.y/2;
         // base
-        ctx.fillStyle = "#cccccc";
+        ctx.fillStyle = isDark ? "#333333" : "#cccccc";
         ctx.beginPath();
         ctx.moveTo(left,                    top);
         ctx.lineTo(left + this.size.x,      top);
@@ -88,7 +89,7 @@ class Adder implements Component {
         ctx.textBaseline = "middle";
         for (let i = 0; i < this.inputSockets.length; i++) {
             let socket = this.inputSockets[i];
-            ctx.fillStyle = "#3333cc";
+            ctx.fillStyle = isDark ? "#223388" : "#3333cc";
             ctx.beginPath();
             ctx.arc(this.position.x + socket.x, this.position.y + socket.y, 6, 0, 2*Math.PI);
             ctx.fill();
@@ -98,8 +99,8 @@ class Adder implements Component {
 
         for (let i = 0; i < this.outputSockets.length; i++) {
             let socket = this.outputSockets[i];
-            ctx.fillStyle = "#333333";
-            ctx.strokeStyle = (this.state.bits[i] ? '#33ff33' : '#990000');
+            ctx.fillStyle = isDark ? "#666666" : "#333333";
+            ctx.strokeStyle = getBitColor(this.state.bits[i], isDark);
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.arc(this.position.x + socket.x, this.position.y + socket.y, 6, 0, 2*Math.PI);
@@ -115,7 +116,7 @@ class Adder implements Component {
         }
         const textSize = Math.round(Math.min(this.size.x * 0.125, this.size.y * 0.5));
         ctx.font = textSize + "px monospace";
-        ctx.fillStyle = "black";
+        ctx.fillStyle = getTextColor(isDark);
         ctx.fillText(String(num1) + " + " + String(num2), this.position.x, this.position.y);
 
         const carryWire = this.inputWires[2*this.numBits];

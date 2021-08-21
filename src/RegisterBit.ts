@@ -4,6 +4,7 @@
 // Does nothing if both are on or both are off.
 
 import Component from "./Component";
+import { getBitColor, getStrokeColor } from "./dark";
 import Wire from "./Wire";
 
 class RegisterBit implements Component {
@@ -32,7 +33,7 @@ class RegisterBit implements Component {
         };
 
         // [0] is the off switch and [1] is the on switch
-        const offset = size * 0.44;
+        const offset = size * 0.45;
         this.inputSockets = [
             {x: -offset, y: -offset},
             {x:  offset, y: -offset}
@@ -47,14 +48,14 @@ class RegisterBit implements Component {
 
     onClick: undefined;
 
-    render(ctx: CanvasRenderingContext2D) {
+    render(ctx: CanvasRenderingContext2D, isDark: boolean) {
         ctx.save();
 
         const left = this.position.x - this.size.x/2;
         const top = this.position.y - this.size.y/2;
         ctx.translate(left, top);
         // base
-        ctx.fillStyle = this.state.bits[0] ? "#33ff33" : "#990000";
+        ctx.fillStyle = getBitColor(this.state.bits[0], isDark);
         ctx.beginPath();
         ctx.moveTo(this.size.x*0.5, 0);
         ctx.lineTo(this.size.x*1.0, this.size.y*0.5);
@@ -64,8 +65,9 @@ class RegisterBit implements Component {
         ctx.fill();
         ctx.stroke();
 
-        // red input
-        ctx.fillStyle = "#ccffff";
+        // load input
+        ctx.fillStyle = isDark ? "#446666" : "#ccffff";
+        ctx.strokeStyle = getStrokeColor(isDark);
         ctx.beginPath();
         ctx.arc(this.size.x * 0.25, this.size.y * 0.25, this.size.x * 0.25, 135*Math.PI/180, 315*Math.PI/180);
         ctx.fill();

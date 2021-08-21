@@ -1,6 +1,7 @@
 // Adder.ts
 
 import Component from "./Component";
+import { getApplianceColor } from "./dark";
 import Wire from "./Wire";
 
 class Subtractor implements Component {
@@ -60,17 +61,15 @@ class Subtractor implements Component {
         this.inputWires = [];
     }
 
-    onClick(_offsetX: number, _offsetY: number): void {
-        return;
-    };
+    onClick: undefined;
 
-    render(ctx: CanvasRenderingContext2D) {
+    render(ctx: CanvasRenderingContext2D, isDark: boolean) {
         ctx.save();
 
         const left = this.position.x - this.size.x/2;
         const top = this.position.y - this.size.y/2;
         // base
-        ctx.fillStyle = "#cccccc";
+        ctx.fillStyle = getApplianceColor(isDark);
         ctx.beginPath();
         ctx.moveTo(left,                    top);
         ctx.lineTo(left + this.size.x*0.46, top);

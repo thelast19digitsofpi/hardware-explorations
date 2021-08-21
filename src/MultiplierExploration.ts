@@ -70,7 +70,7 @@ class MultiplierExploration extends Exploration {
 
         // ironic that I called the above a "clock"
         // when the clock strikes 2*BITS + 1 it will end the operation
-        const countdown = new Clock(clockX - 20, 260, 14, 80, 50);
+        const countdown = new Clock(clockX - 20, 260, 80, 50);
         countdown.inputWires.push(new Wire(startButton, 0, [
             {x: countdown.position.x, y: countdown.position.y - 40},
             {x: clockX - 30, y: countdown.position.y - 40},
@@ -78,7 +78,7 @@ class MultiplierExploration extends Exploration {
         ]));
         this.countdown = countdown;
 
-        const adder = new Adder(180, 190, BITS, 270, 90);
+        const adder = new Adder(180, 185, BITS, 270, 100);
         //this.outputComponents.push(adder);
 
         // The "Register" that really isn't.
@@ -94,14 +94,14 @@ class MultiplierExploration extends Exploration {
         }
 
         // Wire Coloring
-        const purple = {color: "rgb(128, 32, 128)"};
-        const purpleFaded = {color: "rgba(128, 0, 128, 0.4)"};
+        const purple = {color: "rgb(128, 32, 128)", darkColor: "rgb(160, 80, 160)"};
+        const purpleFaded = {color: "rgba(128, 0, 128, 0.4)", darkColor: "rgba(160, 80, 160, 0.6)"};
         const teal = {color: "rgb(0, 128, 128)"};
         const tealFaded = {color: "rgba(0, 128, 128, 0.35)"};
 
         // Wires from the registers to the adder.
         for (let i = 0; i < BITS; i++) {
-            const d = 3;
+            const d = 2;
             const bit = productRegister[i + BITS];
             // basically, we want the most significant bit to be highest
             const y1 = bit.position.y + 15 + d * (BITS - i);
@@ -110,7 +110,7 @@ class MultiplierExploration extends Exploration {
                 {x: 10 + d*i, y: 110 + d*i},
                 {x: 10 + d*i, y: y1},
                 {x: bit.position.x, y: y1},
-            ], {color: "rgba(128, 0, 128, 0.75)"}));
+            ], {color: "rgba(128, 0, 128, 0.75)", darkColor: "rgba(160, 80, 160, 0.67)"}));
         }
 
         // And Gates coming out of the adder (for the clock).
@@ -235,7 +235,7 @@ class MultiplierExploration extends Exploration {
                 {x: 400, y: choice.position.y - 20},
                 {x: 400, y: regLSB.position.y + 20},
                 {x: regLSB.position.x, y: regLSB.position.y + 20},
-            ], {color: "rgb(127, 127, 127)"}));
+            ], {color: "#7f7f7f", darkColor: "#555"}));
 
             // Else wire
             const outBit = productRegister[i + BITS];
@@ -256,12 +256,12 @@ class MultiplierExploration extends Exploration {
             this.outputComponents.push(bit);
 
             // set wire: on at the 12th clock cycle
-            bit.inputWires.push(new Wire(countdown, 12, [
+            bit.inputWires.push(new Wire(countdown, 1, [
                 {x: bit.position.x - 15, y: bit.position.y - 15},
                 {x: bit.position.x - 15, y: bit.position.y - 30},
                 {x: clockX + 20, y: bit.position.y - 30},
                 {x: clockX + 20, y: countdown.position.y + 40},
-                {x: countdown.position.x + countdown.outputSockets[12].x, y: countdown.position.y + 40},
+                {x: countdown.position.x + countdown.outputSockets[1].x, y: countdown.position.y + 40},
             ], {color: "rgb(128, 128, 128)"}));
 
             // what wire: from the corresponding from the product "register"
@@ -278,7 +278,7 @@ class MultiplierExploration extends Exploration {
         // finally, add displays
         const displayA = new Display(245, 25, inputA, false, 30);
         const displayB = new Display(510, 20, inputB, false, 30);
-        const displayEnd = new Display(400, 565, finalAnswer, false, 60);
+        const displayEnd = new Display(375, 565, finalAnswer, false, 60);
         displayEnd.size.x = 2*displayEnd.size.y;
 
         // rendering trick, because input wires are drawn with a component

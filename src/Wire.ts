@@ -2,7 +2,7 @@
 
 import Component from "./Component"
 
-type WireOptions = {color?: string};
+type WireOptions = {color?: string, darkColor?: string};
 
 // not sure a wire really is a component but it uses them
 class Wire {
@@ -11,6 +11,7 @@ class Wire {
     toOutput: number;
 
     color: string | undefined;
+    darkColor: string | undefined;
 
     // in case you want the wire to bend
     waypoints: Array<{x: number, y: number, node?: boolean}> = [];
@@ -26,6 +27,7 @@ class Wire {
         this.waypoints = waypoints;
 
         this.color = options.color;
+        this.darkColor = options.darkColor;
     }
 
     get(): boolean {
@@ -42,7 +44,13 @@ class Wire {
     render(ctx: CanvasRenderingContext2D, from: {x: number, y: number}, isDark: boolean) {
         if (!this.toComponent) return;
         ctx.save();
-        ctx.strokeStyle = this.color ?? (isDark ? "#909396" : "#333");
+        if (isDark && this.darkColor) {
+            ctx.strokeStyle = this.darkColor;
+        } else if (this.color) {
+            ctx.strokeStyle = this.color;
+        } else {
+            ctx.strokeStyle = (isDark ? "#606468" : "#333");
+        }
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(from.x, from.y);

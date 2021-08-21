@@ -3,9 +3,10 @@
 // These clocks can have an arbitrary period.
 
 import Component from "./Component";
+import { getApplianceColor, getBitColor } from "./dark";
 import Wire from "./Wire";
 
-class ChoiceGate implements Component {
+class Clock implements Component {
     public state: {bits: boolean[], clock: number};
     public position: {x: number, y: number};
     public size: {x: number, y: number};
@@ -15,7 +16,7 @@ class ChoiceGate implements Component {
     public numBits: number;
 
     //
-    constructor(x: number, y: number, bits: number, width: number = 100, height: number = 50) {
+    constructor(x: number, y: number, width: number = 50, height: number = 50) {
         this.position = {
             x: x,
             y: y,
@@ -26,22 +27,22 @@ class ChoiceGate implements Component {
             y: height,
         };
         // because .fill() isn't supported?!
-        const bitArray: boolean[] = Array(bits).map(_ => false);
+        const bitArray: boolean[] = Array(2).map(_ => false);
         this.state = {
             bits: bitArray,
             clock: -1,
         };
-        this.numBits = bits;
+        this.numBits = 2;
         // "power supply" or more accurately a way to reset the clock
         this.inputSockets = [
             {x: 0, y: -this.size.y/2 - 1},
         ];
 
         this.outputSockets = [];
-        const spacing = width / bits;
-        for (let i = 0; i < bits; i++) {
+        const spacing = width / 2;
+        for (let i = 0; i < 2; i++) {
             this.outputSockets.push({
-                x: (i - bits/2 + 1/2) * spacing,
+                x: (i - 1/2) * spacing,
                 y: this.size.y/2,
             });
         }
@@ -49,18 +50,16 @@ class ChoiceGate implements Component {
         this.inputWires = [];
     }
 
-    onClick(_offsetX: number, _offsetY: number): void {
-        return;
-    };
+    onClick: undefined;
 
-    render(ctx: CanvasRenderingContext2D) {
+    render(ctx: CanvasRenderingContext2D, isDark: boolean) {
         ctx.save();
 
         const left = this.position.x - this.size.x/2;
         const top = this.position.y - this.size.y/2;
         ctx.translate(left, top);
         // base
-        ctx.fillStyle = "#cccccc";
+        ctx.fillStyle = getApplianceColor(isDark);
         ctx.beginPath();
         let r = Math.min(this.size.y * 0.2, this.size.x * 0.1);
         const w = this.size.x, h = this.size.y;
@@ -83,7 +82,7 @@ class ChoiceGate implements Component {
         ctx.stroke();
 
         // clock
-        ctx.fillStyle = "#e0e0e4";
+        ctx.fillStyle = isDark ? "#555555" : "#e0e0e4";
         r = Math.min(w/3, h/3);
         ctx.translate(0, h/2); // move origin to center
         ctx.beginPath();
@@ -122,9 +121,9 @@ class ChoiceGate implements Component {
         // outputs
         for (let i = 0; i < this.outputSockets.length; i++) {
             const socket = this.outputSockets[i];
-            ctx.fillStyle = (i == this.state.clock) ? "#33ff33" : "#990000";
+            ctx.fillStyle = getBitColor(i == this.state.clock, isDark);
             ctx.beginPath();
-            ctx.arc(socket.x, socket.y, 5, 0, 2*Math.PI);
+            ctx.arc(socket.x, socket.y, 8, 0, 2*Math.PI);
             ctx.fill();
             ctx.stroke();
         }
@@ -149,4 +148,4 @@ class ChoiceGate implements Component {
     }
 }
 
-export default ChoiceGate;
+export default Clock;

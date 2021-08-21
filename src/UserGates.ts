@@ -146,7 +146,7 @@ abstract class UserGate implements Component {
         ctx.fill();
 
         ctx.rotate(-this.rotation);
-        ctx.font = Math.round(this.size.y * 0.6) + "px monospace";
+        ctx.font = Math.round(this.size.y * 0.4) + "px monospace";
         ctx.fillStyle = isDark ? "#939699" : "#333";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
@@ -188,6 +188,8 @@ class BinarySwitch extends UserGate {
                 ctx.closePath();
                 ctx.stroke();
                 ctx.fill();
+
+                this.symbol = "&";
                 break;
             case 1: // or
                 ctx.beginPath();
@@ -198,6 +200,8 @@ class BinarySwitch extends UserGate {
                 ctx.closePath();
                 ctx.stroke();
                 ctx.fill();
+
+                this.symbol = "O";
                 break;
             case 2: // xor
                 // do the or's path...
@@ -214,12 +218,22 @@ class BinarySwitch extends UserGate {
                 ctx.moveTo(s * -0.4, s * -0.5);
                 ctx.quadraticCurveTo(s * 0, s * -0.3, s * 0.4, s * -0.5);
                 ctx.stroke();
+                this.symbol = "X";
                 break;
         }
     }
 
     evaluate(bits: boolean[]): boolean[] {
-        return [(this.state.whichGate === 1) ? !bits[0] : bits[0]];
+        switch (this.state.whichGate) {
+            case 0:
+                return [bits[0] && bits[1]];
+            case 1:
+                return [bits[0] || bits[1]];
+            case 2:
+                return [bits[0] !== bits[1]];
+            default:
+                throw new Error(`Invalid state ${this.state.whichGate}`);
+        }
     };
 }
 

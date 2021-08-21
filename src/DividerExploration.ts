@@ -49,15 +49,15 @@ class DividerExploration extends Exploration {
 
     constructor(canvas: HTMLCanvasElement) {
         super(canvas);
-        canvas.width = 800;
+        canvas.width = 750;
         canvas.height = 600;
 
         // A lot of the same stuff happens compared to Multiplier...
 
-        const BITS = 6;
+        const BITS = 5;
         this.numBits = BITS;
 
-        const startButton = new InputBit(695, 40, false, 50);
+        const startButton = new InputBit(660, 40, false, 50);
         this.startButton = startButton;
 
         // probably more user friendly
@@ -74,41 +74,28 @@ class DividerExploration extends Exploration {
         //startNot.inputWires.push(new Wire(startButton, 0));
         //this.components.push(startNot);
 
-        const clockX = 690;
 
-        const clockAnd = new AndGate(clockX, 100, 25, 0);
-        const clockNot = new Not(clockX, 150, 25, 0);
-        const clockBit = new OutputBit(clockX, 200);
+        const clockX = startButton.position.x;
+        const clock = new Clock(clockX, 125, 50, 50);
+        clock.inputWires.push(new Wire(startButton, 0));
+        this.components.push(clock);
 
-        clockAnd.inputWires.push(new Wire(clockNot, 0, [
-            {x: clockX - 5, y: 75},
-            {x: clockX - 20, y: 75},
-            {x: clockX - 20, y: 175},
-            {x: clockX, y: 175}
-        ]));
-        clockAnd.inputWires.push(new Wire(startButton, 0));
-        clockBit.inputWires.push(new Wire(clockNot, 0));
-        clockNot.inputWires.push(new Wire(clockAnd, 0));
-        this.components.push(clockAnd, clockNot, clockBit);
-        this.outputComponents.push(clockBit);
-
-        // ironic that I called the above a "clock"
-        // when the clock strikes 2*BITS + 4 it will end the operation
+        // when this clock strikes 2*BITS + 4 it will end the operation
         // but I add one more to avoid confusion
-        const countdown = new Clock(750, 230, 2*BITS + 4, 80, 50);
+        const countdown = new Clock(clockX + 30, 200, 75, 45);
         countdown.inputWires.push(new Wire(startButton, 0, [
             {x: countdown.position.x, y: countdown.position.y - 40},
             {x: countdown.position.x, y: 40},
         ]));
         this.countdown = countdown;
 
-        const subtractor = new Subtractor(210, 180, BITS, 260, 80);
+        const subtractor = new Subtractor(210, 180, BITS, 11*26, 90);
         //this.outputComponents.push(subtractor);
 
         // Also not really a register.
         let remainderRegister = [];
-        this.remainderRight = 680;
-        this.remainderSpacing = 52;
+        this.remainderRight = 585;
+        this.remainderSpacing = 54;
         for (let i = 0; i < 2*BITS+1; i++) {
             const reg = new OutputBit(this.remainderRight - this.remainderSpacing*i, 460, 20);
             remainderRegister.push(reg);
@@ -117,39 +104,39 @@ class DividerExploration extends Exploration {
         }
 
         // Wire Coloring
-        const purple = {color: "rgb(128, 32, 128)"};
-        const purpleFaded = {color: "rgba(128, 0, 128, 0.25)"};
+        const purple = {color: "rgb(128, 32, 128)", darkColor: "rgba(160, 48, 160)"};
+        const purpleFaded = {color: "rgba(128, 0, 128, 0.25)", darkColor: "rgba(160, 40, 160, 0.33)"};
         const teal = {color: "rgb(0, 128, 128)"};
         const tealFaded = {color: "rgba(0, 128, 128, 0.35)"};
-        const blue = {color: "rgba(32, 64, 128, 0.8)"};
-        const blueFaded = {color: "rgba(32, 64, 128, 0.4)"};
+        const blue = {color: "rgba(32, 64, 128, 0.8)", darkColor: "rgba(96, 112, 160, 0.8)"};
+        const blueFaded = {color: "rgba(32, 64, 128, 0.4)", darkColor: "rgba(96, 112, 160, 0.4)"};
         //const yellow = {color: "rgba(160, 160, 0)"};
 
         // Input Numbers (N/D). D = divisor, N = dividend
         let inputN = [];
         let inputD = [];
         for (let i = 0; i < BITS; i++) {
-            const input = new InputBit(340 - i*25, 40);
+            const input = new InputBit(subtractor.position.x + subtractor.inputSockets[BITS+i].x, 30, false, 22);
             this.components.push(input);
             inputN.push(input); // in case we need it
         }
         for (let i = 0; i < BITS; i++) {
-            const input = new InputBit(340 - i*25, 110);
+            const input = new InputBit(inputN[i].position.x, 95, false, 22);
             this.components.push(input);
             inputD.push(input);
         }
 
         // Wires from the registers to the subtractor.
         for (let i = 0; i < BITS; i++) {
-            const d = 3;
+            const d = 2;
             const bit = remainderRegister[i + BITS];
             // basically, we want the most significant bit to be highest
             const y1 = bit.position.y + 15 + d * (BITS - i);
             const y2 = subtractor.position.y - 70;
             subtractor.inputWires.push(new Wire(bit, 0, [
-                {x: subtractor.position.x + subtractor.inputSockets[i].x - 30 + d*i, y: y2 + d*i},
-                {x: 10 + d*i, y: y2 + d*i},
-                {x: 10 + d*i, y: y1},
+                {x: subtractor.position.x + subtractor.inputSockets[i].x - 0, y: y2 + d*i},
+                {x: 3 + d*i, y: y2 + d*i},
+                {x: 3 + d*i, y: y1},
                 {x: bit.position.x, y: y1},
             ], {color: "rgba(128, 0, 128, 0.75)"}));
         }
@@ -163,31 +150,35 @@ class DividerExploration extends Exploration {
         for (let i = 0; i < BITS; i++) {
             //const x = subtractor.position.x + subtractor.outputSockets[i].x;
             const y = subtractor.position.y + subtractor.outputSockets[0].y; // put them all on the same line
-            // space them a bit
-            const choice = new ChoiceGate(remainderRegister[i+BITS].position.x, y + 50, 10);
+            // space them out a little
+            const choice = new ChoiceGate(remainderRegister[i+BITS].position.x - 2, y + 60, 14);
             // choice depends on whether or not the carry bit is positive or negative
             choice.inputWires.push(new Wire(subtractor, BITS, [
-                {x: choice.position.x - 15, y: choice.position.y},
-                {x: choice.position.x - 15, y: choice.position.y - 20},
-                {x: subtractor.position.x - subtractor.size.x/2, y: choice.position.y - 20},
+                {x: choice.position.x - 20, y: choice.position.y},
+                {x: choice.position.x - 20, y: choice.position.y - 25},
+                {x: subtractor.position.x - subtractor.size.x/2, y: choice.position.y - 25},
                 {x: subtractor.position.x - subtractor.size.x/2, y: subtractor.position.y},
             ], {color: "#888"}));
             // if negative, we just re-use the remainder register
             const regBit = remainderRegister[i + BITS];
             choice.inputWires.push(new Wire(regBit, 0, [
-                {x: choice.position.x + 5, y: choice.position.y - 10},
-                {x: choice.position.x + 20, y: choice.position.y - 10},
-                {x: choice.position.x + 20, y: regBit.position.y},
+                {x: choice.position.x - 7, y: choice.position.y - 17},
+                {x: regBit.position.x + 20, y: choice.position.y - 17},
+                {x: regBit.position.x + 20, y: regBit.position.y},
             ], purple));
             // otherwise we use the subtraction
+            const y2 = choice.position.y - 32 - Math.round(Math.abs(i - BITS/2)) * 4
             choice.inputWires.push(new Wire(subtractor, i, [
-                {x: choice.position.x + 5, y: choice.position.y - 30},
+                {x: choice.position.x + 7, y: y2},
+                {x: subtractor.position.x + subtractor.outputSockets[i].x, y: y2}
             ]));
             subtractorChoiceGates.push(choice);
             this.components.push(choice);
         }
 
         // Shifting the Remainder Register
+        // wires:
+        // (1) the faded purple wires from the clock control
         // includes many wires
         // also includes register for holding the quotient input
         const fullRow = [];
@@ -198,9 +189,9 @@ class DividerExploration extends Exploration {
             regBit.inputWires.push(new Wire(or, 0));*/
 
             // This is the middle (full) row
-            const choice = new ChoiceGate(regBit.position.x + (i < BITS ? 5 : -1), regBit.position.y - 100, 14);
+            const choice = new ChoiceGate(regBit.position.x + (i < BITS ? 5 : -1), regBit.position.y - 95, 14);
             // Selection Wire (from clock's NOT)
-            choice.inputWires.push(new Wire(clockAnd, 0, [
+            choice.inputWires.push(new Wire(clock, 0, [
                 {x: choice.position.x - 18, y: choice.position.y},
                 {x: choice.position.x - 18, y: choice.position.y - 40},
                 {x: 580 - 2*i, y: choice.position.y - 50 - 1*i},
@@ -213,11 +204,11 @@ class DividerExploration extends Exploration {
                 // Lower Half of the Register: Connect to itself.
                 choice.inputWires.push(new Wire(regBit, 0, [
                     {x: choice.position.x - 7, y: choice.position.y - 25},
-                    {x: regBit.position.x - 19, y: choice.position.y - 25},
-                    {x: regBit.position.x - 19, y: regBit.position.y},
+                    {x: regBit.position.x - 18, y: choice.position.y - 25},
+                    {x: regBit.position.x - 18, y: regBit.position.y},
                 ], purple));
             }
-            // Shifting
+            // Shifting and the Ones Bit
             if (i > 0) {
                 choice.inputWires.push(new Wire(remainderRegister[i-1], 0, [
                     {x: choice.position.x + 7, y: choice.position.y - 25},
@@ -225,9 +216,9 @@ class DividerExploration extends Exploration {
                     {x: regBit.position.x + 26, y: regBit.position.y + 0},
                 ], teal));
             } else {
-                const holdWrite = new OutputBit(choice.position.x + 30, choice.position.y - 25, 20);
-                const notY = subtractorChoiceGates[0].position.y - 20;
-                const not = new Not(500, notY, 30, -90);
+                const holdWrite = new OutputBit(choice.position.x + 7, choice.position.y - 34, 20);
+                const notY = subtractorChoiceGates[0].position.y - 25;
+                const not = new Not(this.remainderRight - this.remainderSpacing, notY, 30, -90);
                 not.inputWires.push(new Wire(subtractor, BITS, [
                     {x: subtractor.position.x - subtractor.size.x/2, y: notY},
                     {x: subtractor.position.x - subtractor.size.x/2, y: subtractor.position.y}
@@ -235,7 +226,9 @@ class DividerExploration extends Exploration {
                 // set on green
                 //holdWrite.inputWires.push(new Wire(clockNot, 0, [], teal));
                 // value is negated result of subtraction
-                holdWrite.inputWires.push(new Wire(not, 0, [], teal));
+                holdWrite.inputWires.push(new Wire(not, 0, [
+                    {x: holdWrite.position.x, y: not.position.y},
+                ], teal));
                 // maybe?
                 //choice.inputWires[1] = new Wire(holdWrite, 0, [], purple);
                 choice.inputWires.push(new Wire(holdWrite, 0, [], teal));
@@ -294,6 +287,7 @@ class DividerExploration extends Exploration {
 
         // Wiring Dividend to seed the remainder register
         // (blue wires)
+        const blueRightEdge = this.remainderRight + 33 + 2*BITS;
         let dividendChoice: ChoiceGate[] = [];
         for (let i = 0; i < BITS; i++) {
             const regBit = remainderRegister[i];
@@ -304,26 +298,25 @@ class DividerExploration extends Exploration {
             // Wire coming from the start button
             choice.inputWires.push(new Wire(startButton, 0, [
                 {x: choice.position.x - 15, y: choice.position.y},
-                {x: choice.position.x - 15, y: choice.position.y + 15},
-                {x: 770, y: choice.position.y + 15},
-                {x: 770, y: countdown.position.y + 40},
-                {x: clockX - 30, y: countdown.position.y + 40},
-                {x: clockX - 30, y: startButton.position.y + (startButton.position.x - clockX + 30)},
+                {x: choice.position.x - 15, y: choice.position.y + 15, node: true},
+                {x: blueRightEdge, y: choice.position.y + 15},
+                {x: blueRightEdge, y: startButton.position.y + (startButton.position.x - blueRightEdge)},
             ], blue));
 
             // If power is on, make it come from the teal/purple stuff
             choice.inputWires.push(new Wire(fullRow[i], 0));
 
             // Otherwise, set it to the input
-            const d = 3;
-            const y1 = countdown.position.y + 50;
+            const d = 2;
+            const y1 = fullRow[0].position.y - 90 - d*BITS;
             const y2 = inBit.position.y + 30;
+            const x1 = this.remainderRight + 24 + d*BITS;
             choice.inputWires.push(new Wire(inBit, 0, [
                 {x: choice.position.x + 6, y: choice.position.y - 10 - d*i},
-                {x: 760 - d*i, y: choice.position.y - 10 - d*i},
-                {x: 760 - d*i, y: y1 + d*i},
-                {x: clockX - 40 - d*i, y: y1 + d*i},
-                {x: clockX - 40 - d*i, y: y2 + d*i},
+                {x: x1 - d*i, y: choice.position.y - 10 - d*i},
+                {x: x1 - d*i, y: y1 + d*i},
+                {x: clockX - 90 - d*i, y: y1 + d*i},
+                {x: clockX - 90 - d*i, y: y2 + d*i},
                 {x: inBit.position.x, y: y2 + d*i},
             ], blueFaded));
 
@@ -341,12 +334,10 @@ class DividerExploration extends Exploration {
             and.inputWires.push(new Wire(fullRow[i+BITS], 0));
             and.inputWires.push(new Wire(startButton, 0, [
                 {x: and.position.x + 5, y: and.position.y - 20},
-                {x: and.position.x + 13, y: and.position.y - 20},
-                {x: and.position.x + 13, y: and.position.y + 15},
-                {x: 770, y: and.position.y + 15},
-                {x: 770, y: countdown.position.y + 40},
-                {x: clockX - 30, y: countdown.position.y + 40},
-                {x: clockX - 30, y: startButton.position.y + (startButton.position.x - clockX + 30)},
+                {x: and.position.x + 14, y: and.position.y - 20},
+                {x: and.position.x + 14, y: and.position.y + 15, node: i < BITS},
+                {x: blueRightEdge, y: and.position.y + 15},
+                {x: blueRightEdge, y: startButton.position.y + (startButton.position.x - blueRightEdge)},
             ], blue));
 
             this.components.push(and);
@@ -386,12 +377,12 @@ class DividerExploration extends Exploration {
             this.outputComponents.push(bit);
 
             // set wire: on at the 14th clock cycle
-            bit.inputWires.push(new Wire(countdown, 14, [
+            const x1 = countdown.position.x + countdown.outputSockets[1].x;
+            bit.inputWires.push(new Wire(countdown, 0, [
                 {x: bit.position.x - 15, y: bit.position.y - 15},
                 {x: bit.position.x - 15, y: bit.position.y - 30},
-                {x: 790, y: bit.position.y - 30},
-                {x: 790, y: countdown.position.y + 40},
-                {x: countdown.position.x + countdown.outputSockets[14].x, y: countdown.position.y + 40},
+                {x: x1, y: bit.position.y - 30},
+                {x: x1, y: countdown.position.y + 40},
             ], {color: "rgb(128, 128, 128)"}));
 
             // what wire: from the corresponding from the product "register"
@@ -405,8 +396,8 @@ class DividerExploration extends Exploration {
         }
 
         // finally, add displays
-        const displayN = new Display(inputN[0].position.x + 50, inputN[0].position.y, inputN, false, 30);
-        const displayD = new Display(inputD[0].position.x + 50, inputD[0].position.y, inputD, false, 30);
+        const displayN = new Display(inputN[0].position.x + 54, inputN[0].position.y, inputN, false, 36);
+        const displayD = new Display(inputD[0].position.x + 54, inputD[0].position.y, inputD, false, 36);
         const displayQ = new Display(557, 540, finalAnswer.slice(0, BITS), false, 30);
         const displayR = new Display(200, 540, finalAnswer.slice(BITS, 2*BITS), false, 30);
 

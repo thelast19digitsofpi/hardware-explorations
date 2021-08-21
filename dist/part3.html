@@ -4,8 +4,10 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<link rel="stylesheet" type="text/css" href="/style.e308ff8e.css">
-		<link rel="stylesheet" type="text/css" href="/bootstrap.5f792716.css" <="" head="">
-	</head><body>
+		<link rel="stylesheet" type="text/css" href="/bootstrap.5f792716.css">
+		<title>Computer Hardware Part 3</title>
+	</head>
+	<body>
 		<div class="container">
             <h1>Part 3: Multiplication and Division</h1>
 			<p>So we've figured out addition and subtraction. Multiplication, then, doesn't actually seem so bad; indeed, it is only repeated addition...</p>
@@ -27,17 +29,17 @@
 	476181
 			</pre>
 			<p>You might have noticed that I deliberately chose to make the second number only have the digits 0 and 1. This is a very useful feature of binary: since the bits can only ever be 0 or 1, at each step, we either add the number as is or we don't. (In contrast, with base ten we might have to add some multiple of 471.)</p>
-			<p>For now, we're also going to ignore overflow entirely, and just assume that we can somehow output twice as many bits. We'll also be using unsigned integers, so 1001 means 8+1 = 9, not -7. I'll explain how this is possible later. But for now, let's jump right to a naive attempt at building a circuit:</p>
+			<p>For now, we're also going to ignore overflow entirely, and just assume that we can somehow output twice as many bits. We'll also be using unsigned integers, so 1001 means 8+1 = 9, not -7. (Signed multiplication is a little trickier. However, if you don't care about overflow and want a 4-bit output, you can actually multiply the two's complement representations directly, as if they were positive numbers! Try it yourself if you want.) But for now, let's jump right to a naive attempt at building a circuit:</p>
 
 			<div class="exploration" id="multiplier-naive">
 
 			</div>
 
-			<p>Actually, the top right adder isn't really necessary, although if you wanted to have a multiply-add operation that computes (A * B) + C for three numbers A,B,C.</p>
+			<p>Actually, the top right adder isn't really necessary, although it could be helpful if you wanted to have a multiply-add operation that computes (A * B) + C given three inputs.</p>
 			<p>But that gets a bit unwieldy if you try to imagine 32 or 64 of them. In fact, that would be <em>extremely</em> slow. Although it all looks instantaneous here, each of those wires is distance that electrons have to move at some finite speed.</p>
 			<p>Even the "add" operation itself is fairly slow for a 32-bit machine; a signal has to travel through 32 full adders to make the final answer. (There are no shortcuts: imagine something like 7 + 3999994. You can't find out the millions digit until you finish adding the right six digits.) Multiplication would then require waiting for 32 of those add cycles.</p>
-			<p>There are actually more complicated designs that cut down on this time considerably, by using something called a "carry save adder". These designs are quite complicated, but the basic idea is similar to how I did the multiplication: I wrote (well, typed) all the 471's, then added each column and carried as needed.</p>
-			<p>But the reason this works is that multiplication is just repeated addition. All the information you need is right there in plain sight to begin with. This is not true of division, as we will see...</p>
+			<p>There are actually more complicated multiplier designs that cut down on this time considerably, by using something called a "carry save adder". These designs are quite complicated, but the basic idea is similar to how I did the multiplication: I wrote (well, typed) all the 471's, then added each column and carried as needed.</p>
+			<p>But the reason this works is that multiplication is just repeated addition. All the information you need is right there in plain sight to begin with. Unfortunately, this is <em>not</em> true of division, which means we're going to need more complicated steps to make that work.</p>
 
 			<!-- Introducing Division -->
 			<h4>Division...</h4>
@@ -77,18 +79,48 @@
 
 
 			<p>One thing you may have noticed is that division took more steps. There is no column-by-column trick to make the subtraction faster. What's worse, we have to make a <em>decision</em> at each step, of whether or not to subtract 471 (actually, in base ten there are ten possible subtractions including zero). There's no good way to predict, say, whether the last step will need a subtraction or not without calculating it all the way down to 513.</p>
-			<p>This is going to involve a much different kind of circuit from the static ones we've seen so far. Our circuit is going to need a lot more time, and a bunch of new components. Since this is going to be a lot of content, I've decided to <strong>build a slow multiplier</strong> first that will feature a lot of the components we need to build a divider. But before we get to any of that, let's start with three new components...</p>
+			<p>This is going to involve a much different kind of circuit from the static ones we've seen so far. Our circuit is going to need a lot more time, and a bunch of new components. Since this is going to be a lot of content, I've decided to <strong>first build a slow multiplier</strong> that will feature a lot of the components we need to build a divider. But before we get to any of that, let's start with three new components...</p>
 
+			<!-- Choice Gates -->
+			<h3>Making Decisions</h3>
+			<p>Remember how I said that with division, we need to be able to choose between two different options? How would you go about doing that?</p>
+			<p>I mean, a bit is already in some sense a "choice" between ON or OFF. But what if you need to choose between, say, two 32-bit numbers? Or what about more than two, even?</p>
+			<p>Actually, for the purposes of multiplication and division, we will only need to choose between two options, so let's figure that out. The simplest case, of course, is choosing between two bits. This isn't very complicated, but there are some subtleties to understand.</p>
+			<p>The gate we're going to build is called a "multi<b>plex</b>or" (<em>not</em> a multi<u>pli</u>er!) or a "selector" (although I personally like the name "choice gate"). It takes three inputs: the selection input S, and two others which I'll call A and B. The output is determined as follows:</p>
+			<ul>
+				<li>If <strong>S</strong> is <strong class="bit-1">ON</strong>, then we output whatever <strong>A</strong> is.</li>
+				<li>If <strong>S</strong> is <strong class="bit-0">OFF</strong>, then we output whatever <strong>B</strong> is.</li>
+			</ul>
+			<p>It's actually a little tricky to get this one right. I've started you off with a hint (namely, how I arranged the wires). It's your job to figure out which gates to use.</p>
+			<div class="exploration" id="choice">
+				<h4>Choice Exploration</h4>
+			</div>
+
+			<!-- Clocks -->
 			<h3>Clocks and Counters</h3>
 			<p>In computer hardware, one of the fundamental concepts is the <em>clock</em>. This is a signal that alternates up-down-up-down-up-down-... for as long as the computer has power. This is how it knows when, for instance, it is time to run the next instruction safely (any operations are required to take less time than one cycle of the clock, or else the program has to wait).</p>
-			<p>The clock can also be used with our multiplication and division hardware to
+			<p>Here, I'm representing this with the left output being the "up" phase and the right output being the "down" phase of the clock. It also has an input bit, which I use more as a "start button" in the multiplier and divider circuits to activate the clock (you could think of it as the power source).</p>
 			<div class="exploration" id="clock">
 				<h4>Clock Exploration</h4>
 			</div>
 
+			<p>It would be nice to
+
+			</p><h3>Registers</h3>
+			<p>In order to do that, we need some more persistent components, something that can "remember" what it had before. That looks difficult, but we can actually implement it fairly easily with a simple trick: we take the output and wire it back into the input!</p>
+			<p>"Registers" are just a fancy name for a group of bits that stores information. A 32-bit register, for instance, can hold any 32 bits you want for as long as you need them (if the power stays on).</p>
+			<p>The design I am going to use is non-informatively called a "D latch". There are two inputs: a "load" input and a "data" input. If the former is ON, the register adopts the value of the "data" input; if the "load" is OFF, the register remembers what it had before.</p>
+			<p>This process might remind you of something. Indeed, we can simulate this by simply wiring a choice gate back on itself.</p>
+
+			<div class="exploration" id="register">
+				<h4>Register Exploration</h4>
+			</div>
+			<p>In practice, however, registers are usually implemented with more complicated circuitry that responds to the clock. This is because in real life, signals take time to move through wires. Allowing registers to change only when the clock ticks can prevent data from being corrupted. This is all getting very advanced, though, so we'll use the unclocked version of the register for now.</p>
+
 
 			<!-- Slow Multiplication -->
-			</p><h3>Multiplication, the Slow Way</h3>
+			<h3>Multiplication, the Slow Way</h3>
+			<p>With all of those components, it is time to do our multiplication!</p>
 			<p>What we're going to do this time is to start with a blank "canvas" of bits. It's easier to keep the adder in one place and move bit values, so we add into the upper 6 bits (the final answer may be as large as 12 bits) and then shift the register downward. (By "shift", I mean to shift the <strong>values</strong> of the bits. So in a shift cycle, each bit inherits the value of its left neighbor.) In decimal, it looks like this:</p>
 			<pre id="slow-mult-pre">
 	Register:  000000    [1011]

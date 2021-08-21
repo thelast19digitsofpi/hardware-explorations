@@ -11,7 +11,7 @@ import DividerExploration from './DividerExploration';
 import FullAdderExploration1 from './FullAdderGates';
 import FullSubtractorExploration1 from './FullSubtractorGates';
 import GateExploration from './GateExploration';
-import HalfAdderCheat from './HalfAdderCheat';
+import HalfAdderBuild from './HalfAdderBuild';
 import MakeALUExploration from './MakeALUExploration';
 import MultiplierExploration from './MultiplierExploration';
 import MultiplierNaiveExploration from './MultiplierNaiveExploration';
@@ -106,7 +106,7 @@ const explorationMap: {[id: string]: typeof Exploration} = {
     'adder': AdderExploration,
     'gates': GateExploration,
     'choice': ChoiceExploration,
-    'half-adder-cheat': HalfAdderCheat,
+    'half-adder-build': HalfAdderBuild,
     'gates-again': GateExploration,
     'full-adder1': FullAdderExploration1,
     'clock': ClockExploration,
@@ -122,6 +122,7 @@ const explorationMap: {[id: string]: typeof Exploration} = {
 
     // part 3
     'multiplier-naive': MultiplierNaiveExploration,
+    'register': RegisterExploration,
     'multiplier-full': MultiplierExploration,
     'divider-full': DividerExploration,
 };

@@ -2,6 +2,7 @@
 // Need a good way to distinguish from InputBits
 
 import Component from './Component';
+import { getBitColor } from './dark';
 import Wire from './Wire';
 
 class OutputBit implements Component {
@@ -23,12 +24,12 @@ class OutputBit implements Component {
         this.outputSockets = [{x: 0, y: 0}];
         this.inputWires = [];
     }
-    render(ctx: CanvasRenderingContext2D): void {
+    render(ctx: CanvasRenderingContext2D, isDark: boolean): void {
         const left = this.position.x - this.size.x/2;
         const top = this.position.y - this.size.y/2;
         ctx.fillStyle = "black";
         ctx.fillRect(left, top, this.size.x, this.size.y);
-        ctx.fillStyle = (this.state.bits[0] ? "#33ff33" : "#990000");
+        ctx.fillStyle = getBitColor(this.state.bits[0], isDark);
         ctx.fillRect(
             left + this.size.x * 0.1,
             top + this.size.y * 0.1,

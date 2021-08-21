@@ -2,6 +2,7 @@
 // Can be clicked to change state
 
 import Component from './Component';
+import { getBitColor, getStrokeColor } from './dark';
 
 class InputBit implements Component {
     state: {bits: boolean[], active: boolean};
@@ -39,12 +40,8 @@ class InputBit implements Component {
             // panic
             throw new Error("[InputBit.render] State does not match bit array");
         }
-        if (isDark) {
-            ctx.fillStyle = (this.state.active ? "#00cc00" : "#990000");
-        } else {
-            ctx.fillStyle = (this.state.active ? "#33ff33" : "#990000");
-        }
-        ctx.strokeStyle = "2px solid black";
+        ctx.fillStyle = getBitColor(this.state.active, isDark);
+        ctx.strokeStyle = "2px solid " + getStrokeColor(isDark);
         ctx.beginPath();
         ctx.arc(this.position.x, this.position.y, this.size.x / 2, 0, Math.PI * 2);
         ctx.fill();

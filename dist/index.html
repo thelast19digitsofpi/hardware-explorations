@@ -4,19 +4,21 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<link rel="stylesheet" type="text/css" href="/style.e308ff8e.css">
-		<link rel="stylesheet" type="text/css" href="/bootstrap.5f792716.css" <="" head="">
-	<script src="/style.e308ff8e.js"></script><script src="/bootstrap.5f792716.js"></script><script src="/part2.js"></script></head><body>
+		<link rel="stylesheet" type="text/css" href="/bootstrap.5f792716.css">
+		<title>Arithmetic in Computer Hardware</title>
+	<script src="/style.e308ff8e.js"></script><script src="/bootstrap.5f792716.js"></script><script src="/part2.js"></script></head>
+	<body>
 		<div class="container">
 			<h1>Arithmetic in Computer Hardware</h1>
 			<h4>
 				<a href="/part2.html">Skip right to Part 2</a>
-				<a href="/part3.html">Skip right to Part 3</a> <small>(part 2 is not made yet)</small>
+				<a href="/part3.html">Skip right to Part 3</a>
 			</h4>
 
 			<h3>The Basics</h3>
 			<p>You're probably aware that computers store numbers as a series of 0's and 1's. These 0s and 1s are sent around in various complicated circuits to do calculations.</p>
 			<p>But how does the computer actually do arithmetic? Before we can get into that, we need to learn how the computer actually stores numbers in the first place. There are a few different methods, but we'll focus on whole numbers for now.</p>
-			<p>Humans generally use base ten notation, which means that a number like 314 means three hundreds, one ten, and four units. Computer wiring generally uses base two, or binary, where the only digits are 0 and 1. For example, 110 means not "one hundred and ten" but "one four and one two", or six. Instead of powers of ten, binary digits use powers of two.</p>
+			<p>Humans generally use base ten notation, which means that a number like 314 means three hundreds, one ten, and four units. Computer wiring generally uses base two, or binary, where the only digits are 0 and 1 and the digits use powers of two (1, 2, 4, 8, 16, 32, ...). For example, <code>110</code> in binary means not "one hundred and ten" but "one four and one two", or 6.</p>
 			<p>I promised this would be interactive. Here's a simple exploration to show how binary numbers work. I've included six binary digits, or bits, which means the maximum number you can reach is 2<sup>6</sup>&nbsp;-&nbsp;1, or 63. (With six decimal digits you could reach 10<sup>6</sup>&nbsp;-&nbsp;1 = 999,999.)</p>
 
 			<h4>Exploration Instructions</h4>
@@ -86,13 +88,13 @@
 			<div class="exploration" id="gates"></div>
 
 			<h3>Addition</h3>
-			<p>With these four gates, we can make almost anything. But let's not get too far ahead of ourselves. It's still not immediately obvious how you would add two numbers using only those gates.</p>
-			<p>So for now let's consider the simplest possible case: adding two individual bits. (In other words, we're adding two numbers that can be either 0 or 1.) Now, the result could be either 0, 1, or 2, which is three possiblilities, so we'll need more than one bit. For these purposes, we'll have two output bits, one that means "1" and one that means "2".</p>
-			<p>Here's what we're going for. I've made a little black box (or should I say, grey trapezoid) machine that does the addition. Play around with it and see if you can tell what it is doing...</p>
-			<div class="exploration" id="half-adder-cheat"></div>
-			<p>Here's the gates exploration again. See if you can find a similarity between the adder and some of the gates. (Hint: The "1" and "2" use different gates; there's no real connection between them. Note that we are allowed to cross wires over each other.)</p>
-			<div class="exploration" id="gates-again"></div>
-			<p>Did you figure it out? If you did, good job! If not, let's see how we can discover it from scratch. (It might help to read this section even if you think you got it; the "1" output is a little tricky.)</p>
+			<p>With these four gates, we can make almost anything. Probably the easiest thing to start with is arithmetic, because numbers are so fundamental to computations. Of the four basic operations, addition is clearly the easiest of them, so let's start there.</p>
+			<p>In fact, let's start with the simplest case of the simplest case: adding two individual bits. (In other words, we're adding two numbers that can be either 0 or 1.) Now, the result could be either 0, 1, or 2, which is three possiblilities, so we'll need more than one bit for the output. For these purposes, we'll have two output bits, one that means "1" and one that means "2".</p>
+			<p>Here's what we're going for. On the left, I've made a simple adder to show what we're doing. On the right, I have a set of adjustable logic gates. You can click or tap the arrows to change the gates.</p>
+			<p>See if you can get the rightmost output square to turn on when A + B = 1, and the leftmost one to turn on when A + B = 2. If you think you have it, click the "TEST" button to see if you're right!</p>
+			<div class="exploration" id="half-adder-build"></div>
+
+			<p>Did you figure it out? If you did, good job! If not, let's see how we can discover it from scratch.</p>
 			<p>With these kinds of problems, it helps to write down <em>exactly</em> what we want the wiring to do. We have two inputs, A and B.</p>
 			<ul>
 				<li>If both A and B are <strong class="bit-0">OFF</strong>, then both 1 and 2 are off.</li>
@@ -272,9 +274,7 @@
 			</div>
 			<p>Now, of course, in practice there are easier ways to do this using transistors, but this is a little easier to grasp. Usually we think of a register as being 32 or 64 bits, but we can just repeat this design for each bit of the register. On the right I've simplified this down to a single component.</p>
 
-			<div class="exploration" id="choice">
-				<h4>Choice Exploration</h4>
-			</div>
+
 
 			<h3>Clocks</h3>
 			<p>To do multiplication and division, we're going to need some time. I've given the clock a "power" input that can be used to reset it, and arranged the output sockets horizontally.</p>

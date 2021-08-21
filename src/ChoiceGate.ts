@@ -4,6 +4,7 @@
 // Does nothing if both are on or both are off.
 
 import Component from "./Component";
+import { getApplianceColor, getStrokeColor } from "./dark";
 import Wire from "./Wire";
 
 class ChoiceGate implements Component {
@@ -44,18 +45,17 @@ class ChoiceGate implements Component {
         this.inputWires = [];
     }
 
-    onClick(_offsetX: number, _offsetY: number): void {
-        return;
-    };
+    onClick: undefined;
 
-    render(ctx: CanvasRenderingContext2D) {
+    render(ctx: CanvasRenderingContext2D, isDark: boolean) {
         ctx.save();
 
         const left = this.position.x - this.size.x/2;
         const top = this.position.y - this.size.y/2;
         ctx.translate(left, top);
         // base
-        ctx.fillStyle = "#cccccc";
+        ctx.fillStyle = getApplianceColor(isDark);
+        ctx.strokeStyle = getStrokeColor(isDark);
         ctx.beginPath();
         ctx.moveTo(0, 0);
         ctx.lineTo(this.size.x*1.0, 0);
