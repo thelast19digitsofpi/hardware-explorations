@@ -7,7 +7,7 @@ type WireOptions = {color?: string, darkColor?: string};
 // not sure a wire really is a component but it uses them
 class Wire {
     // I use "from" and "to" because "input" and "output" are ambiguous
-    toComponent: Component;
+    toComponent: Component | null | undefined;
     toOutput: number;
 
     color: string | undefined;
@@ -17,7 +17,7 @@ class Wire {
     waypoints: Array<{x: number, y: number, node?: boolean}> = [];
 
     constructor(
-        to: Component,
+        to: Component | null | undefined,
         toOutput: number,
         waypoints: {x: number, y: number, node?: boolean}[] = [],
         options: WireOptions = {}
@@ -58,6 +58,9 @@ class Wire {
             ctx.lineTo(this.waypoints[i].x, this.waypoints[i].y);
         }
         const endOffset = this.toComponent.outputSockets[this.toOutput];
+        if (!endOffset) {
+            console.error(this, this.toComponent, this.toOutput);
+        }
         ctx.lineTo(endOffset.x + this.toComponent.position.x, endOffset.y + this.toComponent.position.y);
         ctx.stroke();
 

@@ -36,7 +36,7 @@ class RegisterExploration extends Exploration {
             {x: choice.position.x + 60, y: choice.position.y - 50},
             {x: choice.position.x + 60, y: choice.position.y + 50},
             {x: choice.position.x, y: choice.position.y + 50, node: true},
-        ]))
+        ]));
 
 
         const output = new OutputBit(100, 320, 32);

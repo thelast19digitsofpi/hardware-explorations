@@ -46,7 +46,7 @@ class AdderFailExploration extends Exploration {
 
         const displayA = new Display(35, 30, inputA, "signmag");
         const displayB = new Display(365, 30, inputB, "signmag");
-        const displayResult = new Display(200, 350, outputBits, "signmag", 40);
+        const displayResult = new Display(320, 260, outputBits, "signmag", 40);
 
         this.components.push(displayA, displayB, displayResult);
 

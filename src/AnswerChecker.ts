@@ -10,7 +10,7 @@ import Exploration from './Exploration';
 import { getApplianceColor } from './dark';
 
 
-type CheckFunctionType = (arg0: boolean[]) => [boolean];
+type CheckFunctionType = (arg0: boolean[]) => boolean[];
 
 class AnswerChecker implements Component {
     state: StateObject;
@@ -104,7 +104,6 @@ class AnswerChecker implements Component {
             }
             for (let j = 0; j < array.length; j++) {
                 array[j].state.bits[0] = bit;
-                array[j].state.active = bit;
             }
             inputBits.push(bit);
         }
@@ -124,9 +123,14 @@ class AnswerChecker implements Component {
             }
         }
 
-        const newLocal = this;
         // if it survived...
-        newLocal.timer = window.setTimeout(this.nextTest.bind(this), 1000);
+        let timeDelay = 1000;
+        let escalation = 2;
+        while (escalation < this.state.counter-1) {
+            escalation++;
+        }
+        timeDelay = 1000 / (escalation - 1);
+        this.timer = window.setTimeout(this.nextTest.bind(this), timeDelay);
     }
 
     render(ctx: CanvasRenderingContext2D, isDark: boolean) {
@@ -150,12 +154,16 @@ class AnswerChecker implements Component {
         ctx.stroke();
 
         // test button
-        if (isDark) {
-            ctx.fillStyle = this.state.running ? "#228822" : "#993333";
-            ctx.strokeStyle = this.state.running ? "#006600" : "#660000";
+        // red = stopped or failed, green = win, yellow = running
+        if (this.state.win) {
+            ctx.fillStyle = isDark ? "#228822" : "#33cc33";
+            ctx.strokeStyle = isDark ? "#006600" : "#009900";
+        } else if (this.state.running) {
+            ctx.fillStyle = isDark ? "#999922" : "#eeee22";
+            ctx.strokeStyle = isDark ? "#666600" : "#999900";
         } else {
-            ctx.fillStyle = this.state.running ? "#33cc33" : "#cc3333";
-            ctx.strokeStyle = this.state.running ? "#009900" : "#990000";
+            ctx.fillStyle = isDark ? "#993333" : "#cc3333";
+            ctx.strokeStyle = isDark ? "#660000" : "#990000";
         }
         ctx.lineWidth = 6;
         ctx.beginPath();
@@ -182,7 +190,7 @@ class AnswerChecker implements Component {
             message = "Good job!";
         } else if (this.state.lose) {
             message = "";
-            ctx.font = "16px sans-serif";
+            ctx.font = (this.inputs.length < 4 ? "16" : "14") + "px sans-serif";
             ctx.fillText("Oops! That should", 80, 67);
             const correct = this.state.loseCorrectAnswer.map(Number).join("");
             const wrong = this.state.loseWrongAnswer.map(Number).join("");

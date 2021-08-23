@@ -381,7 +381,6 @@ function () {
       y: size
     };
     this.state = {
-      active: value,
       bits: [value]
     };
     this.inputSockets = []; // it is input, it needs no input from elsewhere
@@ -391,15 +390,11 @@ function () {
       x: 0,
       y: 0
     }];
+    this.linkedBits = [];
   }
 
   InputBit.prototype.render = function (ctx, isDark) {
-    if (this.state.active !== this.state.bits[0]) {
-      // panic
-      throw new Error("[InputBit.render] State does not match bit array");
-    }
-
-    ctx.fillStyle = (0, _dark.getBitColor)(this.state.active, isDark);
+    ctx.fillStyle = (0, _dark.getBitColor)(this.state.bits[0], isDark);
     ctx.strokeStyle = "2px solid " + (0, _dark.getStrokeColor)(isDark);
     ctx.beginPath();
     ctx.arc(this.position.x, this.position.y, this.size.x / 2, 0, Math.PI * 2);
@@ -411,8 +406,13 @@ function () {
 
   InputBit.prototype.onClick = function (_offsetX, _offsetY) {
     console.log("[InputBit] clicked");
-    this.state.active = !this.state.active;
-    this.state.bits[0] = this.state.active; // bits will be updated when everything is
+    this.state.bits[0] = !this.state.bits[0]; // also update everything else
+
+    for (var _i = 0, _a = this.linkedBits; _i < _a.length; _i++) {
+      var otherBit = _a[_i];
+      otherBit.state.bits[0] = this.state.bits[0];
+    } // bits will be updated when everything is
+
 
     return true;
   };
@@ -420,7 +420,7 @@ function () {
   ;
 
   InputBit.prototype.evaluate = function (_) {
-    return [this.state.active];
+    return this.state.bits;
   };
 
   return InputBit;
@@ -734,6 +734,11 @@ function () {
     }
 
     var endOffset = this.toComponent.outputSockets[this.toOutput];
+
+    if (!endOffset) {
+      console.error(this, this.toComponent, this.toOutput);
+    }
+
     ctx.lineTo(endOffset.x + this.toComponent.position.x, endOffset.y + this.toComponent.position.y);
     ctx.stroke();
     ctx.lineWidth = 6;
@@ -1461,7 +1466,7 @@ function (_super) {
 
     var displayA = new _Display.default(35, 30, inputA, "signmag");
     var displayB = new _Display.default(365, 30, inputB, "signmag");
-    var displayResult = new _Display.default(200, 350, outputBits, "signmag", 40);
+    var displayResult = new _Display.default(320, 260, outputBits, "signmag", 40);
 
     _this.components.push(displayA, displayB, displayResult);
 
@@ -2120,7 +2125,6 @@ function () {
 
       for (var j = 0; j < array.length; j++) {
         array[j].state.bits[0] = bit;
-        array[j].state.active = bit;
       }
 
       inputBits.push(bit);
@@ -2141,11 +2145,18 @@ function () {
         });
         return;
       }
+    } // if it survived...
+
+
+    var timeDelay = 1000;
+    var escalation = 2;
+
+    while (escalation < this.state.counter - 1) {
+      escalation++;
     }
 
-    var newLocal = this; // if it survived...
-
-    newLocal.timer = window.setTimeout(this.nextTest.bind(this), 1000);
+    timeDelay = 1000 / (escalation - 1);
+    this.timer = window.setTimeout(this.nextTest.bind(this), timeDelay);
   };
 
   AnswerChecker.prototype.render = function (ctx, isDark) {
@@ -2167,13 +2178,17 @@ function () {
     ctx.closePath();
     ctx.fill();
     ctx.stroke(); // test button
+    // red = stopped or failed, green = win, yellow = running
 
-    if (isDark) {
-      ctx.fillStyle = this.state.running ? "#228822" : "#993333";
-      ctx.strokeStyle = this.state.running ? "#006600" : "#660000";
+    if (this.state.win) {
+      ctx.fillStyle = isDark ? "#228822" : "#33cc33";
+      ctx.strokeStyle = isDark ? "#006600" : "#009900";
+    } else if (this.state.running) {
+      ctx.fillStyle = isDark ? "#999922" : "#eeee22";
+      ctx.strokeStyle = isDark ? "#666600" : "#999900";
     } else {
-      ctx.fillStyle = this.state.running ? "#33cc33" : "#cc3333";
-      ctx.strokeStyle = this.state.running ? "#009900" : "#990000";
+      ctx.fillStyle = isDark ? "#993333" : "#cc3333";
+      ctx.strokeStyle = isDark ? "#660000" : "#990000";
     }
 
     ctx.lineWidth = 6;
@@ -2199,7 +2214,7 @@ function () {
       message = "Good job!";
     } else if (this.state.lose) {
       message = "";
-      ctx.font = "16px sans-serif";
+      ctx.font = (this.inputs.length < 4 ? "16" : "14") + "px sans-serif";
       ctx.fillText("Oops! That should", 80, 67);
       var correct = this.state.loseCorrectAnswer.map(Number).join("");
       var wrong = this.state.loseWrongAnswer.map(Number).join("");
@@ -2579,10 +2594,9 @@ var _OutputBit = _interopRequireDefault(require("./OutputBit"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-// RegisterExploration
+// ClockExploration.ts
 //
-// Exploration that shows how a register bit works.
-// Most of these (not multipliers and dividers) have the expanded version on the left and a compact version on the right.
+// Exploration of a clock, more meant to illustrate the time-based explorations.
 var __extends = void 0 && (void 0).__extends || function () {
   var _extendStatics = function extendStatics(d, b) {
     _extendStatics = Object.setPrototypeOf || {
@@ -2857,8 +2871,8 @@ function () {
     for (var i = 0; i < this.numBits; i++) {
       var wire1 = this.inputWires[i],
           wire2 = this.inputWires[i + this.numBits];
-      num1 += (wire1.toComponent.state.bits[wire1.toOutput] ? 1 : 0) * (1 << i);
-      num2 += (wire2.toComponent.state.bits[wire2.toOutput] ? 1 : 0) * (1 << i);
+      num1 += (wire1 && wire1.get() ? 1 : 0) * (1 << i);
+      num2 += (wire2 && wire2.get() ? 1 : 0) * (1 << i);
     }
 
     var textSize = Math.round(Math.min(this.size.x * 0.125, this.size.y * 0.5));
@@ -2900,6 +2914,155 @@ function () {
 
 var _default = Subtractor;
 exports.default = _default;
+},{"./dark":"dark.ts"}],"Countdown.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _dark = require("./dark");
+
+// Countdown.ts
+//
+// These clocks can have an arbitrary period.
+var Countdown =
+/** @class */
+function () {
+  //
+  function Countdown(x, y, cap, width, height) {
+    if (width === void 0) {
+      width = 60;
+    }
+
+    if (height === void 0) {
+      height = 50;
+    }
+
+    this.position = {
+      x: x,
+      y: y
+    };
+    this.size = {
+      x: width,
+      y: height
+    }; // because .fill() isn't supported?!
+
+    var bitArray = Array(2).map(function (_) {
+      return false;
+    });
+    this.state = {
+      bits: bitArray,
+      count: cap
+    };
+    this.startValue = cap;
+    this.numBits = 2; // "power supply" or more accurately a way to reset the clock
+
+    this.inputSockets = [{
+      x: 0,
+      y: -this.size.y / 2 - 1
+    }, {
+      x: -this.size.x / 2,
+      y: -this.size.y / 2
+    }];
+    this.outputSockets = [{
+      x: 0,
+      y: this.size.y / 2
+    }];
+    this.inputWires = [];
+  }
+
+  Countdown.prototype.render = function (ctx, isDark) {
+    ctx.save();
+    var left = this.position.x - this.size.x / 2;
+    var top = this.position.y - this.size.y / 2;
+    ctx.translate(left, top); // base
+
+    ctx.fillStyle = (0, _dark.getApplianceColor)(isDark);
+    ctx.beginPath();
+    var r = Math.min(this.size.y * 0.2, this.size.x * 0.1);
+    var w = this.size.x,
+        h = this.size.y;
+    ctx.moveTo(w * 0.5, 0);
+    ctx.arcTo(w * 1.0, 0, w * 1.0, h * 0.5, r);
+    ctx.arcTo(w * 1.0, h * 1.0, w * 0.5, h * 1.0, r);
+    ctx.arcTo(0, h * 1.0, 0, h * 0.5, r);
+    ctx.arcTo(0, 0, w * 0.5, 0, r);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke(); // clock icon
+
+    r = Math.min(w / 8, h / 8);
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(r * 0.6, 0);
+    ctx.lineTo(0, 0);
+    ctx.lineTo(0, -r);
+    ctx.stroke(); // power
+
+    ctx.translate(w / 2, 0); // move origin to top-middle
+
+    ctx.beginPath();
+    ctx.moveTo(2, -5);
+    ctx.lineTo(2, -1);
+    ctx.lineTo(-2, -1);
+    ctx.lineTo(-2, -5);
+    ctx.stroke();
+    r *= 0.8;
+    ctx.lineWidth *= 2;
+    ctx.lineJoin = "round";
+    ctx.beginPath();
+    ctx.moveTo(r * 0.4, r * 0.5);
+    ctx.lineTo(-r * 0.8, r * 1.5);
+    ctx.lineTo(r * 0.8, r * 1.5);
+    ctx.lineTo(-r * 0.4, r * 2.5);
+    ctx.stroke();
+    ctx.lineWidth /= 2; // clock
+
+    ctx.fillStyle = (0, _dark.getTextColor)(isDark);
+    ctx.font = String(Math.round(this.size.y * 0.6)) + "px monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(this.state.count.toString(), 0, h * 0.50);
+    ctx.translate(0, h / 2); // outputs
+
+    ctx.fillStyle = (0, _dark.getBitColor)(this.state.count == 0, isDark);
+    ctx.beginPath();
+    ctx.arc(0, h / 2, 5, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }; // Evaluation: we give a "1" output when it expires
+
+
+  Countdown.prototype.evaluate = function (bits) {
+    return [this.state.count == 0];
+  };
+
+  Countdown.prototype.beforeUpdate = function () {
+    var _a, _b; // 0 = the power button, if off it resets
+
+
+    if ((_a = this.inputWires[0]) === null || _a === void 0 ? void 0 : _a.get()) {
+      // 1 = the clock input, if off it holds
+      if ((_b = this.inputWires[1]) === null || _b === void 0 ? void 0 : _b.get()) {
+        this.state.count--;
+        if (this.state.count < 0) this.state.count = 0;
+      }
+    } else {
+      this.state.count = this.startValue;
+    }
+  };
+
+  return Countdown;
+}();
+
+var _default = Countdown;
+exports.default = _default;
 },{"./dark":"dark.ts"}],"DividerExploration.ts":[function(require,module,exports) {
 "use strict";
 
@@ -2927,6 +3090,8 @@ var _Display = _interopRequireDefault(require("./Display"));
 var _Gates = require("./Gates");
 
 var _ChoiceGate = _interopRequireDefault(require("./ChoiceGate"));
+
+var _Countdown = _interopRequireDefault(require("./Countdown"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -2999,29 +3164,43 @@ function (_super) {
     _this.afterRender = function () {
       // display the quotient
       var ctx = _this.context;
-      ctx.save(); // get the clock cycle
+      ctx.save();
+      var B = _this.numBits; // get the clock cycle
 
-      var cycle = _this.countdown.state.clock;
+      var cycle = _this.countdown.state.count;
+      var n = cycle + (1 - _this.clock.state.clock);
 
-      if (cycle >= 0 && cycle < 2 * _this.numBits + 3) {
-        var n = cycle + 1 >> 1;
+      if (n <= B + 1 && _this.clock.state.clock >= 0) {
+        var rValue = 0,
+            qValue = 0;
+        var rOffset = B + 2 - n; // a quirk of my hardware
 
-        _this.drawRemainderGuide(n + 5, n + 0, "#33c", "Remainder");
+        for (var i = 0; i < B; i++) {
+          var bit = _this.remainderRegister[i + rOffset];
+          rValue += Number(bit.state.bits[0]) * (1 << i);
+        }
 
-        if (n > 1) {
-          _this.drawRemainderGuide(n - 2, Math.max(n - 7, 0), "#990", "Quotient");
+        for (var i = 0; i < B - n; i++) {
+          var bit = _this.remainderRegister[i];
+          qValue += Number(bit.state.bits[0]) * (1 << i + n - 1);
+        }
+
+        _this.drawRemainderGuide(rOffset + _this.numBits - 1, rOffset, "#33c", "Remainder (" + rValue + ")");
+
+        if (n <= B) {
+          _this.drawRemainderGuide(B - n, 0, "#990", "Quotient (" + qValue + ")");
         }
       }
 
       ctx.restore(); // not sure where to put this
 
-      if (cycle == 2 * _this.numBits + 3) {
-        _this.startButton.state.active = false;
+      if (cycle == 0) {
         _this.startButton.state.bits = [false];
+        if (!_this.paused) _this.paused = true;
       }
     };
 
-    canvas.width = 750;
+    canvas.width = 720;
     canvas.height = 600; // A lot of the same stuff happens compared to Multiplier...
 
     var BITS = 5;
@@ -3032,34 +3211,40 @@ function (_super) {
     var thisExploration = _this;
 
     startButton.onClick = function () {
+      thisExploration.update(); // get the bits ready
+
       startButton.constructor.prototype.onClick.apply(startButton, arguments);
 
-      if (startButton.state.active) {
-        thisExploration.resume();
+      if (startButton.state.bits[0]) {
+        setTimeout(function () {
+          thisExploration.resume();
+        }, 1000);
       }
 
       return true;
-    }; //const startNot = new Not(startButton.position.x - 50, 40, 30, 90);
-    //startNot.inputWires.push(new Wire(startButton, 0));
-    //this.components.push(startNot);
-
+    };
 
     var clockX = startButton.position.x;
     var clock = new _Clock.default(clockX, 125, 50, 50);
     clock.inputWires.push(new _Wire.default(startButton, 0));
 
-    _this.components.push(clock); // when this clock strikes 2*BITS + 4 it will end the operation
+    _this.components.push(clock);
+
+    _this.clock = clock; // when this clock strikes 2*BITS + 4 it will end the operation
     // but I add one more to avoid confusion
 
-
-    var countdown = new _Clock.default(clockX + 30, 200, 75, 45);
+    var countdown = new _Countdown.default(clockX + 20, 220, BITS + 1, 60, 45);
     countdown.inputWires.push(new _Wire.default(startButton, 0, [{
       x: countdown.position.x,
       y: countdown.position.y - 40
     }, {
-      x: countdown.position.x,
-      y: 40
+      x: startButton.position.x + 40,
+      y: countdown.position.y - 40
+    }, {
+      x: startButton.position.x + 40,
+      y: startButton.position.y
     }]));
+    countdown.inputWires.push(new _Wire.default(clock, 1));
     _this.countdown = countdown;
     var subtractor = new _Subtractor.default(210, 180, BITS, 11 * 26, 90); //this.outputComponents.push(subtractor);
     // Also not really a register.
@@ -3216,7 +3401,7 @@ function (_super) {
       regBit.inputWires.push(new Wire(or, 0));*/
       // This is the middle (full) row
 
-      var choice = new _ChoiceGate.default(regBit.position.x + (i < BITS ? 5 : -1), regBit.position.y - 95, 14); // Selection Wire (from clock's NOT)
+      var choice = new _ChoiceGate.default(regBit.position.x + (i < BITS ? 5 : -1), regBit.position.y - 95, 14); // Selection Wire (from clock's left end)
 
       choice.inputWires.push(new _Wire.default(clock, 0, [{
         x: choice.position.x - 18,
@@ -3225,8 +3410,11 @@ function (_super) {
         x: choice.position.x - 18,
         y: choice.position.y - 40
       }, {
-        x: 580 - 2 * i,
+        x: 540 - 2 * i,
         y: choice.position.y - 50 - 1 * i
+      }, {
+        x: clockX - 60,
+        y: clock.position.y + clock.size.y / 2
       }], purpleFaded)); // Purple action
 
       if (i >= BITS && i < 2 * BITS) {
@@ -3259,9 +3447,9 @@ function (_super) {
           y: regBit.position.y + 0
         }], teal));
       } else {
-        var holdWrite = new _OutputBit.default(choice.position.x + 7, choice.position.y - 34, 20);
+        var holdWrite = new _OutputBit.default(choice.position.x + 7, choice.position.y - 40, 20);
         var notY = subtractorChoiceGates[0].position.y - 25;
-        var not = new _Gates.Not(_this.remainderRight - _this.remainderSpacing, notY, 30, -90);
+        var not = new _Gates.Not(_this.remainderRight - _this.remainderSpacing * 1.5, notY, 40, -90);
         not.inputWires.push(new _Wire.default(subtractor, BITS, [{
           x: subtractor.position.x - subtractor.size.x / 2,
           y: notY
@@ -3292,46 +3480,8 @@ function (_super) {
       fullRow.push(choice);
     } // Computing the Quotient
     // The second input register that is actually a register.
-
-    /*let divisorRegister: RegisterBit[] = [];
-    let divisorRegisterChoice = [];
-    for (let i = 0; i < BITS; i++) {
-        const reg = new RegisterBit(inputD[i].position.x - 4, 150, 20);
-        subtractor.inputWires.push(new Wire(reg, 0));
-        divisorRegister.push(reg);
-        this.components.push(reg);
-        this.outputComponents.push(reg);
-    }
-    // Wiring Divisor (denominator) to the Registers
-    for (let i = 0; i < BITS; i++) {
-        const reg = divisorRegister[i];
-        const or = new OrGate(reg.position.x - 9, reg.position.y - 25, 20, 0);
-        const choice = new ChoiceGate(reg.position.x + 9, reg.position.y - 55, 12);
-        reg.inputWires.push(new Wire(or, 0), new Wire(choice, 0));
-         const wirePath = [
-            {x: reg.position.x - 13, y: choice.position.y},
-            {x: reg.position.x - 13, y: startNot.position.y},
-        ];
-        or.inputWires.push(new Wire(startNot, 0, wirePath, {color: "rgba(100, 100, 130, 0.75)"}));
-        or.inputWires.push(new Wire(clockNot, 0, [
-            {x: or.position.x + 10, y: or.position.y - 18 - i/2},
-            {x: clockNot.position.x - 40, y: or.position.y - 18 - i},
-        ], tealFaded));
-         // choice gate is [0] ? [1] : [2]
-        // the selection comes first
-        choice.inputWires.push(new Wire(startNot, 0, wirePath, {color: "rgba(100, 100, 130, 0.75)"}));
-         // If the clock is off, the registers need to use the input bits
-        choice.inputWires.push(new Wire(inputD[i], 0));
-        // Else, move up
-        choice.inputWires.push(new Wire(divisorRegister[i+1] || null, 0, [
-            {x: reg.position.x + 15, y: choice.position.y - 15},
-            {x: reg.position.x - 22, y: choice.position.y - 15},
-            {x: reg.position.x - 22, y: reg.position.y + 10},
-        ]));
-         this.components.push(or, choice);
-    }*/
     // Wiring Dividend to seed the remainder register
-    // (blue wires)
+    // (blue wires, including faded ones)
 
 
     var blueRightEdge = _this.remainderRight + 33 + 2 * BITS;
@@ -3361,7 +3511,7 @@ function (_super) {
       choice.inputWires.push(new _Wire.default(fullRow[i], 0)); // Otherwise, set it to the input
 
       var d = 2;
-      var y1 = fullRow[0].position.y - 90 - d * BITS;
+      var y1 = fullRow[0].position.y - 70 - d * BITS;
       var y2 = inBit.position.y + 30;
       var x1 = _this.remainderRight + 24 + d * BITS;
       choice.inputWires.push(new _Wire.default(inBit, 0, [{
@@ -3455,7 +3605,7 @@ function (_super) {
       _this.outputComponents.push(bit); // set wire: on at the 14th clock cycle
 
 
-      var x1 = countdown.position.x + countdown.outputSockets[1].x;
+      var x1 = countdown.position.x + countdown.outputSockets[0].x;
       bit.inputWires.push(new _Wire.default(countdown, 0, [{
         x: bit.position.x - 15,
         y: bit.position.y - 15
@@ -3492,6 +3642,7 @@ function (_super) {
 
     _this.components.push(subtractor, countdown, startButton, displayN, displayD, displayQ, displayR);
 
+    _this.remainderRegister = remainderRegister;
     return _this;
   }
 
@@ -3512,6 +3663,7 @@ function (_super) {
     ctx.lineTo(x2, y);
     ctx.stroke();
     ctx.strokeStyle = "rgba(255, 255, 255, 0.33)";
+    ctx.lineWidth = 8;
     ctx.fillStyle = color;
     ctx.font = "30px monospace";
     ctx.strokeText(text, (x1 + x2) / 2, y + 25);
@@ -3523,7 +3675,7 @@ function (_super) {
 
 var _default = DividerExploration;
 exports.default = _default;
-},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./RegisterBit":"RegisterBit.ts","./Subtractor":"Subtractor.ts","./Wire":"Wire.ts","./Clock":"Clock.ts","./Display":"Display.ts","./Gates":"Gates.ts","./ChoiceGate":"ChoiceGate.ts"}],"FullAdderGates.ts":[function(require,module,exports) {
+},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./RegisterBit":"RegisterBit.ts","./Subtractor":"Subtractor.ts","./Wire":"Wire.ts","./Clock":"Clock.ts","./Display":"Display.ts","./Gates":"Gates.ts","./ChoiceGate":"ChoiceGate.ts","./Countdown":"Countdown.ts"}],"FullAdderGates.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3537,6 +3689,8 @@ var _InputBit = _interopRequireDefault(require("./InputBit"));
 
 var _OutputBit = _interopRequireDefault(require("./OutputBit"));
 
+var _Adder = _interopRequireDefault(require("./Adder"));
+
 var _Wire = _interopRequireDefault(require("./Wire"));
 
 var _Display = _interopRequireDefault(require("./Display"));
@@ -3544,6 +3698,10 @@ var _Display = _interopRequireDefault(require("./Display"));
 var _Text = _interopRequireDefault(require("./Text"));
 
 var _Gates = require("./Gates");
+
+var _UserGates = require("./UserGates");
+
+var _AnswerChecker = _interopRequireDefault(require("./AnswerChecker"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -3584,62 +3742,56 @@ function (_super) {
   __extends(FullAdderExploration1, _super);
 
   function FullAdderExploration1(canvas) {
-    var _this = _super.call(this, canvas, 400, 400) || this;
+    var _this = _super.call(this, canvas, 480, 400) || this;
 
-    var inputA = new _InputBit.default(80, 50, false, 30);
-    var inputB = new _InputBit.default(200, 50, false, 30);
-    var inputC = new _InputBit.default(300, 200, false, 30);
-    var output1 = new _OutputBit.default(200, 340, 30);
-    var output2 = new _OutputBit.default(100, 340, 30);
-    var and1 = new _Gates.AndGate(inputA.position.x + 10, 140, 50, 0);
+    var inputA = new _InputBit.default(40, 50, false, 32);
+    var inputB = new _InputBit.default(160, 50, false, 32);
+    var inputC = new _InputBit.default(240, 180, false, 32);
+    var output1 = new _OutputBit.default(inputB.position.x - 1, 340, 30);
+    var output2 = new _OutputBit.default(inputA.position.x + 19, 340, 30);
+    var and1 = new _Gates.AndGate(inputA.position.x + 10, 125, 50, 0);
     and1.inputWires.push(new _Wire.default(inputA, 0));
     and1.inputWires.push(new _Wire.default(inputB, 0, [{
       x: and1.position.x + 10,
-      y: and1.position.y - 40
+      y: and1.position.y - 35
     }]));
-    var xor1 = new _Gates.XorGate(inputB.position.x - 10, 140, 50, 0);
+    var xor1 = new _Gates.XorGate(inputB.position.x - 10, 125, 50, 0);
     xor1.inputWires.push(new _Wire.default(inputA, 0, [{
       x: xor1.position.x - 10,
-      y: and1.position.y - 40
+      y: and1.position.y - 35
     }]));
     xor1.inputWires.push(new _Wire.default(inputB, 0));
-    var xor2 = new _Gates.XorGate(200, 280, 50, 0);
+    var xor2 = new _UserGates.BinarySwitch(output1.position.x, 280, 60, 0);
     xor2.inputWires.push(new _Wire.default(xor1, 0));
     xor2.inputWires.push(new _Wire.default(inputC, 0, [{
-      x: xor2.position.x + 10,
+      x: xor2.position.x + 9,
       y: inputC.position.y,
       node: true
     }]));
     output1.inputWires.push(new _Wire.default(xor2, 0));
-    var and2 = new _Gates.AndGate(output2.position.x + 30, 230, 50, 0);
+    var and2 = new _UserGates.BinarySwitch(output2.position.x + 30, 220, 60, 0);
     and2.inputWires.push(new _Wire.default(xor1, 0, [{
-      x: and2.position.x - 10,
-      y: 180
+      x: and2.position.x - 9,
+      y: 165
     }, {
       x: xor1.position.x,
-      y: 180,
+      y: 165,
       node: true
     }]));
     and2.inputWires.push(new _Wire.default(inputC, 0, [{
-      x: and2.position.x + 10,
+      x: and2.position.x + 9,
       y: inputC.position.y
     }])); // or gate for the "2" output
 
-    var or2 = new _Gates.OrGate(output2.position.x, output2.position.y - 44, 50, 0);
-    or2.inputWires.push(new _Wire.default(and1, 0, [{
-      x: or2.position.x - 10,
-      y: and1.position.y + 30
-    }, {
-      x: and1.position.x,
-      y: and1.position.y + 30
-    }]));
+    var or2 = new _UserGates.BinarySwitch(output2.position.x, output2.position.y - 44, 60, 0);
+    or2.inputWires.push(new _Wire.default(and1, 0));
     or2.inputWires.push(new _Wire.default(and2, 0, [// add 12 because of the output bit
     {
-      x: or2.position.x + 10,
-      y: (and2.position.y + or2.position.y + 12) / 2
+      x: or2.position.x + 9,
+      y: (and2.position.y + or2.position.y + 6) / 2
     }, {
       x: and2.position.x,
-      y: (and2.position.y + or2.position.y + 12) / 2
+      y: (and2.position.y + or2.position.y + 6) / 2
     }]));
     output2.inputWires.push(new _Wire.default(or2, 0));
 
@@ -3650,13 +3802,13 @@ function (_super) {
     aid1.inputWires.push(new _Wire.default(xor1, 0));
     var aid2 = new _OutputBit.default(and1.position.x, and1.position.y + 27, 12);
     aid2.inputWires.push(new _Wire.default(and1, 0));
-    var aid3 = new _OutputBit.default(and2.position.x, and2.position.y + 27, 12);
+    var aid3 = new _OutputBit.default(and2.position.x, and2.position.y + 30, 12);
     aid3.inputWires.push(new _Wire.default(and2, 0));
 
     _this.components.push(aid1, aid2, aid3); // Number Display
 
 
-    var displayResult = new _Display.default(320, 340, [output1, output2], false, 42);
+    var displayResult = new _Display.default(220, 340, [output1, output2], false, 42);
 
     _this.components.push(displayResult);
 
@@ -3673,7 +3825,35 @@ function (_super) {
     _this.components.push(labelA, labelB, labelC, text1, text2); // Updating
 
 
-    _this.outputComponents.push(output1, output2, aid1, aid2, aid3);
+    _this.outputComponents.push(output1, output2, aid1, aid2, aid3); // The Answer
+
+
+    var correctAdder = new _Adder.default(370, 200, 1, 140);
+    var rightInputA = new _InputBit.default(correctAdder.position.x + correctAdder.inputSockets[0].x, 120, false, 25);
+    var rightInputB = new _InputBit.default(correctAdder.position.x + correctAdder.inputSockets[1].x, 120, false, 25);
+    var rightInputC = new _InputBit.default(460, 200, false, 25);
+
+    _this.components.push(correctAdder, rightInputA, rightInputB, rightInputC);
+
+    var rightOutput1 = new _OutputBit.default(correctAdder.position.x, 270, 25);
+    var rightOutput2 = new _OutputBit.default(correctAdder.position.x + correctAdder.outputSockets[1].x, 270, 25);
+    rightOutput1.inputWires.push(new _Wire.default(correctAdder, 0));
+    rightOutput2.inputWires.push(new _Wire.default(correctAdder, 1));
+
+    _this.components.push(rightOutput1, rightOutput2);
+
+    _this.outputComponents.push(rightOutput1, rightOutput2);
+
+    var helpText1 = new _Text.default(correctAdder.position.x, 60, 20, "Can you make the");
+    var helpText2 = new _Text.default(correctAdder.position.x, 80, 20, "left side do this?");
+
+    _this.components.push(helpText1, helpText2);
+
+    correctAdder.inputWires = [new _Wire.default(rightInputA, 0), new _Wire.default(rightInputB, 0), new _Wire.default(rightInputC, 0)];
+
+    _this.components.push(new _AnswerChecker.default(_this, 380, 345, [[inputA, rightInputA], [inputB, rightInputB], [inputC, rightInputC]], [output2, output1], function (bits) {
+      return [Number(bits[0]) + Number(bits[1]) + Number(bits[2]) >= 2, Boolean(bits[0] !== bits[1]) !== bits[2]];
+    }));
 
     return _this;
   }
@@ -3683,7 +3863,7 @@ function (_super) {
 
 var _default = FullAdderExploration1;
 exports.default = _default;
-},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./Wire":"Wire.ts","./Display":"Display.ts","./Text":"Text.ts","./Gates":"Gates.ts"}],"FullSubtractorGates.ts":[function(require,module,exports) {
+},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./Adder":"Adder.ts","./Wire":"Wire.ts","./Display":"Display.ts","./Text":"Text.ts","./Gates":"Gates.ts","./UserGates":"UserGates.ts","./AnswerChecker":"AnswerChecker.ts"}],"FullSubtractorGates.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3968,9 +4148,11 @@ var _Adder = _interopRequireDefault(require("./Adder"));
 
 var _Wire = _interopRequireDefault(require("./Wire"));
 
-var _Display = _interopRequireDefault(require("./Display"));
-
 var _Text = _interopRequireDefault(require("./Text"));
+
+var _UserGates = require("./UserGates");
+
+var _AnswerChecker = _interopRequireDefault(require("./AnswerChecker"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -4005,50 +4187,84 @@ var __extends = void 0 && (void 0).__extends || function () {
   };
 }();
 
-var HalfAdderCheat =
+var HalfAdderBuild =
 /** @class */
 function (_super) {
-  __extends(HalfAdderCheat, _super);
+  __extends(HalfAdderBuild, _super);
 
-  function HalfAdderCheat(canvas) {
-    var _this = _super.call(this, canvas, 300, 300) || this;
+  function HalfAdderBuild(canvas) {
+    var _this = _super.call(this, canvas, 480, 320) || this; // left side
 
-    var inputA = new _InputBit.default(100, 40, false, 30);
-    var inputB = new _InputBit.default(200, 40, false, 30);
-    var output1 = new _OutputBit.default(150, 240, 30);
-    var output2 = new _OutputBit.default(75, 240, 30);
-    var adder = new _Adder.default(150, 150, 1, 200, 100);
+
+    var adder = new _Adder.default(120, 160, 1, 180, 80);
+    var inputA = new _InputBit.default(adder.position.x + adder.inputSockets[0].x, 60, false, 30);
+    var inputB = new _InputBit.default(adder.position.x + adder.inputSockets[1].x, 60, false, 30);
+    var output1 = new _OutputBit.default(adder.position.x + adder.outputSockets[0].x, 260, 30);
+    var output2 = new _OutputBit.default(adder.position.x + adder.outputSockets[1].x, 260, 30);
 
     _this.components.push(adder, inputA, inputB, output1, output2);
 
     adder.inputWires.push(new _Wire.default(inputA, 0));
     adder.inputWires.push(new _Wire.default(inputB, 0));
     output1.inputWires.push(new _Wire.default(adder, 0));
-    output2.inputWires.push(new _Wire.default(adder, 1));
-    var displayResult = new _Display.default(240, 250, [output1, output2], false, 40);
-
-    _this.components.push(displayResult);
+    output2.inputWires.push(new _Wire.default(adder, 1)); // const displayResult = new Display(180, 240, [output1, output2], false, 40);
+    // this.components.push(displayResult);
 
     _this.outputComponents.push(output1, output2);
 
-    var text1 = new _Text.default(150, 275, 24, "1", {
-      color: '#333'
-    });
-    var text2 = new _Text.default(75, 275, 24, "2", {
-      color: '#333'
+    var thisIsYourTarget = new _Text.default(adder.position.x, 30, 18, "Can you make this...");
+    var text1 = new _Text.default(output1.position.x, 295, 30, "1");
+    var text2 = new _Text.default(output2.position.x, 295, 30, "2");
+
+    _this.components.push(thisIsYourTarget, text1, text2); // right side
+
+
+    var x2 = 390;
+    var userA = new _InputBit.default(x2 - 45, 60, false, 30);
+    var userB = new _InputBit.default(x2 + 45, 60, false, 30);
+    var switch1 = new _UserGates.BinarySwitch(userB.position.x - 9, 160, 60, 0);
+    switch1.state.whichGate = 1;
+    var switch2 = new _UserGates.BinarySwitch(userA.position.x + 9, 160, 60, 0);
+    switch2.state.whichGate = 1;
+    switch1.inputWires.push(new _Wire.default(userA, 0));
+    switch1.inputWires.push(new _Wire.default(userB, 0));
+    switch2.inputWires.push(new _Wire.default(userA, 0));
+    switch2.inputWires.push(new _Wire.default(userB, 0));
+    var userOutput1 = new _OutputBit.default(switch1.position.x, 260, 30);
+    var userOutput2 = new _OutputBit.default(switch2.position.x, 260, 30);
+    userOutput1.inputWires.push(new _Wire.default(switch1, 0));
+    userOutput2.inputWires.push(new _Wire.default(switch2, 0));
+    var thisIsYourCanvas = new _Text.default(x2, 30, 18, "...on this side?");
+
+    _this.components.push(thisIsYourCanvas, switch1, switch2, userA, userB, userOutput1, userOutput2);
+
+    _this.outputComponents.push(userOutput1, userOutput2);
+
+    var userText1 = new _Text.default(userOutput1.position.x, 295, 30, "1");
+    var userText2 = new _Text.default(userOutput2.position.x, 295, 30, "2");
+
+    _this.components.push(userText1, userText2);
+
+    var testButton = new _AnswerChecker.default(_this, 235, 270, [[userA, inputA], [userB, inputB]], [userOutput2, userOutput1], function (bits) {
+      return [bits[0] && bits[1], bits[0] !== bits[1]];
     });
 
-    _this.components.push(text1, text2);
+    _this.components.push(testButton); // Link the bits for easy comparison
 
+
+    inputA.linkedBits.push(userA);
+    userA.linkedBits.push(inputA);
+    inputB.linkedBits.push(userB);
+    userB.linkedBits.push(inputB);
     return _this;
   }
 
-  return HalfAdderCheat;
+  return HalfAdderBuild;
 }(_Exploration.default);
 
-var _default = HalfAdderCheat;
+var _default = HalfAdderBuild;
 exports.default = _default;
-},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./Adder":"Adder.ts","./Wire":"Wire.ts","./Display":"Display.ts","./Text":"Text.ts"}],"MakeALUExploration.ts":[function(require,module,exports) {
+},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./Adder":"Adder.ts","./Wire":"Wire.ts","./Text":"Text.ts","./UserGates":"UserGates.ts","./AnswerChecker":"AnswerChecker.ts"}],"MakeALUExploration.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4118,7 +4334,7 @@ function (_super) {
     _this.components.push(adder); // need this up here...
 
 
-    var operBit = new _InputBit.default(460, 70, true, 40);
+    var operBit = new _InputBit.default(460, 70, false, 40);
     var inputA = [],
         inputB = [];
 
@@ -4163,9 +4379,11 @@ function (_super) {
 
 
     var operSwitch = new _UserGates.NotSwitch(operBit.position.x, operBit.position.y + 100, 50, 0);
+    operSwitch.state.whichGate = 1; // start you off with the wrong gate, heh heh
+
     var operText1 = new _Text.default(operBit.position.x, operBit.position.y - 50, 20, "OPER");
     var operText2 = new _Text.default(operBit.position.x, operBit.position.y - 32, 20, function () {
-      return operBit.state.bits[0] ? "(ADD)" : "(SUB)";
+      return operBit.state.bits[0] ? "(SUB)" : "(ADD)";
     });
     operSwitch.inputWires.push(new _Wire.default(operBit, 0));
     adder.inputWires.push(new _Wire.default(operSwitch, 0, [{
@@ -4198,7 +4416,8 @@ function (_super) {
       var a = Number(displayA.getValue());
       var b = Number(displayB.getValue());
       var op = operBit.state.bits[0];
-      var raw = op ? a + b : a - b;
+      var raw = op ? a + b : a - b; // add 8, mod 16, then subtract 8 makes it return in -8..7
+
       var overflow = (raw + 24) % 16 - 8;
       return "Actual: " + overflow + (raw === overflow ? "" : "*");
     });
@@ -4244,6 +4463,8 @@ var _ChoiceGate = _interopRequireDefault(require("./ChoiceGate"));
 
 var _Text = _interopRequireDefault(require("./Text"));
 
+var _Countdown = _interopRequireDefault(require("./Countdown"));
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 // MultiplierExploration.ts
@@ -4287,23 +4508,18 @@ function (_super) {
 
     _this.afterRender = function () {
       var ctx = _this.context;
-      var cycle = _this.countdown.state.clock;
+      var cycle = _this.countdown.state.count;
 
-      if (cycle >= 0) {
-        var n = cycle + 1 >> 1;
+      if (_this.startButton.state.bits[0]) {
+        var n = _this.numBits - cycle + 1;
 
         if (n <= 5) {
           ctx.fillStyle = "rgba(255,255,255,0.75)";
           var west = _this.regRight - _this.regSpacing * (5 - n) - 20;
-          var north = 340,
-              south = 480;
+          var north = 329,
+              south = 479;
           var east = _this.regRight + 22;
-          ctx.beginPath();
-          ctx.moveTo(west, north);
-          ctx.lineTo(east, north);
-          ctx.lineTo(east, south);
-          ctx.lineTo(west, south);
-          ctx.fill();
+          ctx.fillRect(west, north, east - west, south - north);
         }
 
         if (n <= 6) {
@@ -4315,21 +4531,28 @@ function (_super) {
             productValue += Number(bit.state.bits[0]) * (1 << i);
           }
 
-          _this.drawProductGuide(2 * _this.numBits, _this.numBits - n, "#33c", "Product (" + productValue + ")");
+          _this.drawProductGuide(2 * _this.numBits - 1, _this.numBits - n, "#33c", "Product (" + productValue + ")");
         }
       }
 
-      if (cycle == 2 * _this.numBits + 1) {
-        _this.startButton.state.active = false;
+      if (_this.countdown.state.count == 0) {
         _this.startButton.state.bits = [false];
+        _this.paused = true; // but clear the register first
+
+        var update = _this.update.bind(_this);
+
+        for (var _i = 0, _a = _this.productRegister; _i < _a.length; _i++) {
+          var bit = _a[_i];
+          bit.state.bits[0] = false;
+        }
       }
     };
 
-    canvas.width = 750;
+    canvas.width = 720;
     canvas.height = 600;
     var BITS = 6;
     _this.numBits = BITS;
-    var startButton = new _InputBit.default(710, 60, false, 50);
+    var startButton = new _InputBit.default(680, 60, false, 50);
     _this.startButton = startButton;
     var startText = new _Text.default(startButton.position.x, startButton.position.y - 35, 24, function () {
       return startButton.state.bits[0] ? "ABORT" : "START";
@@ -4340,68 +4563,51 @@ function (_super) {
     var thisExploration = _this;
 
     startButton.onClick = function () {
+      thisExploration.update();
       startButton.constructor.prototype.onClick.apply(startButton, arguments);
 
-      if (startButton.state.active) {
+      if (startButton.state.bits[0]) {
         thisExploration.resume();
       }
 
       return true;
     };
 
+    var clockX = startButton.position.x; // not gate adjusting the initial register
+
     var startNot = new _Gates.Not(startButton.position.x - 60, 40, 30, 90);
     startNot.inputWires.push(new _Wire.default(startButton, 0));
 
     _this.components.push(startNot);
 
-    var clockX = startButton.position.x - 5;
-    var clockAnd = new _Gates.AndGate(clockX, 110, 25, 0);
-    var clockNot = new _Gates.Not(clockX, 150, 25, 0);
-    var clockBit = new _OutputBit.default(clockX, 200);
-    clockAnd.inputWires.push(new _Wire.default(clockNot, 0, [{
-      x: clockX - 5,
-      y: startButton.position.y + 30
-    }, {
-      x: clockX - 15,
-      y: startButton.position.y + 30
-    }, {
-      x: clockX - 15,
-      y: clockNot.position.y + 30
-    }, {
-      x: clockX,
-      y: clockNot.position.y + 30
-    }]));
-    clockAnd.inputWires.push(new _Wire.default(startButton, 0));
-    clockBit.inputWires.push(new _Wire.default(clockNot, 0));
-    clockNot.inputWires.push(new _Wire.default(clockAnd, 0));
-
-    _this.components.push(clockAnd, clockNot, clockBit);
-
-    _this.outputComponents.push(clockBit); // ironic that I called the above a "clock"
+    var clock = new _Clock.default(clockX, 150);
+    clock.inputWires.push(new _Wire.default(startButton, 0));
+    _this.clock = clock; //this.components.push(clock); // do it later
+    //this.outputComponents.push(clock);
     // when the clock strikes 2*BITS + 1 it will end the operation
 
-
-    var countdown = new _Clock.default(clockX - 20, 260, 80, 50);
+    var countdown = new _Countdown.default(clockX + 5, 260, _this.numBits, 50, 50);
     countdown.inputWires.push(new _Wire.default(startButton, 0, [{
       x: countdown.position.x,
       y: countdown.position.y - 40
     }, {
-      x: clockX - 30,
+      x: clockX + 30,
       y: countdown.position.y - 40
     }, {
-      x: clockX - 30,
+      x: clockX + 30,
       y: startButton.position.y
     }]));
+    countdown.inputWires.push(new _Wire.default(clock, 1));
     _this.countdown = countdown;
-    var adder = new _Adder.default(180, 185, BITS, 270, 100); //this.outputComponents.push(adder);
+    var adder = new _Adder.default(170, 175, BITS, 270, 100); //this.outputComponents.push(adder);
     // The "Register" that really isn't.
     // The Add and Shift steps should be successfully separated...
 
     var productRegister = [];
-    _this.regRight = 660;
+    _this.regRight = 610;
     _this.regSpacing = 50;
 
-    for (var i = 0; i < 2 * BITS + 1; i++) {
+    for (var i = 0; i < 2 * BITS; i++) {
       var reg = new _OutputBit.default(_this.regRight - _this.regSpacing * i, 400, 20);
       productRegister.push(reg);
 
@@ -4426,18 +4632,20 @@ function (_super) {
     var tealFaded = {
       color: "rgba(0, 128, 128, 0.35)"
     }; // Wires from the registers to the adder.
+    // (deep purple, left)
 
     for (var i = 0; i < BITS; i++) {
       var d = 2;
-      var bit = productRegister[i + BITS]; // basically, we want the most significant bit to be highest
+      var bit = productRegister[i + BITS - 1]; // basically, we want the most significant bit to be highest
 
       var y1 = bit.position.y + 15 + d * (BITS - i);
+      var y2 = adder.position.y - adder.size.y / 2 - 15 - d * BITS;
       adder.inputWires.push(new _Wire.default(bit, 0, [{
         x: adder.position.x + adder.inputSockets[i].x,
-        y: 110 + d * i
+        y: y2 + d * i
       }, {
         x: 10 + d * i,
-        y: 110 + d * i
+        y: y2 + d * i
       }, {
         x: 10 + d * i,
         y: y1
@@ -4459,16 +4667,25 @@ function (_super) {
       var y = adder.position.y + adder.outputSockets[0].y; // put them all on the same line
       // space them a bit
 
-      var choice = new _ChoiceGate.default(productRegister[i + BITS].position.x + 7, y + 50, 10); // this will be input 0 temporarily but we will unshift later
+      var choice = new _ChoiceGate.default(productRegister[i + BITS - 1].position.x - 7, y + 50, 10); // this will be input 0 temporarily but we will unshift later
 
-      choice.inputWires.push(new _Wire.default(adder, i));
+      var x2 = adder.position.x + adder.outputSockets[i].x;
+      var y2 = y + 10 + 4 * i;
+      if (choice.position.x < x2) y2 = y + 20;
+      choice.inputWires.push(new _Wire.default(adder, i, [{
+        x: choice.position.x + choice.inputSockets[1].x,
+        y: y2
+      }, {
+        x: x2,
+        y: y2
+      }]));
       adderChoiceGates.push(choice);
 
       _this.components.push(choice);
     } // Shifting the Multiplication Register
 
 
-    for (var i = 0; i < 2 * BITS + 1; i++) {
+    for (var i = 0; i < 2 * BITS; i++) {
       var regBit = productRegister[i];
       /*const or = new OrGate(regBit.position.x, regBit.position.y - 30, 20, 0);
       this.components.push(or);
@@ -4476,7 +4693,7 @@ function (_super) {
 
       var choice = new _ChoiceGate.default(regBit.position.x, regBit.position.y - 40, 14); // Selection Wire (from clock's NOT)
 
-      choice.inputWires.push(new _Wire.default(clockNot, 0, [{
+      choice.inputWires.push(new _Wire.default(clock, 1, [{
         x: choice.position.x - 18,
         y: choice.position.y
       }, {
@@ -4485,11 +4702,32 @@ function (_super) {
       }, {
         x: 630 - 2 * i,
         y: choice.position.y - 38 - 2 * i
-      }], tealFaded)); // Shifting
+      }, {
+        x: clock.position.x - 40,
+        y: clock.position.y + clock.size.y / 2
+      }], tealFaded));
 
-      if (i < 2 * BITS) {
-        choice.inputWires.push(new _Wire.default(productRegister[i + 1], 0, [{
+      if (i >= BITS - 1) {
+        // Upper Half of the Register: Conditionally connect to the adder.
+        choice.inputWires.push(new _Wire.default(adderChoiceGates[i - BITS + 1], 0, [], purple));
+      } else {
+        // Lower Half of the Register: Connect to itself.
+        choice.inputWires.push(new _Wire.default(regBit, 0, [{
           x: regBit.position.x - 7,
+          y: choice.position.y - 30
+        }, {
+          x: regBit.position.x + 20,
+          y: choice.position.y - 30
+        }, {
+          x: regBit.position.x + 20,
+          y: regBit.position.y
+        }], purple));
+      } // Shifting
+
+
+      if (i < 2 * BITS - 1) {
+        choice.inputWires.push(new _Wire.default(productRegister[i + 1], 0, [{
+          x: regBit.position.x + 7,
           y: choice.position.y - 20
         }, {
           x: regBit.position.x - 24,
@@ -4502,23 +4740,6 @@ function (_super) {
         choice.inputWires.push(null);
       }
 
-      if (i >= BITS) {
-        // Upper Half of the Register: Conditionally connect to the adder.
-        choice.inputWires.push(new _Wire.default(adderChoiceGates[i - BITS], 0, [], purple));
-      } else {
-        // Lower Half of the Register: Connect to itself.
-        choice.inputWires.push(new _Wire.default(regBit, 0, [{
-          x: regBit.position.x + 7,
-          y: choice.position.y - 20
-        }, {
-          x: regBit.position.x + 20,
-          y: choice.position.y - 20
-        }, {
-          x: regBit.position.x + 20,
-          y: regBit.position.y
-        }], purple));
-      }
-
       _this.components.push(choice);
 
       regBit.inputWires.push(new _Wire.default(choice, 0));
@@ -4529,7 +4750,7 @@ function (_super) {
     var inputB = [];
 
     for (var i = 0; i < BITS; i++) {
-      var input = new _InputBit.default(320 - i * 30, 60, false, 25);
+      var input = new _InputBit.default(310 - i * 30, 60, false, 25);
 
       _this.components.push(input);
 
@@ -4538,7 +4759,7 @@ function (_super) {
     }
 
     for (var i = 0; i < BITS; i++) {
-      var input = new _InputBit.default(630 - i * 50, 60, false, 25);
+      var input = new _InputBit.default(610 - i * 50, 60, false, 25);
 
       _this.components.push(input);
 
@@ -4550,20 +4771,21 @@ function (_super) {
     var multiplierRegisterChoice = [];
 
     for (var i = 0; i < BITS; i++) {
-      var reg = new _RegisterBit.default(inputB[i].position.x - 4, 170, 20);
+      var reg = new _RegisterBit.default(inputB[i].position.x - 3, 170, 20);
       multiplierRegister.push(reg);
 
       _this.components.push(reg);
 
       _this.outputComponents.push(reg);
-    } // Wiring to the Registers
+    } // Wiring to the Multiplier Register
 
 
     for (var i = 0; i < BITS; i++) {
       var reg = multiplierRegister[i];
       var or = new _Gates.OrGate(reg.position.x - 9, reg.position.y - 25, 20, 0);
       var choice = new _ChoiceGate.default(reg.position.x + 9, reg.position.y - 60, 12);
-      reg.inputWires.push(new _Wire.default(or, 0), new _Wire.default(choice, 0));
+      reg.inputWires.push(new _Wire.default(or, 0), new _Wire.default(choice, 0)); // wire path for the OR and the selection bit
+
       var wirePath = [{
         x: reg.position.x - 13,
         y: choice.position.y,
@@ -4576,12 +4798,16 @@ function (_super) {
       or.inputWires.push(new _Wire.default(startNot, 0, wirePath, {
         color: "rgba(100, 100, 130, 0.75)"
       }));
-      or.inputWires.push(new _Wire.default(clockNot, 0, [{
+      or.inputWires.push(new _Wire.default(clock, 1, [{
         x: or.position.x + 10,
         y: or.position.y - 18 - i / 2
       }, {
-        x: clockNot.position.x - 40,
+        x: clock.position.x - 60,
         y: or.position.y - 18 - i
+      }, {
+        x: clock.position.x - 40,
+        y: clock.position.y + clock.size.y / 2,
+        node: true
       }], tealFaded)); // choice gate is [0] ? [1] : [2]
       // the selection comes first
 
@@ -4604,6 +4830,7 @@ function (_super) {
 
       _this.components.push(or, choice);
     } // Control Wire from the final register bit to the adder's output
+    // Also the wiring between the product register and the choice gates
 
 
     var regLSB = multiplierRegister[0];
@@ -4631,18 +4858,15 @@ function (_super) {
         darkColor: "#555"
       })); // Else wire
 
-      var outBit = productRegister[i + BITS];
+      var outBit = productRegister[i + BITS - 1];
       choice.inputWires.push(new _Wire.default(outBit, 0, [{
-        x: choice.position.x + 4,
+        x: choice.position.x + 5,
         y: choice.position.y - 10
       }, {
-        x: choice.position.x + 11,
+        x: outBit.position.x + 17,
         y: choice.position.y - 10
       }, {
-        x: outBit.position.x + 18,
-        y: 305 + 2 * i
-      }, {
-        x: outBit.position.x + 18,
+        x: outBit.position.x + 17,
         y: outBit.position.y - 18
       }], purpleFaded));
     } // Answer Register
@@ -4650,7 +4874,7 @@ function (_super) {
 
     var finalAnswer = [];
 
-    for (var i = 0; i <= 2 * BITS; i++) {
+    for (var i = 0; i < 2 * BITS; i++) {
       var offset = 5;
       var bit = new _RegisterBit.default(productRegister[i].position.x + offset, 510, 30);
 
@@ -4659,21 +4883,15 @@ function (_super) {
       _this.outputComponents.push(bit); // set wire: on at the 12th clock cycle
 
 
-      bit.inputWires.push(new _Wire.default(countdown, 1, [{
+      bit.inputWires.push(new _Wire.default(countdown, 0, [{
         x: bit.position.x - 15,
         y: bit.position.y - 15
       }, {
         x: bit.position.x - 15,
         y: bit.position.y - 30
       }, {
-        x: clockX + 20,
+        x: countdown.position.x + countdown.outputSockets[0].x,
         y: bit.position.y - 30
-      }, {
-        x: clockX + 20,
-        y: countdown.position.y + 40
-      }, {
-        x: countdown.position.x + countdown.outputSockets[1].x,
-        y: countdown.position.y + 40
       }], {
         color: "rgb(128, 128, 128)"
       })); // what wire: from the corresponding from the product "register"
@@ -4691,13 +4909,13 @@ function (_super) {
     } // finally, add displays
 
 
-    var displayA = new _Display.default(245, 25, inputA, false, 30);
-    var displayB = new _Display.default(510, 20, inputB, false, 30);
+    var displayA = new _Display.default((inputA[0].position.x + inputA[BITS - 1].position.x) / 2, 25, inputA, false, 30);
+    var displayB = new _Display.default((inputB[0].position.x + inputB[BITS - 1].position.x) / 2, 20, inputB, false, 30);
     var displayEnd = new _Display.default(375, 565, finalAnswer, false, 60);
     displayEnd.size.x = 2 * displayEnd.size.y; // rendering trick, because input wires are drawn with a component
     // so pushing these last makes them render last so it looks cleaner
 
-    _this.components.push(adder, countdown, startButton, displayA, displayB, displayEnd);
+    _this.components.push(adder, countdown, startButton, displayA, displayB, displayEnd, clock);
 
     _this.productRegister = productRegister;
     return _this;
@@ -4734,7 +4952,7 @@ function (_super) {
 
 var _default = MultiplierExploration;
 exports.default = _default;
-},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./RegisterBit":"RegisterBit.ts","./Adder":"Adder.ts","./Wire":"Wire.ts","./Clock":"Clock.ts","./Display":"Display.ts","./Gates":"Gates.ts","./ChoiceGate":"ChoiceGate.ts","./Text":"Text.ts"}],"MultiplierNaiveExploration.ts":[function(require,module,exports) {
+},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./RegisterBit":"RegisterBit.ts","./Adder":"Adder.ts","./Wire":"Wire.ts","./Clock":"Clock.ts","./Display":"Display.ts","./Gates":"Gates.ts","./ChoiceGate":"ChoiceGate.ts","./Text":"Text.ts","./Countdown":"Countdown.ts"}],"MultiplierNaiveExploration.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -5527,7 +5745,324 @@ function (_super) {
 
 var _default = TwosCompAdderExploration;
 exports.default = _default;
-},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./Adder":"Adder.ts","./Wire":"Wire.ts","./Display":"Display.ts","./Text":"Text.ts"}],"main.ts":[function(require,module,exports) {
+},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./Adder":"Adder.ts","./Wire":"Wire.ts","./Display":"Display.ts","./Text":"Text.ts"}],"FullAdderAnswer.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _Exploration = _interopRequireDefault(require("./Exploration"));
+
+var _InputBit = _interopRequireDefault(require("./InputBit"));
+
+var _OutputBit = _interopRequireDefault(require("./OutputBit"));
+
+var _Wire = _interopRequireDefault(require("./Wire"));
+
+var _Display = _interopRequireDefault(require("./Display"));
+
+var _Text = _interopRequireDefault(require("./Text"));
+
+var _Gates = require("./Gates");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+// FullAdderGates.ts
+//
+// Still just one bit each. That is, three total (A,B,carry).
+var __extends = void 0 && (void 0).__extends || function () {
+  var _extendStatics = function extendStatics(d, b) {
+    _extendStatics = Object.setPrototypeOf || {
+      __proto__: []
+    } instanceof Array && function (d, b) {
+      d.__proto__ = b;
+    } || function (d, b) {
+      for (var p in b) {
+        if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p];
+      }
+    };
+
+    return _extendStatics(d, b);
+  };
+
+  return function (d, b) {
+    if (typeof b !== "function" && b !== null) throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+
+    _extendStatics(d, b);
+
+    function __() {
+      this.constructor = d;
+    }
+
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+  };
+}();
+
+var FullAdderAnswer =
+/** @class */
+function (_super) {
+  __extends(FullAdderAnswer, _super);
+
+  function FullAdderAnswer(canvas) {
+    var _this = _super.call(this, canvas, 300, 400) || this;
+
+    var inputA = new _InputBit.default(40, 50, false, 32);
+    var inputB = new _InputBit.default(160, 50, false, 32);
+    var inputC = new _InputBit.default(250, 180, false, 32);
+    var output1 = new _OutputBit.default(inputB.position.x - 1, 340, 30);
+    var output2 = new _OutputBit.default(inputA.position.x + 19, 340, 30);
+    var and1 = new _Gates.AndGate(inputA.position.x + 10, 125, 50, 0);
+    and1.inputWires.push(new _Wire.default(inputA, 0));
+    and1.inputWires.push(new _Wire.default(inputB, 0, [{
+      x: and1.position.x + 10,
+      y: and1.position.y - 35
+    }]));
+    var xor1 = new _Gates.XorGate(inputB.position.x - 10, 125, 50, 0);
+    xor1.inputWires.push(new _Wire.default(inputA, 0, [{
+      x: xor1.position.x - 10,
+      y: and1.position.y - 35
+    }]));
+    xor1.inputWires.push(new _Wire.default(inputB, 0));
+    var xor2 = new _Gates.XorGate(output1.position.x, 280, 45, 0);
+    xor2.inputWires.push(new _Wire.default(xor1, 0));
+    xor2.inputWires.push(new _Wire.default(inputC, 0, [{
+      x: xor2.position.x + 9,
+      y: inputC.position.y,
+      node: true
+    }]));
+    output1.inputWires.push(new _Wire.default(xor2, 0));
+    var and2 = new _Gates.AndGate(output2.position.x + 30, 220, 45, 0);
+    and2.inputWires.push(new _Wire.default(xor1, 0, [{
+      x: and2.position.x - 9,
+      y: 165
+    }, {
+      x: xor1.position.x,
+      y: 165,
+      node: true
+    }]));
+    and2.inputWires.push(new _Wire.default(inputC, 0, [{
+      x: and2.position.x + 9,
+      y: inputC.position.y
+    }])); // or gate for the "2" output
+
+    var or2 = new _Gates.OrGate(output2.position.x, output2.position.y - 44, 45, 0);
+    or2.inputWires.push(new _Wire.default(and1, 0));
+    or2.inputWires.push(new _Wire.default(and2, 0, [// add 12 because of the output bit
+    {
+      x: or2.position.x + 9,
+      y: (and2.position.y + or2.position.y + 6) / 2
+    }, {
+      x: and2.position.x,
+      y: (and2.position.y + or2.position.y + 6) / 2
+    }]));
+    output2.inputWires.push(new _Wire.default(or2, 0));
+
+    _this.components.push(output1, output2, and1, xor1, and2, xor2, or2, inputA, inputB, inputC); // for ease of visualization
+
+
+    var aid1 = new _OutputBit.default(xor1.position.x, xor1.position.y + 27, 12);
+    aid1.inputWires.push(new _Wire.default(xor1, 0));
+    var aid2 = new _OutputBit.default(and1.position.x, and1.position.y + 27, 12);
+    aid2.inputWires.push(new _Wire.default(and1, 0));
+    var aid3 = new _OutputBit.default(and2.position.x, and2.position.y + 30, 12);
+    aid3.inputWires.push(new _Wire.default(and2, 0));
+
+    _this.components.push(aid1, aid2, aid3); // Number Display
+
+
+    var displayResult = new _Display.default(240, 340, [output1, output2], false, 42);
+
+    _this.components.push(displayResult);
+
+    var labelA = new _Text.default(inputA.position.x, 20, 30, "A");
+    var labelB = new _Text.default(inputB.position.x, 20, 30, "B");
+    var labelC = new _Text.default(inputC.position.x, inputC.position.y - 40, 30, "C");
+    var text1 = new _Text.default(output1.position.x, 375, 30, "1", {
+      color: '#333'
+    });
+    var text2 = new _Text.default(output2.position.x, 375, 30, "2", {
+      color: '#333'
+    });
+
+    _this.components.push(labelA, labelB, labelC, text1, text2); // Updating
+
+
+    _this.outputComponents.push(output1, output2, aid1, aid2, aid3);
+
+    return _this;
+  }
+
+  return FullAdderAnswer;
+}(_Exploration.default);
+
+var _default = FullAdderAnswer;
+exports.default = _default;
+},{"./Exploration":"Exploration.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./Wire":"Wire.ts","./Display":"Display.ts","./Text":"Text.ts","./Gates":"Gates.ts"}],"CountdownExploration.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _Exploration = _interopRequireDefault(require("./Exploration"));
+
+var _Wire = _interopRequireDefault(require("./Wire"));
+
+var _Clock = _interopRequireDefault(require("./Clock"));
+
+var _InputBit = _interopRequireDefault(require("./InputBit"));
+
+var _OutputBit = _interopRequireDefault(require("./OutputBit"));
+
+var _Countdown = _interopRequireDefault(require("./Countdown"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+// ClockExploration.ts
+//
+// Exploration of a clock, more meant to illustrate the time-based explorations.
+var __extends = void 0 && (void 0).__extends || function () {
+  var _extendStatics = function extendStatics(d, b) {
+    _extendStatics = Object.setPrototypeOf || {
+      __proto__: []
+    } instanceof Array && function (d, b) {
+      d.__proto__ = b;
+    } || function (d, b) {
+      for (var p in b) {
+        if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p];
+      }
+    };
+
+    return _extendStatics(d, b);
+  };
+
+  return function (d, b) {
+    if (typeof b !== "function" && b !== null) throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+
+    _extendStatics(d, b);
+
+    function __() {
+      this.constructor = d;
+    }
+
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+  };
+}();
+
+// pass the components and output components arrays
+var CountdownExploration =
+/** @class */
+function (_super) {
+  __extends(CountdownExploration, _super);
+
+  function CountdownExploration(canvas) {
+    var _this = _super.call(this, canvas, 300, 300) || this;
+
+    _this.animated = true;
+    var power = new _InputBit.default(150, 60, false, 40);
+    var clock = new _Clock.default(100, 130);
+
+    _this.components.push(clock);
+
+    clock.inputWires.push(new _Wire.default(power, 0, [{
+      x: clock.position.x,
+      y: power.position.y
+    }]));
+    var countdown = new _Countdown.default(200, 200, 5);
+    countdown.inputWires.push(new _Wire.default(power, 0, [{
+      x: countdown.position.x,
+      y: power.position.y
+    }]));
+    countdown.inputWires.push(new _Wire.default(clock, 0, [{
+      x: clock.position.x + clock.outputSockets[0].x,
+      y: countdown.position.y + countdown.inputSockets[0].y
+    }]));
+
+    _this.components.push(countdown);
+
+    var countdownOutput = new _OutputBit.default(countdown.position.x, 260, 30);
+
+    _this.components.push(countdownOutput);
+
+    countdownOutput.inputWires.push(new _Wire.default(countdown, 0));
+
+    _this.components.push(power);
+
+    _this.outputComponents.push(countdownOutput); // some logic
+
+
+    var thisExploration = _this;
+
+    power.onClick = function () {
+      if (!power.state.bits[0]) {
+        thisExploration.update();
+        power.constructor.prototype.onClick.apply(power, arguments);
+        thisExploration.resume();
+      } else {
+        thisExploration.pause();
+        power.constructor.prototype.onClick.apply(power, arguments);
+      }
+
+      return true;
+    };
+
+    return _this;
+    /*
+    // on the right...
+    const countdown = new Countdown(450, 200, 5);
+    this.components.push(countdown);
+     const countdownSwitch = new InputBit(countdown.position.x, 125, false, 40);
+    this.components.push(countdownSwitch);
+    countdown.inputWires.push(new Wire(countdownSwitch, 0));
+     const countdownOutput = new OutputBit(countdown.position.x, 275, 30);
+    this.components.push(countdownOutput);
+    countdownOutput.inputWires.push(new Wire(countdown, 0));
+    */
+
+    /*
+     // on the left...
+    const numBits = 3;
+    const start = 5;
+     const powerLeft = new InputBit(100, 50, false, 42);
+     const subtractor = new Subtractor(160, 200, numBits, 7 * 24, 80);
+    for (let i = 0; i < numBits; i++) {
+        if (i == 0) {
+            const x1 = subtractor.position.x + subtractor.inputSockets[i].x;
+            const y1 = 110;
+            const comp = new Not(x1, y1, 30, 0);
+            subtractor.inputWires.push(new Wire(comp, 0));
+            this.components.push(comp);
+        } else {
+            subtractor.inputWires.push(new Wire(null, 0));
+        }
+    }
+     // Subtractor self-wiring
+    for (let i = 0; i < numBits; i++) {
+        const d = 12 + 12*i;
+        const y1 = subtractor.position.y + subtractor.size.y/2 + d + 10;
+        const y2 = subtractor.position.y - subtractor.size.y/2 - d - 10;
+        subtractor.inputWires.push(new Wire(subtractor, i, [
+            {x: subtractor.position.x + subtractor.inputSockets[3+i].x, y: y2},
+            {x: subtractor.position.x + subtractor.size.x/2 + d, y: y2},
+            {x: subtractor.position.x + subtractor.size.x/2 + d, y: y1},
+            {x: subtractor.position.x + subtractor.outputSockets[i].x, y: y1, node: true},
+        ]))
+    }
+     this.components.push(subtractor, powerLeft);
+     powerLeft.linkedBits.push(countdownSwitch);
+    countdownSwitch.linkedBits.push(powerLeft);
+    */
+  }
+
+  return CountdownExploration;
+}(_Exploration.default);
+
+var _default = CountdownExploration;
+exports.default = _default;
+},{"./Exploration":"Exploration.ts","./Wire":"Wire.ts","./Clock":"Clock.ts","./InputBit":"InputBit.ts","./OutputBit":"OutputBit.ts","./Countdown":"Countdown.ts"}],"main.ts":[function(require,module,exports) {
 "use strict";
 
 var _AdderExploration = _interopRequireDefault(require("./AdderExploration"));
@@ -5565,6 +6100,10 @@ var _SignMagnitudeExploration = _interopRequireDefault(require("./SignMagnitudeE
 var _SubtractorExploration = _interopRequireDefault(require("./SubtractorExploration"));
 
 var _TwosCompAdderExploration = _interopRequireDefault(require("./TwosCompAdderExploration"));
+
+var _FullAdderAnswer = _interopRequireDefault(require("./FullAdderAnswer"));
+
+var _CountdownExploration = _interopRequireDefault(require("./CountdownExploration"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -5638,7 +6177,6 @@ var explorationMap = {
   'binary-basic': _BinaryExploration.default,
   'adder': _AdderExploration.default,
   'gates': _GateExploration.default,
-  'choice': _ChoiceExploration.default,
   'half-adder-build': _HalfAdderBuild.default,
   'gates-again': _GateExploration.default,
   'full-adder1': _FullAdderGates.default,
@@ -5647,13 +6185,16 @@ var explorationMap = {
   'signmag': _SignMagnitudeExploration.default,
   'adder-fail': _AdderFailExploration.default,
   'full-subtractor1': _FullSubtractorGates.default,
+  'full-adder-answer': _FullAdderAnswer.default,
   'ones-complement': _OnesComplementExploration.default,
   'twos-comp-adder': _TwosCompAdderExploration.default,
   'subtractor': _SubtractorExploration.default,
   'make-alu': _MakeALUExploration.default,
   // part 3
   'multiplier-naive': _MultiplierNaiveExploration.default,
+  'choice': _ChoiceExploration.default,
   'register': _RegisterExploration.default,
+  'countdown': _CountdownExploration.default,
   'multiplier-full': _MultiplierExploration.default,
   'divider-full': _DividerExploration.default
 };
@@ -5682,7 +6223,7 @@ renderLoop(); // some other stuff
 
 function fillInteractiveTable(table) {
   if (table === null) return;
-  var html = "<input type=\"number\" min=\"0\" max=\"1\" size=\"3\" />";
+  var html = "<input type=\"number\" min=\"0\" max=\"1\" size=\"4\" style=\"min-width: 3em\" />";
   var fillIn = table.tBodies[0].getElementsByTagName("tr");
 
   for (var i = 0; i < fillIn.length; i++) {
@@ -5712,7 +6253,7 @@ function setDark(on) {
 }
 
 setDark(false);
-},{"./AdderExploration":"AdderExploration.ts","./AdderFailExploration":"AdderFailExploration.ts","./BinaryExploration":"BinaryExploration.ts","./ChoiceExploration":"ChoiceExploration.ts","./ClockExploration":"ClockExploration.ts","./DividerExploration":"DividerExploration.ts","./FullAdderGates":"FullAdderGates.ts","./FullSubtractorGates":"FullSubtractorGates.ts","./GateExploration":"GateExploration.ts","./HalfAdderBuild":"HalfAdderBuild.ts","./MakeALUExploration":"MakeALUExploration.ts","./MultiplierExploration":"MultiplierExploration.ts","./MultiplierNaiveExploration":"MultiplierNaiveExploration.ts","./OnesComplementExploration":"OnesComplementExploration.ts","./RegisterExploration":"RegisterExploration.ts","./SignMagnitudeExploration":"SignMagnitudeExploration.ts","./SubtractorExploration":"SubtractorExploration.ts","./TwosCompAdderExploration":"TwosCompAdderExploration.ts"}],"../../../../../usr/local/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"./AdderExploration":"AdderExploration.ts","./AdderFailExploration":"AdderFailExploration.ts","./BinaryExploration":"BinaryExploration.ts","./ChoiceExploration":"ChoiceExploration.ts","./ClockExploration":"ClockExploration.ts","./DividerExploration":"DividerExploration.ts","./FullAdderGates":"FullAdderGates.ts","./FullSubtractorGates":"FullSubtractorGates.ts","./GateExploration":"GateExploration.ts","./HalfAdderBuild":"HalfAdderBuild.ts","./MakeALUExploration":"MakeALUExploration.ts","./MultiplierExploration":"MultiplierExploration.ts","./MultiplierNaiveExploration":"MultiplierNaiveExploration.ts","./OnesComplementExploration":"OnesComplementExploration.ts","./RegisterExploration":"RegisterExploration.ts","./SignMagnitudeExploration":"SignMagnitudeExploration.ts","./SubtractorExploration":"SubtractorExploration.ts","./TwosCompAdderExploration":"TwosCompAdderExploration.ts","./FullAdderAnswer":"FullAdderAnswer.ts","./CountdownExploration":"CountdownExploration.ts"}],"../../../../../usr/local/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -5740,7 +6281,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50726" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "55541" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

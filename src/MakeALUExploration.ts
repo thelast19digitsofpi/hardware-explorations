@@ -18,7 +18,7 @@ class MakeALUExploration extends Exploration {
         this.components.push(adder);
 
         // need this up here...
-        const operBit = new InputBit(460, 70, true, 40);
+        const operBit = new InputBit(460, 70, false, 40);
 
         let inputA = [], inputB = [];
         for (let i = 0; i < 4; i++) {
@@ -48,9 +48,10 @@ class MakeALUExploration extends Exploration {
 
         // operation control
         const operSwitch = new NotSwitch(operBit.position.x, operBit.position.y + 100, 50, 0);
+        operSwitch.state.whichGate = 1; // start you off with the wrong gate, heh heh
         const operText1 = new Text(operBit.position.x, operBit.position.y - 50, 20, "OPER");
         const operText2 = new Text(operBit.position.x, operBit.position.y - 32, 20, function() {
-            return (operBit.state.bits[0]) ? "(ADD)" : "(SUB)";
+            return (operBit.state.bits[0]) ? "(SUB)" : "(ADD)";
         });
         operSwitch.inputWires.push(new Wire(operBit, 0));
         adder.inputWires.push(new Wire(operSwitch, 0, [
@@ -77,6 +78,7 @@ class MakeALUExploration extends Exploration {
             const b = Number(displayB.getValue());
             const op = operBit.state.bits[0];
             const raw = op ? (a+b) : (a-b);
+            // add 8, mod 16, then subtract 8 makes it return in -8..7
             const overflow = ((raw + 24) % 16) - 8;
             return `Actual: ${overflow}` + (raw === overflow ? "" : "*");
         });

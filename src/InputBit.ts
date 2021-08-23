@@ -5,13 +5,16 @@ import Component from './Component';
 import { getBitColor, getStrokeColor } from './dark';
 
 class InputBit implements Component {
-    state: {bits: boolean[], active: boolean};
+    state: {bits: boolean[]};
     position: { x: number; y: number; };
     size: { x: number; y: number; };
     inputSockets: [];
     inputWires: [];
     outputSockets: {x: number, y: number}[];
     beforeUpdate: undefined;
+
+    // If this bit is toggled, all linked bits are toggled as well
+    linkedBits: InputBit[];
 
     constructor(x: number, y: number, value: boolean = false, size: number = 20) {
         this.position = {
@@ -24,7 +27,6 @@ class InputBit implements Component {
         };
 
         this.state = {
-            active: value,
             bits: [value],
         };
 
@@ -33,14 +35,12 @@ class InputBit implements Component {
         this.outputSockets = [
             {x: 0, y: 0}
         ];
+
+        this.linkedBits = [];
     }
 
     render(ctx: CanvasRenderingContext2D, isDark: boolean) {
-        if (this.state.active !== this.state.bits[0]) {
-            // panic
-            throw new Error("[InputBit.render] State does not match bit array");
-        }
-        ctx.fillStyle = getBitColor(this.state.active, isDark);
+        ctx.fillStyle = getBitColor(this.state.bits[0], isDark);
         ctx.strokeStyle = "2px solid " + getStrokeColor(isDark);
         ctx.beginPath();
         ctx.arc(this.position.x, this.position.y, this.size.x / 2, 0, Math.PI * 2);
@@ -50,14 +50,18 @@ class InputBit implements Component {
 
     onClick(_offsetX: number, _offsetY: number): boolean {
         console.log("[InputBit] clicked");
-        this.state.active = !this.state.active;
-        this.state.bits[0] = this.state.active;
+        this.state.bits[0] = !this.state.bits[0];
+
+        // also update everything else
+        for (let otherBit of this.linkedBits) {
+            otherBit.state.bits[0] = this.state.bits[0];
+        }
         // bits will be updated when everything is
         return true;
     };
 
     evaluate(_: boolean[]): boolean[] {
-        return [this.state.active];
+        return this.state.bits;
     }
 }
 

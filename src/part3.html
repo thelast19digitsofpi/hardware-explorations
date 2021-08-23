@@ -29,7 +29,8 @@
 	476181
 			</pre>
 			<p>You might have noticed that I deliberately chose to make the second number only have the digits 0 and 1. This is a very useful feature of binary: since the bits can only ever be 0 or 1, at each step, we either add the number as is or we don't. (In contrast, with base ten we might have to add some multiple of 471.)</p>
-			<p>For now, we're also going to ignore overflow entirely, and just assume that we can somehow output twice as many bits. We'll also be using unsigned integers, so 1001 means 8+1 = 9, not -7. (Signed multiplication is a little trickier. However, if you don't care about overflow and want a 4-bit output, you can actually multiply the two's complement representations directly, as if they were positive numbers! Try it yourself if you want.) But for now, let's jump right to a naive attempt at building a circuit:</p>
+			<p>For now, we're also going to ignore overflow entirely, and just assume that we can somehow output twice as many bits. We'll also be using unsigned integers, so 1001 means 8+1 = 9, not -7. (Signed multiplication is a little trickier. However, if you don't care about overflow and want a 4-bit output, you can actually multiply the two's complement representations directly, as if they were positive numbers! Try it yourself below if you want.)</p>
+			<p>Before we get started, I want to let you know that this page only has one exploration where you actually have to make the circuit work. However, I still urge you to at least play around with each one so you get a sense of what it's doing. With that said, let's jump right to a naive attempt at building a circuit:</p>
 
 			<div class="exploration" id="multiplier-naive">
 
@@ -78,8 +79,8 @@
 			</div>
 
 
-			<p>One thing you may have noticed is that division took more steps. There is no column-by-column trick to make the subtraction faster. What's worse, we have to make a <em>decision</em> at each step, of whether or not to subtract 471 (actually, in base ten there are ten possible subtractions including zero). There's no good way to predict, say, whether the last step will need a subtraction or not without calculating it all the way down to 513.</p>
-			<p>This is going to involve a much different kind of circuit from the static ones we've seen so far. Our circuit is going to need a lot more time, and a bunch of new components. Since this is going to be a lot of content, I've decided to <strong>first build a slow multiplier</strong> that will feature a lot of the components we need to build a divider. But before we get to any of that, let's start with three new components...</p>
+			<p>One thing you may have noticed is that division took more steps. There is no column-by-column trick to make the subtraction faster. What's worse, we have to make a <em>decision</em> at each step, of whether or not to subtract 471 (actually, in base ten there are ten possible subtractions including zero). There's no good way to predict, say, whether the last step will need a subtraction or not without calculating it all the way down to 513. (Actually, people <em>have</em> come up with complicated ways to predict divisions, but that's way beyond our scope here.)</p>
+			<p>This is going to involve a much different kind of circuit from the static ones we've seen so far. Our circuit is going to need a lot more time, and a bunch of new components. Since this is going to be a lot of content, I've decided to <strong>first build a slow multiplier</strong> that will feature a lot of the components we need to build a divider. You'll notice that the divider ends up being very similar. But before we get to any of that, let's start with three new components...</p>
 
 			<!-- Choice Gates -->
 			<h3>Making Decisions</h3>
@@ -91,23 +92,34 @@
 				<li>If <strong>S</strong> is <strong class="bit-1">ON</strong>, then we output whatever <strong>A</strong> is.</li>
 				<li>If <strong>S</strong> is <strong class="bit-0">OFF</strong>, then we output whatever <strong>B</strong> is.</li>
 			</ul>
-			<p>It's actually a little tricky to get this one right. I've started you off with a hint (namely, how I arranged the wires). It's your job to figure out which gates to use.</p>
+			<p>The circuit for this is not that complicated; you only need 3-5 gates (I'm not telling you how many NOTs to use!). But it's a little tricky to get this one right. I've started you off with a hint (namely, how I arranged the wires). It's your job to figure out which gates to use.</p>
 			<div class="exploration" id="choice">
 				<h4>Choice Exploration</h4>
+				<textarea rows="4" style="margin-bottom: 0.25em">A scratch textbox if you so desire.</textarea>
 			</div>
 
 			<!-- Clocks -->
-			<h3>Clocks and Counters</h3>
-			<p>In computer hardware, one of the fundamental concepts is the <em>clock</em>. This is a signal that alternates up-down-up-down-up-down-... for as long as the computer has power. This is how it knows when, for instance, it is time to run the next instruction safely (any operations are required to take less time than one cycle of the clock, or else the program has to wait).</p>
+			<h3>Tick, tock, tick, tock...</h3>
+			<p>In computer hardware, one of the fundamental concepts is the <em>clock</em>. This is a signal that alternates up-down-up-down-up-down-... for as long as the computer has power. This is how it knows when, for instance, it is time to run the next instruction safely (any operations are required to take less time than one cycle of the clock, or else the program has to wait). We'll also use it for our divider (in a real circuit, keeping the time synchronized helps prevent gates from giving the wrong values, if for instance two signals arrived at different times).</p>
 			<p>Here, I'm representing this with the left output being the "up" phase and the right output being the "down" phase of the clock. It also has an input bit, which I use more as a "start button" in the multiplier and divider circuits to activate the clock (you could think of it as the power source).</p>
-			<div class="exploration" id="clock">
-				<h4>Clock Exploration</h4>
-			</div>
+			<p>Because it's common for operations to happen on both the rising and falling edges of the clock, I've represented it here with two output bits; at any given time only one of them is on. You can think of the right one as having a built-in NOT gate.</p>
+			<p>This exploration isn't very interesting in and of itself, but it does have a new feature: the speed control. You might find it useful to slowly work your way through the more complicated circuits.</p>
+			<h4>Clock Exploration</h4>
+			<ul>
+				<li>There are three buttons on the right: Pause, Play, and Step. (With bigger explorations and smaller screens, the buttons might end up being below the exploration.)</li>
+				<li>Clicking <b>Play</b> will cause the exploration to periodically update; in this case, the clock will cycle back and forth. The slider controls the speed.</li>
+				<li>Clicking <b>Step</b> will cause it to advance once. You'll want to pause it first if you want to step it at your own pace.</li>
+				<li>The green input bit at the top activates the clock component; turning it off disables the clock. (It's part of the circuit, so it operates independently of the Pause/Play buttons. If everything is red, clicking Play and Step won't do anything.)</li>
+			</ul>
+			<div class="exploration" id="clock"></div>
 
-			<p>It would be nice to
+
+			<p>With a clock we can make a simple counter that adds 1 every clock cycle. Actually, for our purposes later I'll use this design. When the power is off, it resets to its default value (here 5); when the power comes on, it counts down every clock cycle.</p>
+			<p><em>Sorry, at this moment I don't have a full circuit showing how to build this. It's coming soon though! For now, I'll just say that it's not difficult to build with just a subtractor and some registers. In fact, it might be fairly obvious once you see the multiplier.</em></p>
+			<div class="exploration" id="countdown"></div>
 
 			<h3>Registers</h3>
-			<p>In order to do that, we need some more persistent components, something that can "remember" what it had before. That looks difficult, but we can actually implement it fairly easily with a simple trick: we take the output and wire it back into the input!</p>
+			<p>We also need some more persistent components, something that can "remember" what it had before. That looks difficult, but we can actually implement it fairly easily with a simple trick: we take the output and wire it back into the input!</p>
 			<p>"Registers" are just a fancy name for a group of bits that stores information. A 32-bit register, for instance, can hold any 32 bits you want for as long as you need them (if the power stays on).</p>
 			<p>The design I am going to use is non-informatively called a "D latch". There are two inputs: a "load" input and a "data" input. If the former is ON, the register adopts the value of the "data" input; if the "load" is OFF, the register remembers what it had before.</p>
 			<p>This process might remind you of something. Indeed, we can simulate this by simply wiring a choice gate back on itself.</p>
@@ -116,7 +128,6 @@
 				<h4>Register Exploration</h4>
 			</div>
 			<p>In practice, however, registers are usually implemented with more complicated circuitry that responds to the clock. This is because in real life, signals take time to move through wires. Allowing registers to change only when the clock ticks can prevent data from being corrupted. This is all getting very advanced, though, so we'll use the unclocked version of the register for now.</p>
-
 
 			<!-- Slow Multiplication -->
 			<h3>Multiplication, the Slow Way</h3>
@@ -138,7 +149,7 @@
 
 
 
-			<p>So, at last, we come to the multiplier hardware. There's a lot going on here, but don't panic! A detailed explanation follows, but see if you can figure out what's going on by watching it. Remember, this isn't what multiplication usually looks like; it's just here to compare with division.</p>
+			<p>There's a lot going on here, but don't panic! A detailed explanation follows, but see if you can figure out what's going on by watching it. Remember, this isn't what multiplication usually looks like; it's just here to compare with division.</p>
 			<h4 class="text-success">Exploration Instructions</h4>
 			<p><strong>Heads up!</strong> Unlike the previous simulations that calculated immediately, multiplication and division take time. To operate this version:</p>
 			<ol start="0">
@@ -160,11 +171,11 @@
 			</div>
 			<div class="clearfix">
 				<img src="mult_adder.png" alt="Closeup of the Adder" class="float-start img-thumbnail me-2" width="300" />
-				<p>...and for that, we come to the adder. Its purpose is to <b>add the first input</b> to the upper 6 bits of the product register. The selector decides whether to use this sum (if the LSB from above is 1) or keep the state as is (if 0). The faded purple wire is connected to the product register, while the solid purple wire comes down to more selectors.</p>
+				<p>...and for that, we come to the adder. Its purpose is to <b>add the first input</b> to the upper 6 bits of the product register. The selector decides whether to use this sum (if the LSB from above is 1) or keep the state as is (if 0). The faded purple wire is connected to the product register, while the solid purple wire comes down to more selectors. <small>(This screenshot was edited to remove the clutter from the second input circuitry.)</small></p>
 			</div>
 			<div class="clearfix">
-				<img src="mult_prodReg.png" alt="Closeup of the Adder" class="float-start img-thumbnail me-2" width="300" />
-				<p>Those selectors then control what happens to the product register. Because there are only two phases, I decided not to make these formal "register" bits, but in practice you can still think of it as a register. The faded teal wires are the control signal for shifting (just like above). When those are active, all the bit values slide one place to the right. Otherwise, the bits on the right hold their own state, while those on the left receive the value from the selector above (which might or might not be the addition result).</p>
+				<img src="mult_prodReg.png" alt="Closeup of the Product Register" class="float-start img-thumbnail me-2" width="300" />
+				<p>Those selectors then control what happens to the product register. (It doesn't look like a register because the bits are always moving, on both phases of the clock. But the choice gate wiring them to themselves has the same register-like functionality.) The faded teal wires are the control signal for shifting (just like above). When those are active, all the bit values slide one place to the right. Otherwise, the bits on the right hold their own state, while those on the left receive the value from the selector above (which might or might not be the addition result).</p>
 			</div>
 
 			<p>Of course, now we just made a value that has twice as many bits as the computer. If your computer is 64-bit, then the multiplication can theoretically use as many as 128 bits. (Challenge: Find a multiplication in the above where the 12th bit from the right is a 1.) One approach, used by the MIPS architecture, is to store the result in a special "high" and "low" register. Then, programs can use an instruction called <code>mfhi</code> and <code>mflo</code> ("move from high/low") to extract the two halves separately. Usually only the lower half is actually used; the upper half would only check if there is overflow.</p>
@@ -191,13 +202,56 @@
 			<p>When the subtractor gets its result, we first check the carry-out bit and see if it is 0. (If it were 1, then we got a negative result.) This is sent into choice gates to decide whether or not to use the subtraction.</p>
 			<p>Now, a naive implementation of the hardware would just have a second register for storing the quotient. However, because of the way we shift the register upward, we can actually just use the lower half of the register to hold the quotient.</p>
 			<p>Why is this? Well, when done this way, we can now use the same hardware for multiplication and division! The <code>mfhi</code> instruction would now mean "extract the remainder", and <code>mflo</code> now gets the quotient. </p>
+			<p>There's one other complication, though. Remember that with multiplication, we started with a blank canvas and added on to it. With division, unfortunately, we have to <em>start</em> with the numerator in the big register. This requires a few extra selector gates, but it isn't that bad; here, we just use the power button as the selector.</p>
 			<p>Like before, I made the power button shut itself off when the computation is done. Notice how it immediately resets the big row now. The top number is the numerator and the bottom number is the denominator.</p>
+			<p><strong>Because the circuit is more complicated, I've decided to make it use 5 bits instead of 6</strong>. The range of the inputs and outputs are therefore 0 to 31.</p>
 			<div class="exploration" id="divider-full"></div>
 			<p>Here's a few things to try:</p>
 			<ul>
-				<li>Try some stress tests: 63 divided by 1, 63 divided by 63, 1 divided by 63, 1 divided by 1, 0 divided by 1 or 63.</li>
+				<li>Try some stress tests: 31 divided by 1, 31 divided by 31, 1 divided by 31, 1 divided by 1, 0 divided by 1 or 31.</li>
 				<li>What happens if you divide by zero? See if you can guess, then try it. (A real computer would issue some kind of error if you tried to do so, but that requires more work.)</li>
+				<li>Another good thing to try is dividing something with a large remainder, say, 11 by 12 (or 22 by 12) and then comparing it to 13 (or 26) by 12.</li>
 			</ul>
+
+			<h4>Division: What Just Happened?</h4>
+			<p>As I said, it's very similar to the multiplier circuit. However, there are several important differences.</p>
+
+			<p>Well, there we have it! We've successfully worked our way through all of the basic arithmetic operations. I have a <a href="multDivOnly.html">separate page</a> that has just the multiplication and division circuits (with instructions) if you'd like to use this in teaching.</p>
+
+			<div class="clearfix">
+				<img src="div_subtractor.png" alt="Closeup of the Subtractor" class="float-start img-thumbnail me-2" width="250" />
+				<p>Here, the subtraction selector gates are <strong>choosing with the carry bit itself</strong>, instead of the other input. This is how we make the decision of whether or not to subtract: because of 2's complement, a negative result will involve the carry bit (the result is technically 6 bits, not 5) being on. If that happens, we just hold the register as is.</p>
+			</div>
+			<div class="clearfix">
+				<img src="div_insertion.png" alt="Closeup of the Insertion" class="float-start img-thumbnail me-2" width="250" />
+				<p>The subtractor's carry also determines <strong>whether we insert 0 or 1 into the register</strong>. The subtraction went through when the carry is 0, but that's when we need to write a 1. So we use a NOT gate to flip it before doing the insertion.</p>
+			</div>
+			<div class="clearfix">
+				<img src="div_initializing.png" alt="Closeup of the Initializers" class="float-start img-thumbnail me-2" width="250" />
+				<p>The last difference is that <strong>we don't start with a blank register</strong>. The pale blue wires are coming from the input way up top; the darker blue ones are from the power button. When the power is on, we use the <strong>top choice gate almost like we did in multiplication</strong> except that we shift left instead.</p>
+				<p>However, when the "power" (really the control switch) is off, we initialize the register. On the left, those bits need to be cleared (zeroed) when the control is off, so we just use AND gates because (0 AND anything) is 0. On the right, we feed that through a choice gate so that we capture the input (while still keeping the shift functionality when the control switch is on).</p>
+			</div>
+
+			<h3>You Did It!</h3>
+			<p>Congratulations! You now understand how to do the five basic operations in computer hardware! I say five, because in basically every programming language ever, the quotient and remainder operations are separate. For instance, in C and Java, <code>20 / 3</code> gives the quotient 6, while <code>20 % 3</code> gives the remainder 2.</p>
+
+			<p>Or maybe some things are still a little confusing. That's okay. You can continue to play with the explorations. If you have suggestions or bugs to report, you can email me at thelast19digitsofpi &lt;at&gt; gmail &lt;d&omicron;t&gt; com.</p>
+
+			<p>Finally, I have the <a href="multDivOnly.html">muliplier and divider</a> explorations together on their own page, for ease of use in lectures. There are instructions but no detailed explanations.</p>
+
+			<p>Thank you for learning about this, and have a good day!</p>
+
+			<footer>
+				<a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">
+					<img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png" />
+				</a>
+				<br />
+				This <span xmlns:dct="http://purl.org/dc/terms/" href="http://purl.org/dc/dcmitype/InteractiveResource" rel="dct:type">work</span> by
+				<span xmlns:cc="http://creativecommons.org/ns#" property="cc:attributionName">Croix Gyurek</span>
+				is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International License</a>.
+				<br />
+				Based on a work at <a xmlns:dct="http://purl.org/dc/terms/" href="https://thelast19digitsofpi.github.io/hardware-explorations/part3.html" rel="dct:source">https://thelast19digitsofpi.github.io/hardware-explorations/part3.html</a>.
+			</footer>
 		</div>
 	</body>
 

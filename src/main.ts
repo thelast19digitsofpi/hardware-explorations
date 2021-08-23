@@ -20,6 +20,8 @@ import RegisterExploration from './RegisterExploration';
 import SignMagnitudeExploration from './SignMagnitudeExploration';
 import SubtractorExploration from './SubtractorExploration';
 import TwosCompAdderExploration from './TwosCompAdderExploration';
+import FullAdderAnswer from './FullAdderAnswer';
+import CountdownExploration from './CountdownExploration';
 
 function createCanvas(): HTMLCanvasElement {
     const canvas: HTMLCanvasElement = document.createElement("canvas");
@@ -105,7 +107,6 @@ const explorationMap: {[id: string]: typeof Exploration} = {
     'binary-basic': BinaryExploration,
     'adder': AdderExploration,
     'gates': GateExploration,
-    'choice': ChoiceExploration,
     'half-adder-build': HalfAdderBuild,
     'gates-again': GateExploration,
     'full-adder1': FullAdderExploration1,
@@ -115,6 +116,7 @@ const explorationMap: {[id: string]: typeof Exploration} = {
     'signmag': SignMagnitudeExploration,
     'adder-fail': AdderFailExploration,
     'full-subtractor1': FullSubtractorExploration1,
+    'full-adder-answer': FullAdderAnswer,
     'ones-complement': OnesComplementExploration,
     'twos-comp-adder': TwosCompAdderExploration,
     'subtractor': SubtractorExploration,
@@ -122,7 +124,9 @@ const explorationMap: {[id: string]: typeof Exploration} = {
 
     // part 3
     'multiplier-naive': MultiplierNaiveExploration,
+    'choice': ChoiceExploration,
     'register': RegisterExploration,
+    'countdown': CountdownExploration,
     'multiplier-full': MultiplierExploration,
     'divider-full': DividerExploration,
 };
@@ -148,7 +152,7 @@ renderLoop();
 // some other stuff
 function fillInteractiveTable(table: HTMLTableElement | null) {
     if (table === null) return;
-    const html = `<input type="number" min="0" max="1" size="3" />`;
+    const html = `<input type="number" min="0" max="1" size="4" style="min-width: 3em" />`;
     const fillIn = table.tBodies[0].getElementsByTagName("tr");
     for (let i = 0; i < fillIn.length; i++) {
         const out1 = document.createElement("td");

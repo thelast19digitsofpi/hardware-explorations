@@ -13,13 +13,13 @@ import { AndGate, OrGate, XorGate } from './Gates';
 import { BinarySwitch } from './UserGates';
 import AnswerChecker from './AnswerChecker';
 
-class FullAdderExploration1 extends Exploration {
+class FullAdderAnswer extends Exploration {
     constructor(canvas: HTMLCanvasElement) {
-        super(canvas, 480, 400);
+        super(canvas, 300, 400);
 
         const inputA = new InputBit(40, 50, false, 32);
         const inputB = new InputBit(160, 50, false, 32);
-        const inputC = new InputBit(240, 180, false, 32);
+        const inputC = new InputBit(250, 180, false, 32);
         const output1 = new OutputBit(inputB.position.x - 1, 340, 30);
         const output2 = new OutputBit(inputA.position.x + 19, 340, 30);
 
@@ -35,7 +35,7 @@ class FullAdderExploration1 extends Exploration {
         ]));
         xor1.inputWires.push(new Wire(inputB, 0));
 
-        const xor2 = new BinarySwitch(output1.position.x, 280, 60, 0);
+        const xor2 = new XorGate(output1.position.x, 280, 45, 0);
         xor2.inputWires.push(new Wire(xor1, 0));
         xor2.inputWires.push(new Wire(inputC, 0, [
             {x: xor2.position.x + 9, y: inputC.position.y, node: true},
@@ -43,7 +43,7 @@ class FullAdderExploration1 extends Exploration {
 
         output1.inputWires.push(new Wire(xor2, 0));
 
-        const and2 = new BinarySwitch(output2.position.x + 30, 220, 60, 0);
+        const and2 = new AndGate(output2.position.x + 30, 220, 45, 0);
         and2.inputWires.push(new Wire(xor1, 0, [
             {x: and2.position.x - 9, y: 165},
             {x: xor1.position.x, y: 165, node: true},
@@ -53,7 +53,7 @@ class FullAdderExploration1 extends Exploration {
         ]));
 
         // or gate for the "2" output
-        const or2 = new BinarySwitch(output2.position.x, output2.position.y - 44, 60, 0);
+        const or2 = new OrGate(output2.position.x, output2.position.y - 44, 45, 0);
         or2.inputWires.push(new Wire(and1, 0));
         or2.inputWires.push(new Wire(and2, 0, [
             // add 12 because of the output bit
@@ -74,7 +74,7 @@ class FullAdderExploration1 extends Exploration {
         this.components.push(aid1, aid2, aid3);
 
         // Number Display
-        const displayResult = new Display(220, 340, [output1, output2], false, 42);
+        const displayResult = new Display(240, 340, [output1, output2], false, 42);
         this.components.push(displayResult);
 
         const labelA = new Text(inputA.position.x, 20, 30, "A");
@@ -86,42 +86,7 @@ class FullAdderExploration1 extends Exploration {
 
         // Updating
         this.outputComponents.push(output1, output2, aid1, aid2, aid3);
-
-        // The Answer
-        const correctAdder = new Adder(370, 200, 1, 140);
-        const rightInputA = new InputBit(correctAdder.position.x + correctAdder.inputSockets[0].x, 120, false, 25);
-        const rightInputB = new InputBit(correctAdder.position.x + correctAdder.inputSockets[1].x, 120, false, 25);
-        const rightInputC = new InputBit(460, 200, false, 25);
-        this.components.push(correctAdder, rightInputA, rightInputB, rightInputC);
-
-        const rightOutput1 = new OutputBit(correctAdder.position.x, 270, 25);
-        const rightOutput2 = new OutputBit(correctAdder.position.x + correctAdder.outputSockets[1].x, 270, 25);
-        rightOutput1.inputWires.push(new Wire(correctAdder, 0));
-        rightOutput2.inputWires.push(new Wire(correctAdder, 1));
-        this.components.push(rightOutput1, rightOutput2);
-        this.outputComponents.push(rightOutput1, rightOutput2);
-
-        const helpText1 = new Text(correctAdder.position.x, 60, 20, "Can you make the");
-        const helpText2 = new Text(correctAdder.position.x, 80, 20, "left side do this?");
-        this.components.push(helpText1, helpText2);
-
-        correctAdder.inputWires = [new Wire(rightInputA, 0), new Wire(rightInputB, 0), new Wire(rightInputC, 0)];
-
-        this.components.push(new AnswerChecker(this, 380, 345,
-            [
-                [inputA, rightInputA],
-                [inputB, rightInputB],
-                [inputC, rightInputC],
-            ],
-            [output2, output1],
-            function(bits: boolean[]) {
-                return [
-                    (Number(bits[0]) + Number(bits[1]) + Number(bits[2])) >= 2,
-                    Boolean(bits[0] !== bits[1]) !== bits[2]
-                ]
-            }
-        ));
     }
 }
 
-export default FullAdderExploration1;
+export default FullAdderAnswer;

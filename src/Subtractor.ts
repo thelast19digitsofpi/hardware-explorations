@@ -108,8 +108,8 @@ class Subtractor implements Component {
         let num1 = 0, num2 = 0;
         for (let i = 0; i < this.numBits; i++) {
             const wire1 = this.inputWires[i], wire2 = this.inputWires[i + this.numBits];
-            num1 += (wire1.toComponent.state.bits[wire1.toOutput] ? 1 : 0) * (1 << i);
-            num2 += (wire2.toComponent.state.bits[wire2.toOutput] ? 1 : 0) * (1 << i);
+            num1 += ((wire1 && wire1.get()) ? 1 : 0) * (1 << i);
+            num2 += ((wire2 && wire2.get()) ? 1 : 0) * (1 << i);
         }
         const textSize = Math.round(Math.min(this.size.x * 0.125, this.size.y * 0.5));
         ctx.font = textSize + "px monospace";

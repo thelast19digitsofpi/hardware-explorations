@@ -10,16 +10,22 @@
 	<body>
 		<div class="container">
 			<h1>Arithmetic in Computer Hardware</h1>
+
+			<p>[NOTE: This is an entry in the <a href="https://www.3blue1brown.com/blog/some1">3Blue1Brown Summer of Math Exposition</a> for 2021. <strong>Full disclosure</strong>: Originally, I wrote the <a href="multDivOnly">multiplier and divider visuals</a> without the detailed explanation as a project for a class this spring. Over the summer I've been extending it to the broader 3-part explanation that does addition and subtraction as well. I was already somewhat into the design when I heard about SoME, but apart from the original form, this has not been published previously.]</p>
+
 			<h4>
 				<a href="part2.html">Skip right to Part 2</a>
+				<br/>
 				<a href="part3.html">Skip right to Part 3</a>
+				<br/>
+				<a href="multDivOnly.html">Multiplier + Divider alone</a> &lt;&lt; for use in lectures, etc (has instructions but no deeper explanation)
 			</h4>
 
 			<h3>The Basics</h3>
-			<p>You're probably aware that computers store numbers as a series of 0's and 1's. These 0s and 1s are sent around in various complicated circuits to do calculations.</p>
+			<p>You're probably aware that computers store numbers as a series of 0's and 1's. Using just 0's and 1's is called "binary", and the <strong>bi</strong>nary digi<strong>ts</strong> are called <strong>bits</strong>. These bits, the 0s and 1s, are sent around in various complicated circuits to do calculations.</p>
 			<p>But how does the computer actually do arithmetic? Before we can get into that, we need to learn how the computer actually stores numbers in the first place. There are a few different methods, but we'll focus on whole numbers for now.</p>
-			<p>Humans generally use base ten notation, which means that a number like 314 means three hundreds, one ten, and four units. Computer wiring generally uses base two, or binary, where the only digits are 0 and 1 and the digits use powers of two (1, 2, 4, 8, 16, 32, ...). For example, <code>110</code> in binary means not "one hundred and ten" but "one four and one two", or 6.</p>
-			<p>I promised this would be interactive. Here's a simple exploration to show how binary numbers work. I've included six binary digits, or bits, which means the maximum number you can reach is 2<sup>6</sup>&nbsp;-&nbsp;1, or 63. (With six decimal digits you could reach 10<sup>6</sup>&nbsp;-&nbsp;1 = 999,999.)</p>
+			<p>Humans generally use base ten notation, which means that a number like 314 means three hundreds, one ten, and four units. Computer wiring generally uses base two, or binary, where the only digits are 0 and 1 and the digits use powers of two (1, 2, 4, 8, 16, 32, ...). For example, <code>110</code> in binary means not "one hundred and ten" but "one four and one two", or 6. To help avoid confusion, I'll use <code>this font and color</code> for binary numbers with multiple digits: <code>10</code> means two; "10" in normal font means ten, the number after nine.</p>
+			<p>I promised this would be interactive. Here's a simple exploration to show how binary numbers work. I've included six bits, which means the maximum number you can reach is 2<sup>6</sup>&nbsp;-&nbsp;1, or 63. (With six decimal digits you could reach 10<sup>6</sup>&nbsp;-&nbsp;1 = 999,999.)</p>
 
 			<h4>Exploration Instructions</h4>
 			<ul style="font-size: large">
@@ -91,7 +97,14 @@
 			<p>With these four gates, we can make almost anything. Probably the easiest thing to start with is arithmetic, because numbers are so fundamental to computations. Of the four basic operations, addition is clearly the easiest of them, so let's start there.</p>
 			<p>In fact, let's start with the simplest case of the simplest case: adding two individual bits. (In other words, we're adding two numbers that can be either 0 or 1.) Now, the result could be either 0, 1, or 2, which is three possiblilities, so we'll need more than one bit for the output. For these purposes, we'll have two output bits, one that means "1" and one that means "2".</p>
 			<p>Here's what we're going for. On the left, I've made a simple adder to show what we're doing. On the right, I have a set of adjustable logic gates. You can click or tap the arrows to change the gates.</p>
-			<p>See if you can get the rightmost output square to turn on when A + B = 1, and the leftmost one to turn on when A + B = 2. If you think you have it, click the "TEST" button to see if you're right!</p>
+			<p>See if you can get the rightmost output square to turn on when A + B = 1, and the leftmost one to turn on when A + B = 2. If you think you have it, click the "TEST" button to see if you're right! (Note that you have to make it work for EVERY possible input. I'd highly recommend thinking about the different gates, rather than just trying all 9 possible gate configurations.)</p>
+			<h5>Instructions</h5>
+			<ol>
+				<li>On the left, the circuit gives the correct answer but doesn't show the details.</li>
+				<li>On the right are two gates. <strong>Use the arrow buttons to switch the gates between AND, OR, and XOR</strong>. (As you'll see, the inputs on each side are linked so both circuits always have the same inputs.)</li>
+				<li>Your goal is to make the output on the right match that of the left <strong>for all possible inputs</strong> (not just the starting position!).</li>
+				<li>When you think you have the answer, <strong>click the test button</strong>. It will turn yellow and try every combination of bits. If it later turns green, you solved it! Otherwise you'll see where your circuit went wrong.</li>
+			</ol>
 			<div class="exploration" id="half-adder-build"></div>
 
 			<p>Did you figure it out? If you did, good job! If not, let's see how we can discover it from scratch.</p>
@@ -102,10 +115,7 @@
 				<li>If both A and B are <strong class="bit-1">ON</strong>, then "1" should turn off but "2" should turn <strong class="bit-1">ON</strong>.</li>
 			</ul>
 
-			<p>It should be fairly obvious by now that "2" needs to be an AND gate. I hope you've also spotted that "1" should be an XOR gate, but if you guessed inclusive OR, it's okay -- mistakes are part of learning! (That also shows the value of writing everything out. It's much harder to forget about the double-1 case if you have to write it out. In fact, we probably should have made a truth table.)</p>
-
-			<!-- I need a good closing paragraph... -->
-			<p></p>
+			<p>It should be fairly obvious by now that "2" needs to be an AND gate. I hope you've also spotted that "1" should be an XOR gate, but if you guessed inclusive OR, it's okay -- mistakes are part of learning! (That also shows the value of writing everything out. It's much harder to forget about the double-1 case if you have to write it out. In fact, we also could have made a truth table; comparing it to the one for AND/OR/XOR would reveal the answer immediately.)</p>
 
 			<h3>That was only half the work</h3>
 			<p>What we just conceptualized was called a "half adder". Why half? Because if you're trying to add two numbers, sooner or later you have to worry about carrying. The "2" output from above <!-- change? --> would be our carry; it's a little like the tens digit in an addition like this:</p>
@@ -114,7 +124,7 @@
   58
 + 66
 ----
-   4
+   4   (8 + 6 = 14, carry the 1)
  124</pre>
  			<p>The lonely "4" above the answer represents the fact that you normally write the 4 first, <em>then</em> carry the 1, and add 1 + 5 + 6 = 12.</p>
 
@@ -258,9 +268,14 @@
 			</table>
 -->
 
-			<p>But how do we wire this? If you think about it, to adjust the "1" output for carries, all we have to do is <em>add</em> the carry to the original "1" (from A&nbsp;+&nbsp;B). Now, the "2" is a bit trickier. Looking at the truth table, we see there are four possibilities: A+B, A+C, B+C, and A+B+C (which is three, but 3 = 1 + 2).</p>
-			<p>We could make three AND gates (A and B, B and C, A and C) and OR them all together. However, we already have one of those (A AND B) from the half adder, and we also have "A XOR B", which means "one of A,B is on". So we can take that wire AND C to handle both the AC and BC cases.</p>
-			<p>At this point, the circuit has gotten a bit complicated. With five gates, I've taken the liberty to add small red/green displays on three of them (the other two control the actual outputs). You can see that turning on one of the three inputs ("C" is also an input!) activates only the "1", and so on, but it happens in several different ways.</p>
+			<p>But how do we wire this? Well, we're trying to add A + B + C. We can think about splitting that up into (A + B) + C, that is, doing the first addition at the beginning and adding extra stuff on for the carry bit.</p>
+			<p>I'll have you see if you can do it. I'll give you a hint by providing the general layout of the circuit as well as two of the five gates. See if you can fill in the rest!</p>
+			<h5>Interactive Circuit</h5>
+			<ul>
+				<li>Just like before, your goal is to make the two circuits match.</li>
+				<li>However, this time the circuit you are building is on the <strong>left</strong>.</li>
+				<li>The two gates at the top (one AND, one XOR) cannot be changed. They are already correct!</li>
+				<li>Whenever you see a dot (&bull;) inside a wire, that means the signal is being sent to two different places. If there is no dot, then two different wires are crossing without affecting each other.</li>
 			<div class="exploration" id="full-adder1"></div>
 
 			<!--
@@ -286,6 +301,7 @@
 			<p>So once we have a full adder, all we need to do for multiple bits is to chain a whole bunch of them together!</p>
 			<p>On the left side, I've put a basic implementation of the hardware showing the individual gates that make a basic four-bit adder. On the right, I've abstracted that away to a single component that does the same thing.</p>
 			<p>Click on red and green <strong>circles</strong> to change the input bits. Red = 0, green = 1. The square bits are the outputs. The numbers show what your inputs and outputs are in decimal, but you <strong>cannot</strong> type numbers in. I did that on purpose. Click on the bits directly!</p>
+			<p>(There are no adjustable gates this time. You can still click the bits, but the circuit is correct and complete.)</p>
 			<div class="exploration" id="adder"></div>
 			<!--
 			<p>Subtraction works quite similarly to addition if we use what is known as two's complement.
@@ -295,27 +311,21 @@
 			<h3>Longevity</h3>
 			-->
 
-			<h3>Making Decisions</h3>
-			<p>Another important component we will need is a <b>selector</b>. Essentially, a selector allows the circuit to choose between two options based on the value of a third. (If you've done any programming, you might know this as the <code>condition ? thing1 : thing2</code> operator, or <code>thing1 <strong>if</strong> condition <strong>else</strong> thing2</code> in Python.)</p>
-
-			<p>For our purposes, we will make selectors one bit at a time. Call the inputs A, B, and C. The logic is this:</p>
-			<ul>
-				<li>If A is on (1), then we ignore C and output B.</li>
-				<li>If A is off (0), then we ignore B and output B.</li>
-			</ul>
-
-			<p>To do this "if-else" in terms of logic gates, we know that we only want B to be used when A is on, so that would be an AND gate: (A and B). For C, we want that to be used whenever A is off, so that looks like ((not A) and C). Finally, since either of those two options is allowed, we use an OR gate to connect them: (A and B) or ((not A) and C).</p>
-			<p>As usual, the circuit implementation is on the left and the abstracted component is on the right. Click on red and green circles to switch them on and off.</p>
-
-			<div class="exploration" id="choice"></div>
-
-			<!-- TODO: Change link name? -->
-			<h3>Next Steps</h3>
-			<p>Well, this whole thing is still under construction. There's going to be a part 2 where we talk about subtraction and two's complement. But I <strong>do</strong> have a <a href="part3.html">part 3</a> about multipliers and dividers. That might be exactly what you came here for.</p>
+			<h3>What's Next?</h3>
+			<p>Well... if you've gotten this far, take a moment to feel good about yourself. You're learning!</p>
+			<p>All right... Well, we've just done addition. The next simplest operation is subtraction. When you're ready, let's move on to <a href="part2.html">part 2</a>!</p>
+			<footer>
+				<a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">
+					<img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png" />
+				</a>
+				<br />
+				This <span xmlns:dct="http://purl.org/dc/terms/" href="http://purl.org/dc/dcmitype/InteractiveResource" rel="dct:type">work</span> by
+				<span xmlns:cc="http://creativecommons.org/ns#" property="cc:attributionName">Croix Gyurek</span>
+				is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International License</a>.
+				<br />
+				Based on a work at <a xmlns:dct="http://purl.org/dc/terms/" href="https://thelast19digitsofpi.github.io/hardware-explorations/index.html" rel="dct:source">https://thelast19digitsofpi.github.io/hardware-explorations/index.html</a>.
+			</footer>
 		</div>
-		<footer>
-			Copyright &copy; 2021 Croix Gyurek. All rights reserved.
-		</footer>
 	</body>
 
 	<script src="./main.ts"></script>

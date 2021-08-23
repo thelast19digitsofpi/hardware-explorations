@@ -1,7 +1,6 @@
-// RegisterExploration
+// ClockExploration.ts
 //
-// Exploration that shows how a register bit works.
-// Most of these (not multipliers and dividers) have the expanded version on the left and a compact version on the right.
+// Exploration of a clock, more meant to illustrate the time-based explorations.
 
 import Component from './Component';
 import Exploration from './Exploration';
